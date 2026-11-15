@@ -1,0 +1,11 @@
+# signing key: keep it private, never commit
+*.pem
+build/out/
+voice/out/
+voice/*.onnx
+voice/voices.bin
+voice/tmp.wav
+node_modules/
+__pycache__/
+*.png
+!build/icon.png
