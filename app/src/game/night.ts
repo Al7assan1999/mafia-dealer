@@ -17,27 +17,12 @@ function nightOpts(p: number){const r=G.roles[p];let key: string=r;if(r==='citiz
       opts.push({j,name:G.names[j],tag,dis,red:r==='mafia'&&G.roles[j]==='mafia'});}
     if(r==='mafia'&&S.rules.skip&&!G.skipUsed)skip={mv:Object.entries(G.act.mafia).filter(([k,v])=>+k!==p&&v==='skip').length};}
   return{key,opts,skip};}
+/** The choice buttons for nightOpts(p), on this phone (single-phone game and the host's own turn). */
+function nightRows(no: ReturnType<typeof nightOpts>){let rows=no.opts.map(o=>optBtn(o.j,esc(o.name),o.tag,o.dis,o.red)).join('');
+  if(no.skip)rows+=`<button class="opt skip ${G.sel==='skip'?'sel':''}" onclick="pick('skip')"><b>${t('skipKill')}<br><span class="skipleft">${t('skipLeft')}${no.skip.mv?' · '+t('mateVote'):''}</span></b><span class="rad"></span></button>`;
+  return rows;}
 function nightActView(){
-  const p=G.order[G.i],r=G.roles[p];
-  let key: string=r; if(r==='citizen'&&!S.rules.decoy)key='none';
-  const alive=aliveIdx();
-  let rows='';
-  if(key!=='none'){
-    for(const j of alive){
-      let dis=false,tag='';
-      if(j===p)tag=t('you');
-      if(r==='mafia'&&G.roles[j]==='mafia'){dis=true;tag=j===p?t('you'):t('teammate');}
-      if(r==='mafia'&&S.rules.norep&&G.lastTarget===j){dis=true;tag=t('lastTgt');}
-      if(r==='doctor'){if(j===p&&!S.rules.self)dis=true;if(S.rules.rep&&G.lastProt[p]===j){dis=true;tag=t('lastNight');}}
-      if(r==='detective'&&j===p)dis=true;
-      if(r==='mafia'){const mv=Object.entries(G.act.mafia).filter(([k,v])=>+v===j).length;if(mv)tag=(tag?tag+' · ':'')+t('mateVote');}
-      rows+=optBtn(j,nm(j),tag,dis,r==='mafia'&&G.roles[j]==='mafia');
-    }
-    if(r==='mafia'&&S.rules.skip&&!G.skipUsed){
-      const mv=Object.values(G.act.mafia).filter(v=>v==='skip').length;
-      rows+=`<button class="opt skip ${G.sel==='skip'?'sel':''}" onclick="pick('skip')"><b>${t('skipKill')}<br><span class="skipleft">${t('skipLeft')}${mv?' · '+t('mateVote'):''}</span></b><span class="rad"></span></button>`;
-    }
-  }
+  const p=G.order[G.i],no=nightOpts(p),key=no.key,rows=nightRows(no);
   return stage(`<div class="act"><div class="ah"><span>${nm(p)}</span><span>${t('night')} ${G.day}</span></div>
    <h2>${t('a_'+key)}</h2><p class="d">${t('a_'+key+'_d')}</p>
    ${rows?`<div class="list">${rows}</div>`:''}

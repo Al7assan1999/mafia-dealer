@@ -42,8 +42,7 @@ function mpNightView(){const hi=hostIdx();
     if(G.hostRes){const q=G.act.detective[hi];let body=`<div class="orb">${IC.lock}</div><div class="res">${t('locked')}</div>`;
       if(G.roles[hi]==='detective'&&q!=null){const is=G.roles[q]==='mafia';body=`<div class="orb" style="color:${is?'var(--red2)':'var(--green)'}">${IC.detective}</div><div class="res" style="color:${is?'var(--red2)':'var(--green)'}">${t(is?'isMafia':'notMafia',{n:nm(q)})}</div>`;}
       return stage(`<div class="big">${body}<div style="height:16px"></div><button class="btn ghost" onclick="G.hostTurn=false;G.hostRes=false;mpCheckNight();if(G&&G.phase==='mpNight')render()">${t('done')}</button></div>`);}
-    const no=nightOpts(hi);let rows=no.opts.map(o=>optBtn(o.j,esc(o.name),o.tag,o.dis,o.red)).join('');
-    if(no.skip)rows+=`<button class="opt skip ${G.sel==='skip'?'sel':''}" onclick="pick('skip')"><b>${t('skipKill')}<br><span class="skipleft">${t('skipLeft')}${no.skip.mv?' · '+t('mateVote'):''}</span></b><span class="rad"></span></button>`;
+    const no=nightOpts(hi),rows=nightRows(no);
     return stage(`<div class="act"><div class="ah"><span>${nm(hi)}</span><span>${t('night')} ${G.day}</span></div><h2>${t('a_'+no.key)}</h2><p class="d">${t('a_'+no.key+'_d')}</p>
      ${rows?`<div class="list">${rows}</div>`:''}<button class="btn primary" ${no.key!=='none'&&G.sel===null?'disabled':''} onclick="mpRecord(hostIdx(),nightOpts(hostIdx()).key==='none'?null:G.sel);G.hostRes=true;hostPublish();render()">${IC.lock.replace('<svg','<svg style="width:20px;height:20px"')}${t('confirm')}</button></div>`);}
   return stage(`<div class="big"><div class="chip">${IC.moon.replace('<svg','<svg style="width:15px;height:15px;vertical-align:-2px;margin-inline-end:6px"')}${t('night')} ${G.day}</div>
