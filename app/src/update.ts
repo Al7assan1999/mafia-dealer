@@ -9,7 +9,10 @@ const updBanner=()=>{const L=S.latest;return L&&L.code>APP.code?`<div class="ban
    Android always asks "Update this app?" and only accepts an APK signed with the same key. Falls back to the browser. */
 async function doUpdate(){const L=S.latest;if(!L||!/^https:\/\//.test(L.url))return;
   if(!(window.Net&&Net.saveApk&&Net.install)){openUrl(L.url);return;}
-  const show=f=>{$('modal').innerHTML=`<div class="modal"><div class="sheet"><h3>${t('dlT',{v:esc(L.name)})}</h3><div class="pbar"><i style="width:${Math.round(f*100)}%"></i></div><p style="margin:8px 0 0">${f<1?Math.round(f*100)+'%':t('dlReady')}</p></div></div>`;};
+  // the sheet is built once; later calls only move the bar (rebuilding it restarted its fade-in, so it flickered)
+  const show=(f: number)=>{let m=document.querySelector('#modal .dl');
+    if(!m){$('modal').innerHTML=`<div class="modal"><div class="sheet dl"><h3>${t('dlT',{v:esc(L.name)})}</h3><div class="pbar"><i></i></div><p style="margin:8px 0 0"></p></div></div>`;m=document.querySelector('#modal .dl');}
+    (m.querySelector('.pbar i') as HTMLElement).style.width=Math.round(f*100)+'%';m.querySelector('p').textContent=f<1?Math.round(f*100)+'%':t('dlReady');};
   show(0);
   try{const r=await fetch(L.url,{cache:'no-store'});if(!r.ok)throw 0;const total=+r.headers.get('content-length')||0,rd=r.body.getReader(),parts=[];let got=0,last=0;
     for(;;){const {done,value}=await rd.read();if(done)break;parts.push(value);got+=value.length;if(total&&got-last>65536){last=got;show(got/total);}}

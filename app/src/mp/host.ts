@@ -77,7 +77,7 @@ function hostView(){const g=MP.game;
    ${MP.online?`<div class="code sel">${MP.online.code.replace(/(\d{3})/,'$1 ')}</div><button class="mini" onclick="copyText(MP.online.code)">${t('copyCode')}</button><p class="hint" style="margin:8px 0 0">${t('codeHint')}</p>`
      :`<p class="hint" style="margin-bottom:0">${MP.myIp?`<span class="ipline sel">${t('hostAddr',{ip:MP.myIp})}</span> <button class="mini" onclick="copyText(MP.myIp)">${t('copy')}</button>`:t('hotspotMode')}</p>`}</div>
   <button class="btn ghost mt" onclick="shareRoom()">${IC.share}${t(MP.online?'shareCode':'shareAddr')}</button>
-  ${MP.online?`<button class="btn ghost mt" onclick="inviteSheet()">${IC.friend}${t('fInviteT')}</button>`:''}
+  ${MP.online?`<button class="btn ghost mt" onclick="dockOpen(true)">${IC.friend}${t('fInviteT')}</button>`:''}
   <div class="sec mt"><div class="sh"><h3>${t('playersIn',{n:ps.length})}</h3><button class="link" onclick="hostPing()">${t('pingAll')}</button></div>${hostRows()}</div>
   ${deckRules(ps.length,err)}
   <button class="btn primary" ${err?'disabled':''} onclick="hostDeal()">${t('dealRoles')}</button>

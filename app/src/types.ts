@@ -25,6 +25,7 @@ interface Settings {
   latest?: { code: number; name: string; url: string; notes: string; at: number };
   devKey?: string; group?: { code: string } | null; gcache?: LogEntry[] | null; gsent?: number[]; gsync?: number;
   hideOnline?: boolean;  // "Show me as online" switched off
+  fpanel?: boolean;  // friends drawer left open
 }
 
 /** Another account as the relay shows it. rel: 'ok' friends, 'out' I asked, 'in' they asked, '' none, 'me'. on/st only for friends. */

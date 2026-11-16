@@ -9,6 +9,11 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
+## In progress: v2.9.1 (versionCode 26), not published
+- Friends drawer (Alhassan's choice, like MLBB/PUBG): a tab on the screen edge (right; left in Arabic) with online friends' avatars, count and a red dot for requests; it slides out over menus and room lobbies (never during a game, never signed out). Requests, friends online first, Invite buttons in an online lobby; + opens the Friends screen; Back, the dim area, › or a swipe minimize it; `S.fpanel` remembers it. Replaces the Home "Friends" button and the invite sheet. Opening edge swipes are left to Android's Back gesture.
+- Fixed: the update download sheet was rebuilt every 64 KB and replayed its fade-in (flicker); the Friends screen redraws only its lists, so a username being typed is kept. Phones on 2.9 still see the flicker once, while updating to 2.9.1 (the old version's code runs the download).
+- Tests: `test_friends_app.js` 30 checks, `test_inapp.js` checks the progress sheet is built once.
+
 ## Current state: v2.9 (versionCode 25), published on the relay 2026-11-16 (main = feature/friends)
 **Friends (2026-11-16)**, Alhassan's decisions: request + accept (only mutual friends can invite); an invite reaches the friend as an in-app banner and, when their app is closed and Telegram is linked, a bot message; anyone in an online room can invite; friends see Online / In a room / In a game, with a "Show me as online" switch in Settings.
 - Relay `Accounts`: tables `friends(a,b,state 'req'|'ok')`, `invites` (30 min, one per friend per room, 30 per hour), users `seen/st/hide` (online = inbox check in the last 2 min). Endpoints `/acc/inbox` (every 10 s while the app is open), `/acc/friends`, `/acc/user/<id>`, `/acc/friend/request|accept|decline|remove`, `/acc/invite`, `/acc/invite/done`. Account delete removes friendships and invites.

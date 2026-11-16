@@ -514,7 +514,6 @@ const EN = {
   wins: 'wins',
   // friends (v2.9)
   friendsT: 'Friends',
-  fHomeSub: '{n} online',
   fWhy: 'Sign in to add friends and invite them to your online rooms.',
   fAdd: 'Add a friend by username',
   fAddBtn: 'Add',
@@ -541,7 +540,7 @@ const EN = {
   fInviteD: 'They get an invite to room {c}.',
   fInviteBtn: 'Invite',
   fInvited: 'Invited',
-  fClose: 'Close',
+  fMin: 'Minimize',
   fNoneInv: 'No friends yet. Add them from Friends on the home screen, or tap + Add next to a signed-in player.',
   fInvSent: 'Invite sent',
   fInvTg: 'Invite sent (also to their Telegram)',

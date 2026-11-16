@@ -514,7 +514,6 @@ const AR: Partial<Record<keyof typeof EN, string>> = {
   wins: 'فوز',
   // friends (v2.9)
   friendsT: 'الأصدقاء',
-  fHomeSub: '{n} متصل',
   fWhy: 'سجّل الدخول لتضيف أصدقاء وتدعوهم إلى غرفك عبر الإنترنت.',
   fAdd: 'أضف صديقًا باسم المستخدم',
   fAddBtn: 'أضف',
@@ -541,7 +540,7 @@ const AR: Partial<Record<keyof typeof EN, string>> = {
   fInviteD: 'تصلهم دعوة إلى الغرفة {c}.',
   fInviteBtn: 'دعوة',
   fInvited: 'تمت الدعوة',
-  fClose: 'إغلاق',
+  fMin: 'تصغير',
   fNoneInv: 'لا أصدقاء بعد. أضفهم من «الأصدقاء» في الشاشة الرئيسية، أو اضغط «+ أضف» بجانب لاعب مسجّل.',
   fInvSent: 'أُرسلت الدعوة',
   fInvTg: 'أُرسلت الدعوة (وإلى تيليجرام أيضًا)',
