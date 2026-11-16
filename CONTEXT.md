@@ -9,11 +9,11 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## In progress: v2.9.2 (versionCode 27), not published
+## Current state: v2.9.2 (versionCode 27), published on the relay 2026-11-16
 - Home: "Offline game" (was New game), "Local Network (Wi-Fi/Hotspot)" (was Play Together > Same room) and "Online" are the three main buttons; the Play Together screen is gone, its name box moved to Local Network. Share texts and the sign-in note use the new names.
 - Friends tab moved to the top of the screen edge (under the corner buttons) so it no longer covers the first Home button.
 
-## Current state: v2.9.1 (versionCode 26), published on the relay 2026-11-16
+## Previous: v2.9.1 (versionCode 26), published 2026-11-16
 - Friends drawer (Alhassan's choice, like MLBB/PUBG): a tab on the screen edge (right; left in Arabic) with online friends' avatars, count and a red dot for requests; it slides out over menus and room lobbies (never during a game, never signed out). Requests, friends online first, Invite buttons in an online lobby; + opens the Friends screen; Back, the dim area, › or a swipe minimize it; `S.fpanel` remembers it. Replaces the Home "Friends" button and the invite sheet. Opening edge swipes are left to Android's Back gesture.
 - Fixed: the update download sheet was rebuilt every 64 KB and replayed its fade-in (flicker); the Friends screen redraws only its lists, so a username being typed is kept. Phones on 2.9 still see the flicker once, while updating to 2.9.1 (the old version's code runs the download).
 - Tests: `test_friends_app.js` 30 checks, `test_inapp.js` checks the progress sheet is built once.
