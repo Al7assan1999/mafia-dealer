@@ -3,7 +3,7 @@
 You are continuing work on **Mafia Dealer**, an Android app for the Mafia party game, built for Alhassan and his friends. This file carries over everything from the previous chat. The code is in this folder; the README explains the build and tests.
 
 ## Who and how
-- Owner: Alhassan (software engineer, Damascus). Plays with friends: Dareer, Halawy, Farouq, Sami, Hokan, Fater, Khaddour.
+- Owner: Alhassan (software engineer). Plays with friends: Dareer, Halawy, Farouq, Sami, Hokan, Fater, Khaddour.
 - He tests every build on real Android phones and reports back. He wants a short plan and approval **before** big changes, then wants the work done end to end.
 - Wants realistic, practical answers; not looking for reassurance.
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
@@ -76,7 +76,8 @@ v2.4 added (all from his 13-point list, 2026-11-15):
   - **Stage 4, build 2 = v2.2 (after online is confirmed on phones):** UI redesign (2-3 mockups first, keep screens/flow, bundled Arabic-capable fonts, night/day colours on player phones), offline voice regeneration, role-neutral sound cues on player phones.
 
 ## How the app is built (important)
-- **Google's dl.google.com blocks Alhassan's location (Syria)**: the Android SDK, Google Maven, adb, emulator and Flutter-for-Android can't be downloaded. A Kotlin move was approved, then dropped for this reason (2026-11-15). Don't route around the block (VPN, mirrors, cloud runners). Maven Central, PyPI, npm, GitHub and Hugging Face work.
+- **Google's dl.google.com depends on the connection**: on 2026-11-16 it first returned 404 for SDK files, then served them later the same day. When it was blocked: the Android SDK, Google Maven, adb, emulator and Flutter-for-Android can't be downloaded. A Kotlin move was approved, then dropped for this reason (2026-11-15). Don't route around the block (VPN, mirrors, cloud runners). Maven Central, PyPI, npm, GitHub and Hugging Face work.
+- **Code layout (2026-11-16, branch `refactor/ts-split`):** the game moved from one inline `<script>` into TypeScript files in `app/src/` (one shared global scope, joined in `app/tsconfig.json` order by `app/build.mjs` into `app/assets/app.js`, gitignored). `npm run check` / `npm run build`; `build_apk.py` runs both. CSS is in `app/assets/style.css`. `const APP` stays inline in `index.html`. See README "The code". Next planned steps: Capacitor shell (Gradle, AAB) and Google Play.
 - So the app is one HTML page (`app/assets/index.html`) in a WebView, and the APK is produced by Python scripts: `build/dexasm.py` (a small Dalvik assembler; supports `sget` and `if-lt` too), `build/app_dex.py` (the native classes), `build/build_apk.py` (manifest, resources, zip, v2 signing).
 - Native classes in `app_dex.py`:
   - `MainActivity`: full-screen WebView, keeps the screen on, Back goes to the WebView history. Creating `Net` is wrapped in try/catch so a failure only disables multiplayer.
@@ -92,7 +93,7 @@ v2.4 added (all from his 13-point list, 2026-11-15):
 1. Bump `APP` in `app/assets/index.html`. 2. `cd build && python build_apk.py out/MafiaDealer.apk ../app/assets icon.png ../../../mafia-dealer-signing-key.pem && python verify_apk.py out/MafiaDealer.apk`.
 3. `cd relay && python publish.py "what changed"`: copies the APK and a `version.json` into `relay/public/` and deploys. The APK is then public at `https://mafia-relay.mafiadealer.workers.dev/MafiaDealer.apk`.
 - Apps from v2.3 check `version.json` on start (at most every 6 h; quiet offline) and show "Update available" on Home; `Net.open(url)` (native, added in v2.3) hands the link to the browser. Lobby shows "old version" next to players behind the host, and players with an older app than the host see a warning (hello carries `v`, room carries `hv`).
-- Play Protect warns on every sideloaded install (unknown developer/app, background permissions). Publishing on Play is not possible from Syria; Google's planned developer verification for sideloaded apps may matter later.
+- Play Protect warns on every sideloaded install (unknown developer/app, background permissions). Google Play publishing is under discussion (2026-11-16); Google's planned developer verification for sideloaded apps may matter later.
 
 ## Game design decisions
 - Roles (v2.6, his rules): exactly 1 Doctor; at most 1 Detective and only with 2+ Mafia; Mafia must be at least 2 fewer than everyone else (Mafia <= (players-2)/2); Citizens fill the rest; at least 4 players. All enforced in `fixCounts()`/`deckErr()`.
@@ -116,7 +117,7 @@ v2.4 added (all from his 13-point list, 2026-11-15):
   - `voice/pack.py` builds `audio.js`, cutting the preview name ("Halawy") off the lines that end before a name, at -24 LUFS like the old clips.
 - Name clips: about 180 common Arabic and English names plus "Player 1–20" (`voice/names.json`, which includes Arabic-script aliases). His friends' names were added; pronunciation not yet confirmed by him.
 - Sound effects are synthesized in code (WebAudio). Pixabay blocks downloads from here; Freesound works but needs his free account's API key.
-- **ElevenLabs is geo-blocked for Syria** (sanctions list on geo-restriction.elevenlabs.io). He has a free key at `C:/Users/WGN/Desktop/Mafia/elevenlabs.key`, 0 credits used. He asked to route it through WireGuard; declined. Regenerate voices offline: Kokoro (phoneme input to fix names one by one) or Chatterbox on CPU (no GPU on his i7-8550U laptop).
+- **ElevenLabs is geo-blocked on this connection** (redirects to geo-restriction.elevenlabs.io; rechecked 2026-11-16). He has a free key at `C:/Users/WGN/Desktop/Mafia/elevenlabs.key`, 0 credits used. He asked to route it through WireGuard; declined. Regenerate voices offline: Kokoro (phoneme input to fix names one by one) or Chatterbox on CPU (no GPU on his i7-8550U laptop).
 - He reported the name clips sound very bad.
 - Copyrighted game or movie audio (Dota 2, films) was declined.
 
@@ -124,7 +125,7 @@ v2.4 added (all from his 13-point list, 2026-11-15):
 - Playwright tests: `tests/test7.js` (7 single-phone games plus history and stats), `tests/test9.js` (the two newer rules).
 - Multiplayer (run from `tests/multiplayer`; each spawns `mock_srv.py`, a byte-for-byte stand-in for the in-app server, except `test_mp.js` which needs it started by hand): `test_s2.js` (dealing; app restart now rejoins by itself), `test_s3.js cit|maf` (full games), `test_s3b.js` (two Mafia and an offline player), `test_lost.js` (reconnect), `test_drop.js` (stage 4: vote while offline, app restart, stale host address, host killed and resumed), `test_update.js` (rematch both modes, update banner, old-version warnings), `test_online.js [wss://…]` (full online game through the relay: codes, private roles, narration on every phone, dead socket, host resume, wrong code; default local wrangler dev).
 - Relay protocol: `node relay/test_relay.mjs [https://…]` (13 checks).
-- Windows: `python3` is the Store stub, so tests spawn `python` on win32. Playwright is installed with `npm install --no-save playwright`.
+- Windows: `python3` is the Store stub, so tests spawn `python` on win32. Playwright, TypeScript and esbuild are devDependencies in the root `package.json` (`npm install`); run `npm run build` before the tests.
 - Pitfall: Playwright `text=` selectors match any text containing the words, such as a hint sentence. Use `button:has-text("…")`.
 - Bugs already fixed: name clips overwriting each other (each name now has its own file key); the Detective missing their result when acting last (the result now stays visible until the next night).
 

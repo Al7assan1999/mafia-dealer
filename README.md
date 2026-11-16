@@ -16,7 +16,9 @@ An Android app that replaces the dealer in the Mafia party game. Built without t
 ## Layout
 | Path | What it is |
 | --- | --- |
-| `app/assets/index.html` | The whole game: UI, rules engine, sounds, multiplayer client and host |
+| `app/src/` | The game, in TypeScript (see below). Built into `app/assets/app.js` |
+| `app/assets/index.html` | The page: loads `style.css`, `audio.js` and `app.js`; holds the version (`const APP`) |
+| `app/assets/style.css` | All styles, both themes |
 | `app/assets/audio.js` | Narrator clips and name clips in two voices (base64 Opus), packed by `voice/pack.py` |
 | `build/dexasm.py` | Minimal Dalvik assembler (writes `classes.dex`) |
 | `build/app_dex.py` | Native classes: `MainActivity` (WebView), `Voice` (TTS bridge, unused now), `Net` (JS bridge), `Srv` (HTTP server thread) |
@@ -27,7 +29,35 @@ An Android app that replaces the dealer in the Mafia party game. Built without t
 | `relay/` | Online relay: Cloudflare Worker + Durable Object per room (`npx wrangler deploy`), `test_relay.mjs` |
 | `voice/script.py` | v2.1+ narrator script (storyteller and monster voices) and preview page, Chatterbox on CPU |
 
+## The code (`app/src/`)
+The files share one global scope, like the single `<script>` they came from (no `import`/`export`), so inline
+`onclick="…"` handlers and the tests can reach any function. `app/build.mjs` strips the types (esbuild) and joins
+the files **in the order listed in `app/tsconfig.json`**; code that runs at load time must come after the
+constants it uses.
+
+| File | What it holds |
+| --- | --- |
+| `types.ts` | Shapes of the state: `Settings` (S), `Game` (G), `LogEntry`, `Mp` (MP), `MpPlayer`, `MpDeal` |
+| `globals.d.ts` | What comes from outside: `APP`, `CLIPS`/`NAME_ALIAS` (audio.js), the native `Net` bridge |
+| `state.ts` | Saved settings `S`, the game `G`, current screen `V`, `save()`, small helpers |
+| `i18n/en.ts`, `i18n/ar.ts`, `i18n.ts` | UI text (one key per line) and `t()` |
+| `ui.ts`, `nav.ts`, `icons.ts` | Header, sheets, toast; screen navigation and Back; SVG icons and role colours |
+| `audio/sound.ts`, `audio/narrator.ts` | Synthesized effects (`SND`); recorded narrator (`VOX`, `NARR`), suspense reveals |
+| `game/roles.ts` | Role counts and limits, rule presets |
+| `game/flow.ts`, `deal.ts`, `night.ts`, `day.ts`, `end.ts` | The single-phone game, phase by phase (the host reuses it) |
+| `screens/*.ts` | Setup, rules, settings, home, history, stats and profiles, guide |
+| `update.ts`, `accounts.ts`, `group.ts` | Update check and in-app install; accounts; shared group history |
+| `mp/common.ts`, `relay.ts`, `host.ts`, `hostGame.ts`, `client.ts` | Multiplayer: shared state, relay socket, host room, host game, player phone |
+| `main.ts` | `render()`, quitting, the intro, start-up |
+
+```bash
+npm install          # once: TypeScript, esbuild, Playwright
+npm run check        # type-check
+npm run build        # app/src -> app/assets/app.js
+```
+
 ## Build
+`build_apk.py` runs `npm run check` and `npm run build` first, so the APK always has the current code.
 ```bash
 pip install cryptography androguard
 cd build
@@ -57,8 +87,10 @@ Approved name spellings live in `spellings.json`; add names to `names.json` as `
 Needs `../../../hf.key` (a Hugging Face read token) for the model downloads.
 
 ## Tests
+The tests load `app/assets/index.html`, so run `npm run build` after changing `app/src`.
 ```bash
-npm install playwright && npx playwright install chromium
+npm install && npx playwright install chromium
+npm run build
 node tests/test7.js                         # 7 single-phone games + history/stats
 cd tests/multiplayer && python3 mock_srv.py &   # stand-in for the in-app server on port 8765
 node test_s3.js cit                         # full multiplayer game, Citizens win

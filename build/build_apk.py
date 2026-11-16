@@ -13,6 +13,10 @@ OUT = sys.argv[1]
 ASSET_DIR = sys.argv[2]
 ICON = sys.argv[3]
 KEYFILE = sys.argv[4]
+# the game's code lives in app/src (TypeScript): type-check it, then build app/assets/app.js, so the APK never ships a stale app.js
+import subprocess
+for _cmd in ("npm run check", "npm run build"):
+    subprocess.run(_cmd, shell=True, check=True, cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # version comes from the app itself: const APP={code:N,name:'X'} in index.html
 import re as _re
 _m = _re.search(r"const APP=\{code:(\d+),name:'([^']+)'\}", open(os.path.join(ASSET_DIR, 'index.html'), encoding='utf-8').read())

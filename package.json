@@ -1,0 +1,13 @@
+{
+  "name": "mafia-dealer",
+  "private": true,
+  "scripts": {
+    "build": "node app/build.mjs",
+    "check": "tsc -p app"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "playwright": "1.65.1",
+    "typescript": "7.0.2"
+  }
+}

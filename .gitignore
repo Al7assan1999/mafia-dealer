@@ -18,3 +18,4 @@ relay/public/MafiaDealer.apk
 relay/public/version.json
 relay/.dev.vars
 relay/.tgsecret
+app/assets/app.js
