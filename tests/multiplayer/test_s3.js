@@ -7,9 +7,9 @@ const MODE=process.argv[2]||'cit';
 (async()=>{const srv=spawn(process.platform==='win32'?'python':'python3',['mock_srv.py']);await new Promise(r=>setTimeout(r,800));
  const b=await chromium.launch();const errs=[];
  const mk=async(shim,name)=>{const ctx=await b.newContext({viewport:{width:390,height:800},reducedMotion:'reduce'});const p=await ctx.newPage();p.on('pageerror',e=>errs.push(name+': '+e.message));await p.addInitScript(shim);await p.goto(URL);await p.evaluate(n=>{S.mpName=n;S.rules.skip=false;save();},name);return p;};
- const host=await mk(hostShim,'Alhassan');await host.click('text=Play Together');await host.click('#mode-wifi');await host.click('.big2 .btn.primary');
+ const host=await mk(hostShim,'Alhassan');await host.click('#mode-wifi');await host.click('.big2 .btn.primary');
  const names=['Dareer','Sami','Hokan','Farouq'];const P={Alhassan:host};
- for(const n of names){const p=await mk(clientShim,n);await p.click('text=Play Together');await p.click('#mode-wifi');await p.click('.big2 .btn.ghost');P[n]=p;}
+ for(const n of names){const p=await mk(clientShim,n);await p.click('#mode-wifi');await p.click('.big2 .btn.ghost');P[n]=p;}
  for(const n of names)await P[n].waitForFunction(()=>MP.status==='ok',null,{timeout:20000});
  await host.waitForTimeout(800);await host.evaluate(()=>{S.counts={mafia:1,doctor:1,detective:1};render();});
  await host.click('button:has-text("Deal roles")');

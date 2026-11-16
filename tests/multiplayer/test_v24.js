@@ -24,11 +24,11 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  await a.evaluate(()=>{S.vol.voice=1;S.players=['P1','P2','P3','P4','P5','P6'];S.counts={mafia:1,doctor:1,detective:1};save();nav('home');});
  // ---- online room
  await a.evaluate(()=>{S.host.buzzMax=2;S.host.kick='any';S.rules.ghost=true;save();});
- await a.click('text=Play Together');await a.click('#mode-online');await a.click('button:has-text("Host online")');
+ await a.click('#mode-online');await a.click('button:has-text("Host online")');
  await a.waitForFunction(()=>MP.online&&HN.ws&&HN.ws.readyState===1);const code=await a.evaluate(()=>MP.online.code);
  ok(await a.isVisible('button:has-text("Share room code")'),'host lobby has Share room code');
  const names=['Dareer','Sami','Hokan','Farouq','Fater'];const P={};
- for(const n of names){const p=await mk(n);await p.click('text=Play Together');await p.click('#mode-online');await p.fill('#ocode',code);await p.click('button:has-text("Join online")');P[n]=p;}
+ for(const n of names){const p=await mk(n);await p.click('#mode-online');await p.fill('#ocode',code);await p.click('button:has-text("Join online")');P[n]=p;}
  for(const n of names)await P[n].waitForFunction(()=>MP.status==='ok',null,{timeout:15000});
  ok((await P.Sami.textContent('.top .brand b')).includes("Alhassan's room"),'player header shows "Alhassan\'s room"');
  ok(!(await P.Sami.textContent('#lat')).trim(),'no fake "Signal: 0 ms" online');

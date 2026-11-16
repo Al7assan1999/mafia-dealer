@@ -29,7 +29,7 @@ function invBar(){const el=$('inv');if(!el)return;
 function invDone(id: number){INVOFF.push(id);INV=INV.filter(v=>v.id!==id);aReq('/acc/invite/done',{id}).catch(()=>{});invBar();}
 function invJoin(id: number){const v=INV.find(x=>x.id===id);if(!v)return;invDone(id);
   const go=()=>{hush();if(G){stopTimer();if(!G.mp)save();G=null;}if(MP.role==='host')hostStop();else if(MP.role==='client')clientStop(true);
-    $('modal').innerHTML='';MP.lastMode='online';V='mp';joinOnline(v.code);};
+    $('modal').innerHTML='';MP.lastMode='online';V='home';joinOnline(v.code);};
   if(G||MP.role)ask(t('fLeaveQ'),t('fLeaveD'),t('fJoin'),go);else go();}
 
 /* lists and actions */
@@ -74,7 +74,7 @@ function acctCard(id: string){const mine=me()&&me().id===id,f: Friend=mine?Objec
   return `<div class="sec pcard"><div class="meline">${avatarHtml(f?f.avatar:'p:0',id,56)}<div><b>${esc(f?f.display:PROFN)}</b><small style="direction:ltr">${f?'@'+esc(f.uname):t('verifiedAcct')}</small>
     ${f&&f.rel==='ok'?`<small><span class="dot ${f.on?'on':''}"></span>${stTxt(f)}</small>`:''}${f&&f.fav?`<small>${t('aFav')}: <span style="color:${RC[f.fav]};font-weight:800">${t(f.fav)}</span></small>`:''}</div></div>${btn?`<div class="mt">${btn}</div>`:''}</div>`;}
 /* the friends drawer (#fdock, outside #app): a tab on the screen edge, slides out over menus and room lobbies, never during a game */
-const DOCKV=['home','mp','wifi','online','history','stats','profile','guide','settings','rules'];
+const DOCKV=['home','wifi','online','history','stats','profile','guide','settings','rules'];
 const dockShown=()=>!!me()&&!G&&(DOCKV.includes(V)||V.indexOf('game:')===0||V==='host'&&MP.role==='host'&&!MP.game||V==='join'&&!(MP.room&&MP.room.g));
 const dockInvite=()=>MP.online&&(V==='host'&&MP.role==='host'||V==='join'&&MP.status==='ok')?MP.online.code:'';  // in an online lobby: Invite buttons
 let dockAnim=false;  // slide in only when it opens (redrawing must not replay the animation)

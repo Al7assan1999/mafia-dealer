@@ -39,9 +39,9 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  const after=await same.evaluate(()=>({names:G&&G.names.join(),phase:G&&G.phase,log:S.log.length}));
  ok(after.names===before.names&&after.phase==='deal'&&after.log===before.log+1,'Play again: same players, straight to dealing, finished game saved');
  // lobby: an old app joins a new host, and a new app joins with an old one present
- const host=await mk(hostShim,'Alhassan');await host.click('text=Play Together');await host.click('#mode-wifi');await host.click('.big2 .btn.primary');
- const old=await mk(clientShim,'Dareer');await old.evaluate(()=>{APP.code=5;});await old.click('text=Play Together');await old.click('#mode-wifi');await old.click('.big2 .btn.ghost');
- const P=[old];for(const n of ['Sami','Hokan']){const c=await mk(clientShim,n);await c.click('text=Play Together');await c.click('#mode-wifi');await c.click('.big2 .btn.ghost');P.push(c);}
+ const host=await mk(hostShim,'Alhassan');await host.click('#mode-wifi');await host.click('.big2 .btn.primary');
+ const old=await mk(clientShim,'Dareer');await old.evaluate(()=>{APP.code=5;});await old.click('#mode-wifi');await old.click('.big2 .btn.ghost');
+ const P=[old];for(const n of ['Sami','Hokan']){const c=await mk(clientShim,n);await c.click('#mode-wifi');await c.click('.big2 .btn.ghost');P.push(c);}
  for(const c of P)await c.waitForFunction(()=>MP.status==='ok',null,{timeout:20000});
  await host.waitForFunction(()=>document.querySelectorAll('.prs .oldv').length===1,null,{timeout:8000});
  ok((await host.textContent('.prs:has(.oldv)')).includes('Dareer'),'host lobby marks Dareer "old version"');

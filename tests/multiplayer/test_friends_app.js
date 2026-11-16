@@ -27,7 +27,7 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  await a.evaluate(()=>nav('home'));await tick(a);await a.waitForSelector('#fdock .ftab .avt',{timeout:12000});
  ok(await a.waitForFunction(()=>document.querySelector('#fdock .ftab b').textContent==='1',null,{timeout:12000}).then(()=>true,()=>false),'tab: avatar and count of online friends');
  // A hosts online and invites B
- await a.evaluate(()=>nav('home'));await a.click('text=Play Together');await a.click('#mode-online');await a.click('button:has-text("Host online")');
+ await a.evaluate(()=>nav('home'));await a.click('#mode-online');await a.click('button:has-text("Host online")');
  await wait(a,()=>MP.online&&HN.ws&&HN.ws.readyState===1);const code=await a.evaluate(()=>MP.online.code);
  await a.click('button:has-text("Invite friends")');await a.waitForSelector('.fdrawer .prs:has-text("Dareer") button.mini:has-text("Invite")',{timeout:12000});await a.click('.fdrawer button.mini:has-text("Invite")');
  await a.waitForSelector('.fdrawer button.mini:has-text("Invited")[disabled]');ok(true,'lobby: Invite friends opens the drawer; Invite turns into Invited');
@@ -40,7 +40,7 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  // in a room: status shows to friends
  await tick(bp);await a.evaluate(()=>aReq('/acc/friends').then(j=>{FR=j;}));ok(await a.evaluate(()=>FR.friends[0].st==='room'),'Dareer shows "In a room"');
  // C (not a friend) joins: + Add next to C, not next to B
- await c.click('text=Play Together');await c.click('#mode-online');await c.fill('#ocode',code);await c.click('button:has-text("Join online")');await wait(c,()=>MP.status==='ok');
+ await c.click('#mode-online');await c.fill('#ocode',code);await c.click('button:has-text("Join online")');await wait(c,()=>MP.status==='ok');
  await wait(a,()=>Object.values(MP.players).some(q=>q.name==='Sami'&&q.uid));await tick(a);await a.evaluate(()=>render());
  ok(await a.isVisible('.prs:has-text("Sami") button.mini:has-text("+ Add")')&&!(await a.isVisible('.prs:has-text("Dareer") button.mini:has-text("+ Add")')),'host lobby: + Add only next to a non-friend');
  await a.click('.prs:has-text("Sami") button.mini:has-text("+ Add")');await wait(a,()=>Object.values(FREL).includes('out'));

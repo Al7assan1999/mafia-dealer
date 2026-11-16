@@ -4,7 +4,7 @@ An Android app that replaces the dealer in the Mafia party game. Built without t
 
 ## Modes
 - **Pass & Play**: one phone, passed around the table.
-- **Play Together**: every player uses their own phone on the same Wi-Fi or hotspot. The host phone runs a small HTTP server inside the app; the other phones find it automatically.
+- **Local Network (Wi-Fi/Hotspot)**: every player uses their own phone on the same Wi-Fi or hotspot. The host phone runs a small HTTP server inside the app; the other phones find it automatically.
 - **Play Online**: friends anywhere join with a 6-digit room code through a small Cloudflare relay (`relay/`). The host phone still runs the game; narration plays on every phone.
 
 ## Features

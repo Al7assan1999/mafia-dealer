@@ -12,7 +12,7 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  const mk=async(shim,name)=>{const p=await (await b.newContext({viewport:{width:390,height:800},reducedMotion:'reduce'})).newPage();p.on('pageerror',e=>errs.push(name+': '+e.message));
    await p.addInitScript(shim);await p.goto(URL);await p.evaluate(n=>{S.mpName=n;S.rules.ghost=true;S.rules.skip=false;save();},name);return p;};
  const join=async c=>{await c.evaluate(()=>{V='wifi';joinStart();});await c.waitForFunction(()=>MP.status==='ok',null,{timeout:20000});};
- const host=await mk(hostShim,'Alhassan');await host.click('text=Play Together');await host.click('#mode-wifi');await host.click('.big2 .btn.primary');
+ const host=await mk(hostShim,'Alhassan');await host.click('#mode-wifi');await host.click('.big2 .btn.primary');
  const names=['Dareer','Sami','Hokan','Farouq'],P={Alhassan:host};
  for(const n of names){P[n]=await mk(clientShim,n);await join(P[n]);}
  // (9) rules shown to players, (3) share + copy

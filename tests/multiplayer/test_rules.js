@@ -27,11 +27,11 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  await p.click('.sheet .btn.ghost');ok(await p.evaluate(()=>S.players.length===6),'Cancel keeps the player');
  await p.click('.prow .x >> nth=0');await p.click('.sheet .btn.primary');ok(await p.evaluate(()=>S.players.length===5&&S.players[0]==='P2'),'confirm removes the player');
  // rooms: closing / leaving always asks (button, header arrow, phone Back)
- const h=await mk(hostShim,'Host');await h.click('text=Play Together');await h.click('#mode-wifi');await h.click('.big2 .btn.primary');
+ const h=await mk(hostShim,'Host');await h.click('#mode-wifi');await h.click('.big2 .btn.primary');
  await h.click('button.danger:has-text("Close room")');ok(await h.isVisible('.sheet:has-text("Close")'),'Close room asks even with nobody in it');await h.click('.sheet .btn.ghost');
  await h.click('.top .pill');await h.waitForTimeout(500);ok(await h.isVisible('.sheet')&&await h.evaluate(()=>V==='host'&&MP.role==='host'),'header back arrow asks; room stays open');await h.click('.sheet .btn.ghost');
  await h.evaluate(()=>history.back());await h.waitForTimeout(500);ok(await h.isVisible('.sheet')&&await h.evaluate(()=>MP.role==='host'),'phone Back button asks; room stays open');
- const c=await mk(clientShim,'Pia');await c.click('text=Play Together');await c.click('#mode-wifi');await c.click('.big2 .btn.ghost');await c.waitForFunction(()=>MP.status==='ok',null,{timeout:15000});
+ const c=await mk(clientShim,'Pia');await c.click('#mode-wifi');await c.click('.big2 .btn.ghost');await c.waitForFunction(()=>MP.status==='ok',null,{timeout:15000});
  await c.click('button.danger:has-text("Leave")');ok(await c.isVisible('.sheet:has-text("You will leave the room")'),'player Leave in the lobby asks first');
  await c.click('.sheet .btn.primary');await c.waitForTimeout(600);ok(await c.evaluate(()=>MP.role===null&&V==='wifi'),'confirm leaves the room');
  await h.click('.sheet .btn.primary');await h.waitForTimeout(600);ok(await h.evaluate(()=>MP.role===null&&V==='wifi'),'host confirms: room closed');

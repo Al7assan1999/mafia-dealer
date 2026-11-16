@@ -2,7 +2,7 @@
 let lastRenderKey='';  // a new screen gets the fade-in animation
 function render(){
   let h;
-  if(!G)h=V==='setup'?setupView():V==='history'?historyView():V==='stats'?statsView():V==='guide'?guideView():V==='account'?accountView():V==='forgot'?forgotView():V==='profile'?profileView():V==='friends'?friendsView():V==='rules'?rulesView():V==='settings'?settingsView():V==='mp'?mpView():V==='wifi'?wifiView():V==='online'?onlineView():V==='host'?hostView():V==='join'?joinView():V.indexOf('game:')===0?gameView(+V.slice(5)):homeView();
+  if(!G)h=V==='setup'?setupView():V==='history'?historyView():V==='stats'?statsView():V==='guide'?guideView():V==='account'?accountView():V==='forgot'?forgotView():V==='profile'?profileView():V==='friends'?friendsView():V==='rules'?rulesView():V==='settings'?settingsView():V==='wifi'?wifiView():V==='online'?onlineView():V==='host'?hostView():V==='join'?joinView():V.indexOf('game:')===0?gameView(+V.slice(5)):homeView();
   else{
     const v={mpNight:mpNightView,mpVote:mpVoteView,deal:dealView,nightPass:nightPassView,nightAct:nightActView,nightDone:nightDoneView,dawn:dawnView,morning:morningView,day:dayView,ballotPass:ballotPassView,ballotAct:ballotActView,verdict:verdictView,end:endView}[G.phase];
     h=v();
@@ -27,7 +27,7 @@ function showQuit(){
 }
 function keepPlaying(){$('modal').innerHTML='';enterGame();}
 function quitGame(){hush();$('modal').innerHTML='';if(G&&G.mp){stopTimer();G=null;hostBackRoom();V='host';render();return;}stopTimer();save();G=null;resumeOffer=!!S.game;V='home';render();}
-{const J=lsGet(JNK);if(J&&(S.mpName||'').trim()&&(J.online||hasNet()))setTimeout(()=>{V='mp';J.online?joinOnline(J.online.code):joinStart();},0);}
+{const J=lsGet(JNK);if(J&&(S.mpName||'').trim()&&(J.online||hasNet()))setTimeout(()=>{V='home';J.online?joinOnline(J.online.code):joinStart();},0);}
 for(const m of Object.keys(NARR)){const f=NARR[m];NARR[m]=(...a)=>{f(...a);if(MP.role==='host'&&MP.online&&HN&&HN.bc)HN.bc({narr:m,a});};}
 const INTRO=[['users','introT1','introD1'],['eye','introT2','introD2'],['moon','introT3','introD3']];
 function showIntro(i){i=i||0;const [ic,tt,dd]=INTRO[i];

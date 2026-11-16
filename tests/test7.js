@@ -3,7 +3,7 @@ const {chromium}=require('playwright');
 const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('console',m=>{if(m.type()==='error')errs.push(m.text())});
 await p.goto(''+require('url').pathToFileURL(require('path').resolve(__dirname,'../app/assets/index.html')).href+'');await p.screenshot({path:'h1.png'});
 async function game(names,valid,i){
- await p.click('text=New game');
+ await p.click('#mode-offline');
  await p.evaluate(n=>{S.players=n;render();},names);
  if(i==0)await p.screenshot({path:'h2.png',fullPage:false});
  await p.click('text=Shuffle & Deal Roles');

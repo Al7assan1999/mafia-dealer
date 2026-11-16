@@ -10,12 +10,12 @@ const ok=(c,msg)=>{if(!c){console.log('FAIL',msg);process.exitCode=1;}else conso
    p.on('pageerror',e=>errs.push(name+': '+e.message));await p.goto(URL);
    await p.evaluate(([n,r])=>{S.mpName=n;S.rules.skip=false;S.relay=r;save();
      window.__narr=[];for(const m in NARR){const f=NARR[m];NARR[m]=(...a)=>{__narr.push(m);return f(...a);};}},[name,RELAY]);await signup(p,name);return p;};
- const host=await mk('Alhassan');await host.click('text=Play Together');await host.click('#mode-online');await host.click('button:has-text("Host online")');
+ const host=await mk('Alhassan');await host.click('#mode-online');await host.click('button:has-text("Host online")');
  await host.waitForFunction(()=>MP.online&&HN.ws&&HN.ws.readyState===1,null,{timeout:10000});
  const code=await host.evaluate(()=>MP.online.code);
  ok(/^\d{6}$/.test(code)&&(await host.textContent('.big')).replace(/\s/g,'').includes(code),'host shows a 6-digit room code: '+code);
  const names=['Dareer','Sami','Hokan','Farouq'];const P={Alhassan:host};
- for(const n of names){const p=await mk(n);await p.click('text=Play Together');await p.click('#mode-online');await p.fill('#ocode',code);await p.click('button:has-text("Join online")');P[n]=p;}
+ for(const n of names){const p=await mk(n);await p.click('#mode-online');await p.fill('#ocode',code);await p.click('button:has-text("Join online")');P[n]=p;}
  for(const n of names)await P[n].waitForFunction(()=>MP.status==='ok',null,{timeout:15000});
  ok(true,'4 players joined by code');
  await host.waitForFunction(()=>Object.values(MP.players).filter(q=>q.on).length===4,null,{timeout:10000});
@@ -71,6 +71,6 @@ const ok=(c,msg)=>{if(!c){console.log('FAIL',msg);process.exitCode=1;}else conso
  ok((await P.Farouq.$eval('.recap .res',e=>e.textContent)).length>0,'end screen on a player phone: '+await P.Farouq.$eval('.recap .res',e=>e.textContent));
  ok(await P.Farouq.evaluate(()=>__narr.includes('citizensWin')),'winner narration on player phones');
  // a wrong code is rejected
- const x=await mk('Fater');await x.click('text=Play Together');await x.click('#mode-online');await x.fill('#ocode','000001');await x.click('button:has-text("Join online")');
+ const x=await mk('Fater');await x.click('#mode-online');await x.fill('#ocode','000001');await x.click('button:has-text("Join online")');
  await x.waitForFunction(()=>MP.status==='noroom',null,{timeout:15000});ok(true,'wrong room code: "Room not found"');
  console.log('errs',errs);if(errs.length)process.exitCode=1;await b.close();})();

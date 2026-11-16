@@ -15,7 +15,7 @@ function png(w,h){const crc=b=>{let c,k,t=[];for(let n=0;n<256;n++){c=n;for(k=0;
  const uA='al'+Math.random().toString(36).slice(2,9),uB='da'+Math.random().toString(36).slice(2,9);
  const a=await mk('A');
  // online blocked without an account
- await a.click('text=Play Together');await a.click('#mode-online');await a.click('button:has-text("Host online")');
+ await a.click('#mode-online');await a.click('button:has-text("Host online")');
  ok(await a.evaluate(()=>V==='account'),'Host online without an account opens the sign-in screen');
  // sign up through the screens
  await a.click('.seg button:has-text("Create account")');await a.fill('#aun',uA);await a.fill('#apw','secret12');await a.fill('#apw2','secret12');await a.click('.sec .btn.primary');
@@ -30,12 +30,12 @@ function png(w,h){const crc=b=>{let c,k,t=[];for(let n=0;n<256;n++){c=n;for(k=0;
  await a.evaluate(()=>nav('home'));await a.waitForFunction(()=>{const i=document.querySelector('.ib.acc img');return i&&i.complete&&i.naturalWidth>0;},null,{timeout:10000});
  ok(true,'uploaded photo is resized, saved and shown in the corner');
  // name comes from the profile
- await a.click('text=Play Together');ok(await a.isVisible('.meline:has-text("Alhassan")')&&!(await a.$('.sec input.search')),'Play Together uses the profile name (no name to type)');
+ await a.click('#mode-wifi');ok(await a.isVisible('.meline:has-text("Alhassan")')&&!(await a.$('.sec input.search')),'Local Network uses the profile name (no name to type)');await a.evaluate(()=>nav('home'));
  // second account, online room with avatars
  const bp=await mk('B');await bp.evaluate(u=>aReq('/acc/signup',{uname:u,pass:'secret12'}).then(r=>{signedIn(r);return aReq('/acc/profile',{display:'Dareer',avatar:'p:1'});}).then(j=>{S.acct.u=j.user;save();}),uB);
  await a.click('#mode-online');await a.click('button:has-text("Host online")');await a.waitForFunction(()=>MP.online&&HN.ws&&HN.ws.readyState===1,null,{timeout:10000});
  const code=await a.evaluate(()=>MP.online.code);
- await bp.evaluate(()=>{S.mpName='Somebody else';save();});await bp.click('text=Play Together');await bp.click('#mode-online');await bp.fill('#ocode',code);await bp.click('button:has-text("Join online")');
+ await bp.evaluate(()=>{S.mpName='Somebody else';save();});await bp.click('#mode-online');await bp.fill('#ocode',code);await bp.click('button:has-text("Join online")');
  await bp.waitForFunction(()=>MP.status==='ok',null,{timeout:15000});
  await a.waitForFunction(()=>Object.values(MP.players).some(q=>q.name==='Dareer'&&q.uid),null,{timeout:10000});
  ok(await a.evaluate(()=>{const q=Object.values(MP.players)[0];return q.name==='Dareer'&&q.uid===q.uid&&q.uav==='p:1';}),'host sees the verified profile name and avatar (typed name ignored)');

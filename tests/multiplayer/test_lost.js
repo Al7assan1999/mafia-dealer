@@ -6,8 +6,8 @@ const clientShim=()=>{window.Net={start(){},put(){},take(){return null},clear(){
 (async()=>{let srv=spawn(process.platform==='win32'?'python':'python3',['mock_srv.py']);await new Promise(r=>setTimeout(r,800));
  const b=await chromium.launch();const errs=[];
  const mk=async(shim,name)=>{const p=await (await b.newContext({viewport:{width:390,height:780},reducedMotion:'reduce'})).newPage();p.on('pageerror',e=>errs.push(e.message));await p.addInitScript(shim);await p.goto(URL);await p.evaluate(n=>{S.mpName=n;S.mpLastHost=null;save();},name);return p;};
- const host=await mk(hostShim,'Alhassan');await host.click('text=Play Together');await host.click('#mode-wifi');await host.click('.big2 .btn.primary');
- const c=await mk(clientShim,'Farouq');await c.click('text=Play Together');await c.click('#mode-wifi');await c.click('.big2 .btn.ghost');
+ const host=await mk(hostShim,'Alhassan');await host.click('#mode-wifi');await host.click('.big2 .btn.primary');
+ const c=await mk(clientShim,'Farouq');await c.click('#mode-wifi');await c.click('.big2 .btn.ghost');
  await c.waitForFunction(()=>MP.status==='ok',null,{timeout:15000});console.log('joined');
  srv.kill();await c.waitForFunction(()=>MP.status==='lost',null,{timeout:15000});console.log('client shows lost');await c.screenshot({path:'m5.png'});
  srv=spawn(process.platform==='win32'?'python':'python3',['mock_srv.py']);await new Promise(r=>setTimeout(r,800));

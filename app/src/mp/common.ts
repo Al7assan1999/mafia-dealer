@@ -5,13 +5,8 @@ const hasNet=()=>!!(window.Net&&window.Net.put);
 function myId(){let id=null;try{id=localStorage.getItem('mafiaDealer.id');}catch(e){}if(!id){id=Math.random().toString(36).slice(2,10);try{localStorage.setItem('mafiaDealer.id',id);}catch(e){}}return id;}
 function parseIp(str){const [a,b]=String(str||'0,0').split(',').map(Number);const d=n=>n?[n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255].join('.'):'';return{ip:d(a),gw:d(b)};}
 function buzzFx(){try{navigator.vibrate&&navigator.vibrate([90,60,90]);}catch(e){}SND.unlock();SND.hit(false);const f=$('flash');if(f){f.classList.remove('go');void f.offsetWidth;f.classList.add('go');}}
-function mpView(){
-  return head(t('mpT'))+`
-  <div class="sec"><div class="flbl" style="margin-top:0">${t('yourName')}</div>${me()?`<div class="meline">${avatarHtml(me().avatar,me().id,40)}<div><b>${esc(me().display)}</b><small>${t('fromProfile')}</small></div></div>`:`<input class="search" style="margin:0" maxlength="18" value="${esc(S.mpName||'')}" oninput="S.mpName=this.value;persist()"><p class="mpinfo" style="margin:8px 0 0">${t('aNameTip')}</p>`}</div>
-  ${resumeMpBtn()}
-  <button class="tile t1" id="mode-wifi" onclick="nav('wifi')"><i class="ti">${IC.wifi}</i><b>${t('modeWifi')}</b><small>${t('modeWifiSub')}</small><span class="go">›</span></button>
-  <button class="tile t2" id="mode-online" onclick="nav('online')"><i class="ti">${IC.globe}</i><b>${t('modeOnline')}</b><small>${t('modeOnlineSub')}</small><span class="go">›</span></button>`;}
-function wifiView(){return head(t('modeWifi'))+`<p class="mpinfo">${t('mpInfo')}</p><div class="big2"><button class="btn primary" onclick="hostStart()">${t('host')}<small>${t('hostSub')}</small></button><button class="btn ghost" onclick="joinStart()">${t('join')}<small>${t('joinSub')}</small></button></div>`;}
+const nameBox=()=>`<div class="sec"><div class="flbl" style="margin-top:0">${t('yourName')}</div>${me()?`<div class="meline">${avatarHtml(me().avatar,me().id,40)}<div><b>${esc(me().display)}</b><small>${t('fromProfile')}</small></div></div>`:`<input class="search" style="margin:0" maxlength="18" value="${esc(S.mpName||'')}" oninput="S.mpName=this.value;persist()"><p class="mpinfo" style="margin:8px 0 0">${t('aNameTip')}</p>`}</div>`;
+function wifiView(){return head(t('modeWifi'))+nameBox()+`<p class="mpinfo">${t('mpInfo')}</p><div class="big2"><button class="btn primary" onclick="hostStart()">${t('host')}<small>${t('hostSub')}</small></button><button class="btn ghost" onclick="joinStart()">${t('join')}<small>${t('joinSub')}</small></button></div>`;}
 function onlineView(){return head(t('modeOnline'))+`<p class="mpinfo">${t('onlineSub')}</p>
    <div class="sec"><div class="flbl" style="margin-top:0">${t('roomCode')}</div><input id="ocode" class="search codein" inputmode="numeric" maxlength="7" placeholder="000000">
    <div class="big2"><button class="btn primary" onclick="hostStart(true)">${t('hostOnline')}</button><button class="btn ghost" onclick="joinOnline($('ocode').value)">${t('joinOnline')}</button></div>

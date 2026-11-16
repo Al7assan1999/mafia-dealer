@@ -1,6 +1,6 @@
 const {chromium}=require('playwright');
 (async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:390,height:780},reducedMotion:'reduce'});const errs=[];p.on('pageerror',e=>errs.push(e.message));
-await p.goto(''+require('url').pathToFileURL(require('path').resolve(__dirname,'../app/assets/index.html')).href+'');await p.click('text=New game');
+await p.goto(''+require('url').pathToFileURL(require('path').resolve(__dirname,'../app/assets/index.html')).href+'');await p.click('#mode-offline');
 await p.evaluate(()=>{S.rules.norep=true;S.rules.saverev=true;save();});  // rules now live on the Game rules screen
 await p.evaluate(()=>{S.players=['Dareer','Halawy','Farouq','Sami','Hokan','Khaddour'];window.__pl=[];const o=VOX.play;VOX.play=(k,d,c)=>{__pl.push(k.filter(Boolean).join('+'));o(k,d,c);};render();});
 console.log('rules',await p.evaluate(()=>S.rules.norep+','+S.rules.saverev));

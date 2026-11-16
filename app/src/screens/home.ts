@@ -3,8 +3,9 @@ function homeView(){const best=stats().best;
   return `${prefBtns()}<div class="hero"><div class="logo">${IC.logo}</div><h1>Mafia Dealer</h1><p>${t('tag')}</p></div>
   ${updBanner()}${resumeMpBtn()}${S.game?`<button class="btn gold" onclick="resumeGame()">${t('resumeGame')} <small>· ${t('round')} ${S.game.day}</small></button>
   <button class="link discard" onclick="ask(t('discardQ'),t('discardD'),t('discard'),discardGame)">${t('discard')}</button>`:''}
-  <button class="mode primary" onclick="nav('setup')"><i class="mi">${IC.phone}</i><span><b>${t('newGame')}</b><small>${t('newGameSub')}</small></span></button>
-  <button class="mode ghost" onclick="nav('mp')"><i class="mi">${IC.users}</i><span><b>${t('mpT')}</b><small>${t('mpSub')}</small></span></button>
+  <button class="mode primary" id="mode-offline" onclick="nav('setup')"><i class="mi">${IC.phone}</i><span><b>${t('newGame')}</b><small>${t('newGameSub')}</small></span></button>
+  <button class="mode ghost" id="mode-wifi" onclick="nav('wifi')"><i class="mi">${IC.wifi}</i><span><b>${t('modeWifi')}</b><small>${t('modeWifiSub')}</small></span></button>
+  <button class="mode ghost" id="mode-online" onclick="nav('online')"><i class="mi">${IC.globe}</i><span><b>${t('modeOnline')}</b><small>${t('modeOnlineSub')}</small></span></button>
   <div class="row3"><button onclick="nav('history')">${t('historyT')}<small>${LOG().length}${S.group?' · '+t('gTag'):''}</small></button><button onclick="nav('stats')">${t('statsT')}</button><button onclick="nav('guide')">${t('guideT')}</button></div>
   ${best?`<div class="crown">${IC.trophy}<span>${t('bestNow',{n:esc(best.name)})} · ${Math.round(best.r*100)}%</span></div>`:''}
   <button class="ver" onclick="checkNow()">v${APP.name} · ${t('checkUpd')}</button>`;}
