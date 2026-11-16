@@ -2,7 +2,7 @@
 let lastRenderKey='';  // a new screen gets the fade-in animation
 function render(){
   let h;
-  if(!G)h=V==='setup'?setupView():V==='history'?historyView():V==='stats'?statsView():V==='guide'?guideView():V==='account'?accountView():V==='forgot'?forgotView():V==='profile'?profileView():V==='rules'?rulesView():V==='settings'?settingsView():V==='mp'?mpView():V==='wifi'?wifiView():V==='online'?onlineView():V==='host'?hostView():V==='join'?joinView():V.indexOf('game:')===0?gameView(+V.slice(5)):homeView();
+  if(!G)h=V==='setup'?setupView():V==='history'?historyView():V==='stats'?statsView():V==='guide'?guideView():V==='account'?accountView():V==='forgot'?forgotView():V==='profile'?profileView():V==='friends'?friendsView():V==='rules'?rulesView():V==='settings'?settingsView():V==='mp'?mpView():V==='wifi'?wifiView():V==='online'?onlineView():V==='host'?hostView():V==='join'?joinView():V.indexOf('game:')===0?gameView(+V.slice(5)):homeView();
   else{
     const v={mpNight:mpNightView,mpVote:mpVoteView,deal:dealView,nightPass:nightPassView,nightAct:nightActView,nightDone:nightDoneView,dawn:dawnView,morning:morningView,day:dayView,ballotPass:ballotPassView,ballotAct:ballotActView,verdict:verdictView,end:endView}[G.phase];
     h=v();
@@ -36,6 +36,7 @@ function showIntro(i){i=i||0;const [ic,tt,dd]=INTRO[i];
   const el=document.querySelector('#modal .intro');if(el)el.innerHTML=body;else $('modal').innerHTML=`<div class="intro">${body}</div>`;}
 function introDone(){S.intro=1;save();$('modal').innerHTML='';}
 if(!S.intro&&!navigator.webdriver)setTimeout(showIntro,400);  // automated test browsers skip it
-setTimeout(()=>checkUpdate(true),1500);setTimeout(acctRefresh,1800);setTimeout(gSync,2000);  // every app start: version.json is a free static file
+setTimeout(()=>checkUpdate(true),1500);setTimeout(acctRefresh,1800);setTimeout(gSync,2000);setTimeout(inboxTick,2500);  // every app start: version.json is a free static file
+setInterval(inboxTick,10000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)inboxTick();});  // friends: invites, requests, online status
 window.addEventListener('popstate',()=>{if(G){if(G.phase==='end'){finish();return;}showQuit();}else if(inRoom()){try{history.pushState({v:1},'');}catch(e){}askLeaveRoom();}else if(V!=='home')popNav();});
 render();

@@ -9,7 +9,7 @@ function avatarHtml(av,uid,size){size=size||40;av=av||'p:0';
 const me=()=>S.acct&&S.acct.u;
 function signedIn(r){S.acct={tok:r.tok,u:r.user};S.mpName=r.user.display;save();}
 function acctRefresh(){if(S.acct)aReq('/acc/me').then(j=>{S.acct.u=j.user;S.mpName=j.user.display;save();if(V==='account'||V==='home')render();}).catch(()=>{});}
-const AERR={uname:'aErrUname',pass:'aErrPass',taken:'aErrTaken',wrong:'aErrWrong',locked:'aErrLocked',nouser:'aErrNouser',notg:'aErrNotg',code:'aErrCode',avatar:'aErrAvatar'};
+const AERR={uname:'aErrUname',pass:'aErrPass',taken:'aErrTaken',wrong:'aErrWrong',locked:'aErrLocked',nouser:'aErrNouser',notg:'aErrNotg',code:'aErrCode',avatar:'aErrAvatar',self:'aErrSelf',full:'aErrFull',slow:'aErrSlow',notfriend:'aErrNotfriend'};
 const aErr=e=>toast(t(AERR[e&&e.code]||'gOffline'));
 let AF: {mode:string;av:string;busy:boolean;dn?:string;fav?:string}={mode:'in',av:null,busy:false};  // account form
 function acctSubmit(){if(AF.busy)return;const un=$('aun').value.trim(),pw=$('apw').value;

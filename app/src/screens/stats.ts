@@ -12,10 +12,10 @@ function stats(){const P: Record<string,PlayerStat>={};
   return{board,best:board.find(p=>p.q)||null,bestMafia:bm,bestDet:top(p=>p.ct),bestDoc:top(p=>p.sv),firstKilled:top(p=>p.fk)};}
 let BOARD: PlayerStat[]=[],PROF: string=null;
 const seatKey=(g,i)=>g.acc&&g.acc[i]?'a:'+g.acc[i]:nkey(g.names[i]);  // accounts first, typed names otherwise
-let PROFN='';
-function openProfile(i){PROF=BOARD[i]&&BOARD[i].key;PROFN=BOARD[i]&&BOARD[i].name;if(PROF)nav('profile');}
-function profileView(){const k=PROF||'',games=LOG().filter(g=>g.valid&&g.names.some((n,i)=>seatKey(g,i)===k));
-  if(!games.length)return head(esc(PROFN||''))+`<div class="empty">${t('noStats')}</div>`;
+let PROFN='',profRet='stats';  // the screen Back returns to
+function openProfile(i){const p=BOARD[i];if(!p)return;if(p.key.indexOf('a:')===0){openAcct(p.key.slice(2),p.name);return;}PROF=p.key;PROFN=p.name;profRet=V;nav('profile');}
+function profileView(){const k=PROF||'',games=LOG().filter(g=>g.valid&&g.names.some((n,i)=>seatKey(g,i)===k)),acc=k.indexOf('a:')===0;
+  if(!games.length)return head(esc(PROFN||''))+(acc?acctCard(k.slice(2)):'')+`<div class="empty">${t(acc?'fNoGames':'noStats')}</div>`;
   const R={mafia:[0,0],doctor:[0,0],detective:[0,0],citizen:[0,0]},by: Record<string,{n:string;c:number}>={};let w=0,sv=0,ct=0,kd=0,vo=0,form=[];
   games.forEach(g=>{const i=g.names.findIndex((n,j)=>seatKey(g,j)===k),r=g.roles[i],x=won(g,i),e: Partial<GameEv>=g.ev||{};R[r][0]++;if(x){R[r][1]++;w++;}if(form.length<8)form.push(x);
     sv+=(e.saves||[]).filter(q=>q===i).length;ct+=(e.caught||[]).filter(q=>+String(q).split(':')[0]===i).length;vo+=(e.outs||[]).filter(q=>q===i).length;
@@ -23,8 +23,7 @@ function profileView(){const k=PROF||'',games=LOG().filter(g=>g.valid&&g.names.s
   const pct=(a,b)=>b?Math.round(a/b*100)+'%':'–',side=[R.doctor,R.detective,R.citizen].reduce((a,b)=>[a[0]+b[0],a[1]+b[1]],[0,0]);
   const best=Object.keys(R).filter(r=>R[r][0]>=2).sort((a,b)=>(R[b][1]/R[b][0]-R[a][1]/R[a][0])||(R[b][0]-R[a][0]))[0]||Object.keys(R).sort((a,b)=>R[b][0]-R[a][0])[0];
   const nem=Object.values(by).sort((a,b)=>b.c-a.c)[0];
-  const isMe=me()&&k==='a:'+me().id;
-  return head(esc(PROFN))+(k.indexOf('a:')===0?`<div class="meline" style="margin:-6px 0 14px">${isMe?avatarHtml(me().avatar,me().id,40):avatarHtml('p:0','',40)}<div><b>${esc(PROFN)}</b><small>${t('verifiedAcct')}</small></div></div>`:'')+`<div class="titles"><div class="ttl wide"><i>${t('winRate')}</i><b>${pct(w,games.length)}</b><span>${t('winsOf',{w,g:games.length})}</span></div>
+  return head(esc(PROFN))+(acc?acctCard(k.slice(2)):'')+`<div class="titles"><div class="ttl wide"><i>${t('winRate')}</i><b>${pct(w,games.length)}</b><span>${t('winsOf',{w,g:games.length})}</span></div>
     <div class="ttl"><i>${t('bestRole')}</i><b style="color:${RC[best]}">${t(best)}</b><span>${t('winsOf',{w:R[best][1],g:R[best][0]})}</span></div>
     <div class="ttl"><i>${t('asMafiaT')}</i><b>${pct(R.mafia[1],R.mafia[0])}</b><span>${t('winsOf',{w:R.mafia[1],g:R.mafia[0]})}</span></div>
     <div class="ttl"><i>${t('asTownT')}</i><b>${pct(side[1],side[0])}</b><span>${t('winsOf',{w:side[1],g:side[0]})}</span></div>

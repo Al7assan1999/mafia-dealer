@@ -159,6 +159,7 @@ async function sha(x) { return [...new Uint8Array(await crypto.subtle.digest("SH
 
 // ---------------------------------------------------------------- accounts
 const UNAME = /^[A-Za-z0-9_.]{3,20}$/, ROLES = ["", "mafia", "doctor", "detective", "citizen"], CODE_TTL = 15 * 60e3;
+const ONLINE_MS = 2 * 60e3, INVITE_TTL = 30 * 60e3, MAX_FRIENDS = 300, INVITES_PER_HOUR = 30;
 const rnd = n => [...crypto.getRandomValues(new Uint8Array(n))].map(b => b.toString(16).padStart(2, "0")).join("");
 async function pbkdf2(pass, salt) {
   const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(pass), "PBKDF2", false, ["deriveBits"]);
@@ -174,7 +175,18 @@ export class Accounts {
       display TEXT, avatar TEXT DEFAULT 'p:0', av INTEGER DEFAULT 0, fav TEXT DEFAULT '', tg TEXT, fails INTEGER DEFAULT 0, lock INTEGER DEFAULT 0, created INTEGER)`);
     this.sql.exec("CREATE TABLE IF NOT EXISTS sessions(th TEXT PRIMARY KEY, uid TEXT, created INTEGER)");
     this.sql.exec("CREATE TABLE IF NOT EXISTS codes(code TEXT PRIMARY KEY, kind TEXT, uid TEXT, ok INTEGER DEFAULT 0, created INTEGER)");
+    // friends (v2.9): one row per pair, a = who asked; state 'req' until b accepts, then 'ok'
+    this.sql.exec("CREATE TABLE IF NOT EXISTS friends(a TEXT, b TEXT, state TEXT, created INTEGER, PRIMARY KEY(a,b))");
+    this.sql.exec("CREATE TABLE IF NOT EXISTS invites(id INTEGER PRIMARY KEY AUTOINCREMENT, frm TEXT, too TEXT, code TEXT, created INTEGER)");
+    // online status: seen = last inbox check, st = '' | 'room' | 'game', hide = "Show me as online" switched off
+    for (const c of ["seen INTEGER DEFAULT 0", "st TEXT DEFAULT ''", "hide INTEGER DEFAULT 0"]) try { this.sql.exec("ALTER TABLE users ADD COLUMN " + c); } catch (e) {}  // already there
   }
+  rel(me, id) {  // 'ok' friends, 'out' I asked, 'in' they asked, '' nothing
+    const r = this.one("SELECT * FROM friends WHERE (a=? AND b=?) OR (a=? AND b=?)", me, id, id, me);
+    return !r ? "" : r.state === "ok" ? "ok" : r.a === me ? "out" : "in";
+  }
+  onl(r) { return !r.hide && r.seen > Date.now() - ONLINE_MS; }
+  card(r, rel) { const c = Object.assign(this.pub(r), { rel }); delete c.tg; if (rel === "ok") { c.on = this.onl(r); c.st = c.on ? r.st || "" : ""; } return c; }
   one(q, ...b) { return this.sql.exec(q, ...b).toArray()[0] || null; }
   pub(r) { return { id: r.id, uname: r.uname, display: r.display, fav: r.fav || "", avatar: r.avatar && r.avatar.startsWith("data:") ? "i:" + r.av : (r.avatar || "p:0"), tg: !!r.tg }; }
   async session(uid) { const tok = rnd(32); this.sql.exec("INSERT INTO sessions VALUES(?,?,?)", await sha(tok), uid, Date.now()); return tok; }
@@ -191,6 +203,7 @@ export class Accounts {
     let body = {};
     if (req.method === "POST") { const t = await req.text(); if (t.length > 300000) return out({ err: "too big" }, 413); try { body = t ? JSON.parse(t) : {}; } catch (e) { return out({ err: "bad json" }, 400); } }
     this.sql.exec("DELETE FROM codes WHERE created<?", Date.now() - CODE_TTL);
+    this.sql.exec("DELETE FROM invites WHERE created<?", Date.now() - INVITE_TTL);
 
     if (p === "/internal/verify") {  // called by Room objects only (this path is not routed from outside)
       const m = String(body.tok || ""); if (!/^[a-f0-9]{64}$/.test(m)) return out({}, 403);
@@ -277,8 +290,65 @@ export class Accounts {
     if (p === "/acc/delete") {
       if (!same(await pbkdf2(String(body.pass || ""), me.salt), me.hash)) return out({ err: "wrong" }, 401);
       for (const t of ["sessions", "codes"]) this.sql.exec(`DELETE FROM ${t} WHERE uid=?`, me.id);
+      this.sql.exec("DELETE FROM friends WHERE a=? OR b=?", me.id, me.id); this.sql.exec("DELETE FROM invites WHERE frm=? OR too=?", me.id, me.id);
       this.sql.exec("DELETE FROM users WHERE id=?", me.id); return out({ ok: true });
     }
+    // ---- friends
+    if (p === "/acc/inbox") {  // every ~10 s while the app is open: records online status, returns invites and requests
+      const st = ["", "room", "game"].includes(body.st) ? body.st : "", hide = body.hide ? 1 : 0, now = Date.now();
+      if (now - me.seen > 30e3 || st !== (me.st || "") || hide !== me.hide) this.sql.exec("UPDATE users SET seen=?, st=?, hide=? WHERE id=?", now, st, hide, me.id);
+      const inv = this.sql.exec("SELECT i.id AS iid, i.code AS icode, i.created AS iat, u.* FROM invites i JOIN users u ON u.id=i.frm WHERE i.too=? ORDER BY i.created DESC LIMIT 10", me.id).toArray()
+        .map(r => ({ id: r.iid, code: r.icode, at: r.iat, from: this.card(r, "ok") }));
+      const rel = {}; let on = 0;
+      for (const f of this.sql.exec("SELECT f.a, f.b, f.state, u.seen, u.hide FROM friends f JOIN users u ON u.id = CASE WHEN f.a=? THEN f.b ELSE f.a END WHERE f.a=? OR f.b=?", me.id, me.id, me.id).toArray()) {
+        const id = f.a === me.id ? f.b : f.a; rel[id] = f.state === "ok" ? "ok" : f.a === me.id ? "out" : "in";
+        if (f.state === "ok" && this.onl(f)) on++;
+      }
+      return out({ inv, rel, on, req: Object.values(rel).filter(x => x === "in").length });
+    }
+    if (p === "/acc/friends") {
+      const rows = this.sql.exec("SELECT f.a, f.state, u.* FROM friends f JOIN users u ON u.id = CASE WHEN f.a=? THEN f.b ELSE f.a END WHERE f.a=? OR f.b=?", me.id, me.id, me.id).toArray();
+      const cards = rows.map(r => this.card(r, r.state === "ok" ? "ok" : r.a === me.id ? "out" : "in"));
+      const byName = (x, y) => x.display.localeCompare(y.display);
+      return out({ friends: cards.filter(c => c.rel === "ok").sort((x, y) => (+y.on - +x.on) || byName(x, y)), inc: cards.filter(c => c.rel === "in").sort(byName), out: cards.filter(c => c.rel === "out").sort(byName) });
+    }
+    if (p.startsWith("/acc/user/")) {
+      const r = this.one("SELECT * FROM users WHERE id=?", p.slice(10)); if (!r) return out({ err: "nouser" }, 404);
+      return out({ user: this.card(r, r.id === me.id ? "me" : this.rel(me.id, r.id)) });
+    }
+    if (p === "/acc/friend/request") {
+      const r = body.id ? this.one("SELECT * FROM users WHERE id=?", String(body.id)) : this.one("SELECT * FROM users WHERE uname=?", String(body.uname || "").trim().replace(/^@/, ""));
+      if (!r) return out({ err: "nouser" }, 404);
+      if (r.id === me.id) return out({ err: "self" }, 400);
+      const rel = this.rel(me.id, r.id);
+      if (rel === "ok" || rel === "out") return out({ rel, user: this.card(r, rel) });
+      if (rel === "in") { this.sql.exec("UPDATE friends SET state='ok' WHERE a=? AND b=?", r.id, me.id); return out({ rel: "ok", user: this.card(r, "ok") }); }  // they asked first: that's a yes
+      if (this.one("SELECT COUNT(*) n FROM friends WHERE a=? OR b=?", me.id, me.id).n >= MAX_FRIENDS) return out({ err: "full" }, 409);
+      this.sql.exec("INSERT INTO friends VALUES(?,?,'req',?)", me.id, r.id, Date.now());
+      return out({ rel: "out", user: this.card(r, "out") });
+    }
+    if (p === "/acc/friend/accept") {
+      const id = String(body.id || ""); if (this.rel(me.id, id) !== "in") return out({ err: "norequest" }, 404);
+      this.sql.exec("UPDATE friends SET state='ok' WHERE a=? AND b=?", id, me.id); return out({ rel: "ok" });
+    }
+    if (p === "/acc/friend/decline" || p === "/acc/friend/remove") {  // decline a request, cancel mine, or unfriend: the other side is not told
+      const id = String(body.id || "");
+      this.sql.exec("DELETE FROM friends WHERE (a=? AND b=?) OR (a=? AND b=?)", me.id, id, id, me.id);
+      this.sql.exec("DELETE FROM invites WHERE (frm=? AND too=?) OR (frm=? AND too=?)", me.id, id, id, me.id);
+      return out({ rel: "" });
+    }
+    if (p === "/acc/invite") {
+      const id = String(body.id || ""), code = String(body.code || "");
+      if (!CODE.test(code)) return out({ err: "code" }, 400);
+      const r = this.rel(me.id, id) === "ok" && this.one("SELECT * FROM users WHERE id=?", id); if (!r) return out({ err: "notfriend" }, 403);
+      if (this.one("SELECT id FROM invites WHERE frm=? AND too=? AND code=?", me.id, id, code)) return out({ ok: true, dup: true });  // one invite per friend per room
+      if (this.one("SELECT COUNT(*) n FROM invites WHERE frm=? AND created>?", me.id, Date.now() - 60 * 60e3).n >= INVITES_PER_HOUR) return out({ err: "slow" }, 429);
+      this.sql.exec("INSERT INTO invites(frm,too,code,created) VALUES(?,?,?,?)", me.id, id, code, Date.now());
+      const tg = !!r.tg && !(r.seen > Date.now() - ONLINE_MS);  // app closed: Telegram reaches them (the real status, even when hidden)
+      if (tg) await this.tg(r.tg, `${me.display} (@${me.uname}) invited you to a Mafia Dealer room.\nOpen the app, go to Play Together → Online and join with code ${code.slice(0, 3)} ${code.slice(3)}.\nThe invite expires in 30 minutes.`);
+      return out({ ok: true, tg });
+    }
+    if (p === "/acc/invite/done") { this.sql.exec("DELETE FROM invites WHERE id=? AND too=?", Number(body.id), me.id); return out({ ok: true }); }
     return out({ err: "unknown" }, 404);
   }
 }

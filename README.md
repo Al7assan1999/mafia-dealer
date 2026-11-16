@@ -47,6 +47,7 @@ constants it uses.
 | `game/flow.ts`, `deal.ts`, `night.ts`, `day.ts`, `end.ts` | The single-phone game, phase by phase (the host reuses it) |
 | `screens/*.ts` | Setup, rules, settings, home, history, stats and profiles, guide |
 | `update.ts`, `accounts.ts`, `group.ts` | Update check and in-app install; accounts; shared group history |
+| `friends.ts` | Friends: list, requests, profile card, room invites (sheet + banner), online status |
 | `mp/common.ts`, `relay.ts`, `host.ts`, `hostGame.ts`, `client.ts` | Multiplayer: shared state, relay socket, host room, host game, player phone |
 | `main.ts` | `render()`, quitting, the intro, start-up |
 

@@ -36,6 +36,7 @@
     "src/mp/common.ts",
     "src/accounts.ts",
     "src/group.ts",
+    "src/friends.ts",
     "src/mp/relay.ts",
     "src/mp/host.ts",
     "src/mp/hostGame.ts",

@@ -51,6 +51,38 @@ const m1 = msgs.find(m => m.id === "aaaaaaaa"), m2 = msgs.find(m => m.id === "bb
 ok(m1 && m1.uid === uid && m1.uname === "Al Hassan", "signed-in player: relay stamps the real account and name");
 ok(m2 && !m2.uid && !m2.uname, "a phone without a session cannot claim someone's account");
 for (const w of [host, pl, anon]) w.close();
+// friends (v2.9)
+const unB = un + "b", unC = un + "c";
+const tB = (await call("/acc/signup", { uname: unB, pass: "secret1" })).j.tok, tC = (await call("/acc/signup", { uname: unC, pass: "secret1" })).j.tok;
+const idB = (await call("/acc/me", null, tB)).j.user.id, idC = (await call("/acc/me", null, tC)).j.user.id;
+r = await call("/acc/friend/request", { uname: "@" + unB.toUpperCase() }, tok2); ok(r.st === 200 && r.j.rel === "out" && r.j.user.id === idB && !("tg" in r.j.user), "request by @username (any case)");
+r = await call("/acc/friend/request", { id: idB }, tok2); ok(r.j.rel === "out", "asking again changes nothing");
+r = await call("/acc/friend/request", { uname: un }, tok2); ok(r.st === 400 && r.j.err === "self", "you can't add yourself");
+r = await call("/acc/friend/request", { uname: "nobody_" + un }, tok2); ok(r.st === 404 && r.j.err === "nouser", "unknown username");
+r = await call("/acc/invite", { id: idB, code: "123456" }, tok2); ok(r.st === 403, "no invites before the request is accepted");
+r = await call("/acc/inbox", { st: "" }, tB); ok(r.j.req === 1 && r.j.rel[uid] === "in" && r.j.on === 0, "the other side sees the request in its inbox");
+r = await call("/acc/friends", null, tB); ok(r.j.inc.length === 1 && r.j.inc[0].id === uid && !r.j.friends.length, "and in its friends list");
+r = await call("/acc/friend/accept", { id: uid }, tB); ok(r.j.rel === "ok", "accept");
+r = await call("/acc/friends", null, tok2); let fB = r.j.friends.find(f => f.id === idB); ok(fB && fB.on === true && fB.st === "" && fB.uname === unB, "friends both ways; online after an inbox check");
+await call("/acc/inbox", { st: "room" }, tB); r = await call("/acc/friends", null, tok2); ok(r.j.friends.find(f => f.id === idB).st === "room", "\"in a room\" shows");
+await call("/acc/inbox", { st: "game", hide: true }, tB); r = await call("/acc/friends", null, tok2); fB = r.j.friends.find(f => f.id === idB); ok(fB.on === false && fB.st === "", "\"Show me as online\" off: looks offline");
+await call("/acc/inbox", { st: "", hide: false }, tB);
+await call("/acc/friend/request", { id: uid }, tC); r = await call("/acc/friend/request", { id: idC }, tok2); ok(r.j.rel === "ok", "asking someone who already asked you makes you friends");
+r = await call("/acc/inbox", {}, tok2); ok(r.j.on === 1 && r.j.rel[idB] === "ok" && r.j.rel[idC] === "ok", "inbox: online friends count and relations");
+r = await call("/acc/invite", { id: idB, code: "12345" }, tok2); ok(r.st === 400, "invite needs a 6-digit room code");
+r = await call("/acc/invite", { id: idB, code: code6 }, tok2); ok(r.j.ok && r.j.tg === false, "invite an online friend (no Telegram)");
+r = await call("/acc/invite", { id: idB, code: code6 }, tok2); ok(r.j.dup, "one invite per friend per room");
+r = await call("/acc/inbox", {}, tB); const iv = r.j.inv[0]; ok(r.j.inv.length === 1 && iv.code === code6 && iv.from.id === uid && iv.from.display === "Al Hassan", "the friend's inbox has the invite with who sent it");
+await call("/acc/invite/done", { id: iv.id }, tB); r = await call("/acc/inbox", {}, tB); ok(!r.j.inv.length, "a joined or dismissed invite is gone");
+r = await call("/acc/tglink", {}, tC); await tg("/start " + r.j.code, 777003);
+r = await call("/acc/invite", { id: idC, code: code6 }, tok2); ok(r.j.ok && r.j.tg === true, "invite a friend whose app is closed: goes to their Telegram");
+r = await call("/acc/user/" + idB, null, tok2); ok(r.j.user.rel === "ok" && r.j.user.uname === unB && "on" in r.j.user, "friend profile card");
+r = await call("/acc/user/" + uid, null, tok2); ok(r.j.user.rel === "me", "own card");
+r = await call("/acc/friend/remove", { id: idB }, tok2); r = await call("/acc/friends", null, tok2); ok(!r.j.friends.some(f => f.id === idB), "remove friend");
+r = await call("/acc/inbox", {}, tB); ok(!r.j.rel[uid], "removed on the other side too (without telling them)");
+await call("/acc/friend/request", { id: uid }, tB); r = await call("/acc/friend/decline", { id: idB }, tok2); r = await call("/acc/inbox", {}, tB); ok(!r.j.rel[uid], "declined request is gone");
+r = await call("/acc/delete", { pass: "secret1" }, tC); r = await call("/acc/friends", null, tok2); ok(!r.j.friends.some(f => f.id === idC), "a deleted account leaves no friendship behind");
+r = await call("/acc/inbox", {}, tok2); ok(r.j.on === 0 && !Object.keys(r.j.rel).length, "and no invites or relations");
 // delete account
 r = await call("/acc/delete", { pass: "wrongpass" }, tok2); ok(r.st === 401, "deleting needs the password");
 console.log(process.exitCode ? "FAILED" : "all passed"); setTimeout(() => process.exit(), 200);

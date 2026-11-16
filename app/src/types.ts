@@ -24,7 +24,13 @@ interface Settings {
   acct?: { tok: string; u: User } | null;
   latest?: { code: number; name: string; url: string; notes: string; at: number };
   devKey?: string; group?: { code: string } | null; gcache?: LogEntry[] | null; gsent?: number[]; gsync?: number;
+  hideOnline?: boolean;  // "Show me as online" switched off
 }
+
+/** Another account as the relay shows it. rel: 'ok' friends, 'out' I asked, 'in' they asked, '' none, 'me'. on/st only for friends. */
+interface Friend { id: string; uname: string; display: string; avatar: string; fav: string; rel: string; on?: boolean; st?: string }
+/** A room invite from a friend (relay /acc/inbox). */
+interface Invite { id: number; code: string; at: number; from: Friend }
 
 /** What happened in a game, for the recap and the stats. Indexes are seats. */
 interface GameEv { first: number | null; saves: number[]; caught: string[]; kills?: number[]; outs?: number[] }

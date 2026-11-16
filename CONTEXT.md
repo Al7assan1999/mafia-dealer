@@ -9,6 +9,13 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
+## In progress: v2.9 (versionCode 25), branch `feature/friends`, NOT published (relay not deployed)
+**Friends (2026-11-16)**, Alhassan's decisions: request + accept (only mutual friends can invite); an invite reaches the friend as an in-app banner and, when their app is closed and Telegram is linked, a bot message; anyone in an online room can invite; friends see Online / In a room / In a game, with a "Show me as online" switch in Settings.
+- Relay `Accounts`: tables `friends(a,b,state 'req'|'ok')`, `invites` (30 min, one per friend per room, 30 per hour), users `seen/st/hide` (online = inbox check in the last 2 min). Endpoints `/acc/inbox` (every 10 s while the app is open), `/acc/friends`, `/acc/user/<id>`, `/acc/friend/request|accept|decline|remove`, `/acc/invite`, `/acc/invite/done`. Account delete removes friendships and invites.
+- App `app/src/friends.ts`: Friends screen (Home, signed in), invite sheet in online lobbies, "+ Add" next to signed-in players in a room, account card + Add/Accept/Remove on profiles, invite banner `#inv` (outside `#app`).
+- Not done: real push (needs Firebase, comes with Capacitor), opening the app from the Telegram message, joining a friend's room without an invite.
+- Tests: `relay/test_accounts.mjs` (now 54 checks), `tests/multiplayer/test_friends_app.js` (local wrangler dev).
+
 ## Current state: v2.8 (versionCode 24), published on the relay
 v2.8 = fixes from the 7-hour game night (first batch, online mode):
 - **Critical:** players were skipped at night from the second game on. The phone keyed its sent night choice by night number only, so after Play again it thought it had already chosen and re-sent last game's choice, which the host accepted. Now keyed by deal + night (`nkeyN`), cleared on a new deal, and the host checks `o.deal===MP.game.deal`.

@@ -5,6 +5,7 @@ function homeView(){const best=stats().best;
   <button class="link discard" onclick="ask(t('discardQ'),t('discardD'),t('discard'),discardGame)">${t('discard')}</button>`:''}
   <button class="mode primary" onclick="nav('setup')"><i class="mi">${IC.phone}</i><span><b>${t('newGame')}</b><small>${t('newGameSub')}</small></span></button>
   <button class="mode ghost" onclick="nav('mp')"><i class="mi">${IC.users}</i><span><b>${t('mpT')}</b><small>${t('mpSub')}</small></span></button>
+  ${me()?`<button class="mode ghost" onclick="openFriends()"><i class="mi">${IC.friend}</i><span><b>${t('friendsT')}${FREQ?` <em class="badge new">${FREQ}</em>`:''}</b><small>${t('fHomeSub',{n:FON})}</small></span></button>`:''}
   <div class="row3"><button onclick="nav('history')">${t('historyT')}<small>${LOG().length}${S.group?' · '+t('gTag'):''}</small></button><button onclick="nav('stats')">${t('statsT')}</button><button onclick="nav('guide')">${t('guideT')}</button></div>
   ${best?`<div class="crown">${IC.trophy}<span>${t('bestNow',{n:esc(best.name)})} · ${Math.round(best.r*100)}%</span></div>`:''}
   <button class="ver" onclick="checkNow()">v${APP.name} · ${t('checkUpd')}</button>`;}

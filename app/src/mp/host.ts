@@ -65,7 +65,7 @@ function roleCard(name,role,mates,btn){return `<div class="big"><div class="lbl"
    <button class="btn ghost" id="memo" onclick="${btn}" disabled style="opacity:.4">${t('gotIt')}</button></div>`;}
 function hostPing(){MP.seq++;hostPublish();toast(t('pinged'));}
 function hostStop(){clearInterval(MP.timer);MP.timer=null;if(MP.role==='host'){lsSet(MPK,null);keepOn(false);if(HN){HN.clear();if(HN.close)HN.close();}}MP.role=null;MP.online=null;}
-function roomList(players){return players.map(q=>`<div class="prs"><span class="dot ${q.on?'on':''}"></span>${q.uid?avatarHtml(q.av,q.uid,28):''}<b>${esc(q.name)}</b>${q.host?`<small>${t('youHost')}</small>`:''}${q.old?`<small class="oldv">${t('oldApp')}</small>`:''}</div>`).join('');}
+function roomList(players){return players.map(q=>`<div class="prs"><span class="dot ${q.on?'on':''}"></span>${q.uid?avatarHtml(q.av,q.uid,28):''}<b>${esc(q.name)}</b>${q.host?`<small>${t('youHost')}</small>`:''}${q.old?`<small class="oldv">${t('oldApp')}</small>`:''}${plusBtn(q.uid)}</div>`).join('');}
 function hostView(){const g=MP.game;
   if(g){const i=g.ids.indexOf('host');
     return head(t('host'))+`<div class="chip" style="display:table;margin:0 auto 12px">${t('rolesDealt')}</div><p class="mpinfo" style="text-align:center">${t('checkPhone')}</p>
@@ -77,6 +77,7 @@ function hostView(){const g=MP.game;
    ${MP.online?`<div class="code sel">${MP.online.code.replace(/(\d{3})/,'$1 ')}</div><button class="mini" onclick="copyText(MP.online.code)">${t('copyCode')}</button><p class="hint" style="margin:8px 0 0">${t('codeHint')}</p>`
      :`<p class="hint" style="margin-bottom:0">${MP.myIp?`<span class="ipline sel">${t('hostAddr',{ip:MP.myIp})}</span> <button class="mini" onclick="copyText(MP.myIp)">${t('copy')}</button>`:t('hotspotMode')}</p>`}</div>
   <button class="btn ghost mt" onclick="shareRoom()">${IC.share}${t(MP.online?'shareCode':'shareAddr')}</button>
+  ${MP.online?`<button class="btn ghost mt" onclick="inviteSheet()">${IC.friend}${t('fInviteT')}</button>`:''}
   <div class="sec mt"><div class="sh"><h3>${t('playersIn',{n:ps.length})}</h3><button class="link" onclick="hostPing()">${t('pingAll')}</button></div>${hostRows()}</div>
   ${deckRules(ps.length,err)}
   <button class="btn primary" ${err?'disabled':''} onclick="hostDeal()">${t('dealRoles')}</button>
@@ -85,7 +86,7 @@ function hostView(){const g=MP.game;
 const buzzMuted=q=>!!(S.host.buzzMax&&(q.buzz||0)>=S.host.buzzMax);
 function hostRows(inGame?: boolean){
   const rows=Object.keys(MP.players).filter(id=>!inGame||(G.ids.indexOf(id)>=0&&G.alive[G.ids.indexOf(id)])).map(id=>{const q=MP.players[id];
-    return `<div class="prs"><span class="dot ${q.on?'on':''}"></span>${q.uid?avatarHtml(q.uav,q.uid,28):''}<b>${esc(q.name)}</b>${(q.v||0)<APP.code?`<small class="oldv">${t('oldApp')}</small>`:''}
+    return `<div class="prs"><span class="dot ${q.on?'on':''}"></span>${q.uid?avatarHtml(q.uav,q.uid,28):''}<b>${esc(q.name)}</b>${(q.v||0)<APP.code?`<small class="oldv">${t('oldApp')}</small>`:''}${inGame?'':plusBtn(q.uid)}
      ${buzzMuted(q)?`<button class="mini" onclick="unmute('${id}')">${t('unmute')}</button>`:''}<button class="mini bad" onclick="askKick('${id}')">${t('kick')}</button></div>`;}).join('');
   return (inGame?'':`<div class="prs"><span class="dot on"></span>${me()?avatarHtml(me().avatar,me().id,28):''}<b>${esc(S.mpName)}</b><small>${t('youHost')}</small></div>`)+rows;}
 function unmute(id){const q=MP.players[id];if(q){q.buzz=0;hostPublish();render();}}
