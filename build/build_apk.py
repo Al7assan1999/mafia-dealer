@@ -13,6 +13,10 @@ OUT = sys.argv[1]
 ASSET_DIR = sys.argv[2]
 ICON = sys.argv[3]
 KEYFILE = sys.argv[4]
+# version comes from the app itself: const APP={code:N,name:'X'} in index.html
+import re as _re
+_m = _re.search(r"const APP=\{code:(\d+),name:'([^']+)'\}", open(os.path.join(ASSET_DIR, 'index.html'), encoding='utf-8').read())
+VER_CODE, VER_NAME = int(_m.group(1)), _m.group(2)
 
 def uleb(n):
     out = bytearray()
@@ -47,15 +51,22 @@ ANDROID_NS = "http://schemas.android.com/apk/res/android"
 ATTR = {"theme": 0x01010000, "label": 0x01010001, "icon": 0x01010002, "name": 0x01010003, "exported": 0x01010010,
         "screenOrientation": 0x0101001e, "configChanges": 0x0101001f, "minSdkVersion": 0x0101020c,
         "versionCode": 0x0101021b, "versionName": 0x0101021c, "targetSdkVersion": 0x01010270,
-        "allowBackup": 0x01010280, "hardwareAccelerated": 0x010102d3, "usesCleartextTraffic": 0x010104ec}
+        "allowBackup": 0x01010280, "hardwareAccelerated": 0x010102d3, "usesCleartextTraffic": 0x010104ec,
+        "foregroundServiceType": 0x01010599, "authorities": 0x01010018, "grantUriPermissions": 0x0101001b}
 T_REF, T_STR, T_DEC, T_HEX, T_BOOL = 0x01, 0x03, 0x10, 0x11, 0x12
 
 def build_manifest():
-    tree = ("manifest", [(None, "package", T_STR, PKG), ("a", "versionCode", T_DEC, 10), ("a", "versionName", T_STR, "1.9")], [
+    tree = ("manifest", [(None, "package", T_STR, PKG), ("a", "versionCode", T_DEC, VER_CODE), ("a", "versionName", T_STR, VER_NAME)], [
         ("uses-sdk", [("a", "minSdkVersion", T_DEC, 24), ("a", "targetSdkVersion", T_DEC, 34)], []),
         ("uses-permission", [("a", "name", T_STR, "android.permission.VIBRATE")], []),
         ("uses-permission", [("a", "name", T_STR, "android.permission.INTERNET")], []),
         ("uses-permission", [("a", "name", T_STR, "android.permission.ACCESS_WIFI_STATE")], []),
+        # foreground service while hosting (type connectedDevice needs CHANGE_WIFI_STATE as its prerequisite)
+        ("uses-permission", [("a", "name", T_STR, "android.permission.CHANGE_WIFI_STATE")], []),
+        ("uses-permission", [("a", "name", T_STR, "android.permission.WAKE_LOCK")], []),
+        ("uses-permission", [("a", "name", T_STR, "android.permission.FOREGROUND_SERVICE")], []),
+        ("uses-permission", [("a", "name", T_STR, "android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE")], []),
+        ("uses-permission", [("a", "name", T_STR, "android.permission.REQUEST_INSTALL_PACKAGES")], []),  # in-app updates
         ("queries", [], [("intent", [], [("action", [("a", "name", T_STR, "android.intent.action.TTS_SERVICE")], [])])]),
         ("application", [("a", "label", T_STR, "Mafia Dealer"), ("a", "icon", T_REF, 0x7f010000),
                          ("a", "allowBackup", T_BOOL, True), ("a", "hardwareAccelerated", T_BOOL, True), ("a", "usesCleartextTraffic", T_BOOL, True)], [
@@ -64,7 +75,11 @@ def build_manifest():
                 ("intent-filter", [], [
                     ("action", [("a", "name", T_STR, "android.intent.action.MAIN")], []),
                     ("category", [("a", "name", T_STR, "android.intent.category.LAUNCHER")], []),
-                ])])])])
+                ])]),
+            ("service", [("a", "name", T_STR, PKG + ".Keep"), ("a", "exported", T_BOOL, False),
+                         ("a", "foregroundServiceType", T_HEX, 0x10)], []),  # 0x10 = connectedDevice
+            ("provider", [("a", "name", T_STR, PKG + ".Apk"), ("a", "authorities", T_STR, PKG + ".apk"), ("a", "exported", T_BOOL, False),
+                          ("a", "grantUriPermissions", T_BOOL, True)], [])])])  # lets the installer read cache/update.apk
     # collect strings: android attribute names first (ordered by id), matching resource map
     attr_names = set()
     others = []
@@ -197,19 +212,12 @@ def v2_sign(apk, cd_off, cd_len, key, cert_der):
     return contents + block + cdir + bytes(eocd2)
 
 def load_key():
-    if os.path.exists(KEYFILE):
-        data = open(KEYFILE, "rb").read()
-        key = serialization.load_pem_private_key(data.split(b"-----BEGIN CERTIFICATE-----")[0], None)
-        cert = x509.load_pem_x509_certificate(b"-----BEGIN CERTIFICATE-----" + data.split(b"-----BEGIN CERTIFICATE-----")[1])
-    else:
-        key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-        name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "Mafia Dealer")])
-        now = datetime.datetime(2026, 1, 1)
-        cert = x509.CertificateBuilder().subject_name(name).issuer_name(name).public_key(key.public_key()) \
-            .serial_number(x509.random_serial_number()).not_valid_before(now) \
-            .not_valid_after(now + datetime.timedelta(days=365 * 30)).sign(key, hashes.SHA256())
-        open(KEYFILE, "wb").write(key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8,
-                                                    serialization.NoEncryption()) + cert.public_bytes(serialization.Encoding.PEM))
+    # Never generate a key here: an APK signed with a new key can't update the installed app.
+    if not os.path.exists(KEYFILE):
+        sys.exit(f"signing key not found: {KEYFILE} (use the release key, never a new one)")
+    data = open(KEYFILE, "rb").read()
+    key = serialization.load_pem_private_key(data.split(b"-----BEGIN CERTIFICATE-----")[0], None)
+    cert = x509.load_pem_x509_certificate(b"-----BEGIN CERTIFICATE-----" + data.split(b"-----BEGIN CERTIFICATE-----")[1])
     return key, cert.public_bytes(serialization.Encoding.DER)
 
 if __name__ == "__main__":
@@ -219,8 +227,11 @@ if __name__ == "__main__":
     arsc = build_arsc(icon_name)
     files = [("AndroidManifest.xml", manifest, True), ("classes.dex", dex, True),
              ("resources.arsc", arsc, False), (icon_name, open(ICON, "rb").read(), False)]
-    for fn in sorted(os.listdir(ASSET_DIR)):
-        files.append(("assets/" + fn, open(os.path.join(ASSET_DIR, fn), "rb").read(), True))
+    for root, dirs, names in os.walk(ASSET_DIR):  # includes subfolders (assets/fonts/)
+        dirs.sort()
+        for fn in sorted(names):
+            rel = os.path.relpath(os.path.join(root, fn), ASSET_DIR).replace(os.sep, "/")
+            files.append(("assets/" + rel, open(os.path.join(root, fn), "rb").read(), not fn.endswith(".woff2")))  # woff2 is already compressed
     apk, cdo, cdl = build_zip(files)
     key, cert = load_key()
     signed = v2_sign(apk, cdo, cdl, key, cert)

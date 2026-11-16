@@ -1,0 +1,40 @@
+// Protocol check for the relay: node test_relay.mjs [base]   (default: local wrangler dev)
+const BASE = (process.argv[2] || "http://127.0.0.1:8787").replace(/^http/, "ws");
+const code = String(100000 + Math.floor(Math.random() * 900000)), KEY = "k".repeat(8) + Math.random().toString(36).slice(2, 12);
+const ok = (c, m) => { console.log(c ? "ok  " : "FAIL", m); if (!c) process.exitCode = 1; };
+const open = q => new Promise((res, rej) => {
+  const ws = new WebSocket(`${BASE}/r/${code}?${q}`); ws.got = [];
+  ws.onmessage = e => ws.got.push(JSON.parse(e.data)); ws.onopen = () => res(ws); ws.onerror = rej;
+});
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const until = async (f, ms = 3000) => { for (let t = 0; t < ms; t += 50) { if (f()) return true; await wait(50); } return false; };
+
+const host = await open(`role=host&key=${KEY}`);
+host.send(JSON.stringify({ t: "put", k: "room", v: "Alhassan" }));
+host.send(JSON.stringify({ t: "put", k: "p_aaaaaaaa", v: '{"role":"mafia"}' }));
+host.send(JSON.stringify({ t: "put", k: "p_bbbbbbbb", v: '{"role":"doctor"}' }));
+await wait(300);
+const a = await open("role=p&id=aaaaaaaa"), b = await open("role=p&id=bbbbbbbb");
+ok(await until(() => a.got.some(m => m.k === "room" && m.v === "Alhassan")), "player gets the room name on connect");
+ok(await until(() => a.got.some(m => m.k === "p_aaaaaaaa")), "player gets its own state on connect");
+ok(!a.got.some(m => m.k === "p_bbbbbbbb") && !JSON.stringify(a.got).includes("doctor"), "player never receives another player's state");
+ok(a.got.some(m => m.host === 1), "player sees the host online");
+a.send('{"t":"vote","id":"aaaaaaaa"}');
+ok(await until(() => host.got.some(m => m.a && m.a.includes("vote"))), "player action reaches the host");
+host.send(JSON.stringify({ t: "put", k: "p_bbbbbbbb", v: '{"role":"doctor","ph":"night"}' }));
+ok(await until(() => b.got.some(m => m.v && m.v.includes("night"))), "host update reaches only its player live");
+const n = b.got.length; host.send(JSON.stringify({ t: "put", k: "p_bbbbbbbb", v: '{"role":"doctor","ph":"night"}' })); await wait(300);
+ok(b.got.length === n, "unchanged value is not resent");
+host.send(JSON.stringify({ t: "bc", v: { narr: "night" } }));
+ok(await until(() => a.got.some(m => m.bc) && b.got.some(m => m.bc)), "broadcast reaches every player");
+const thief = await open("role=host&key=wrongwrongwrongwrong");
+ok(await until(() => thief.got.some(m => m.err === "taken")), "another key cannot take the room");
+host.close(); ok(await until(() => a.got.some(m => m.host === 0)), "players see the host go offline");
+a.send('{"t":"act","id":"aaaaaaaa"}'); await wait(300);
+const host2 = await open(`role=host&key=${KEY}`);
+ok(await until(() => host2.got.some(m => m.q && m.q.some(x => x.includes("act")))), "actions sent while the host was away are delivered on reconnect");
+ok(await until(() => a.got.filter(m => m.host === 1).length >= 2), "players see the host back");
+host2.send(JSON.stringify({ t: "clear" }));
+ok(await until(() => a.got.some(m => m.k === "room" && m.v === "")), "clear tells players the room closed");
+for (const w of [a, b, host2, thief]) w.close();
+console.log("room", code, process.exitCode ? "FAILED" : "all passed"); setTimeout(() => process.exit(), 200);

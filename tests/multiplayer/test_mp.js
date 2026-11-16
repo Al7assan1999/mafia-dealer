@@ -8,10 +8,10 @@ const clientShim=()=>{window.Net={start(){},put(){},take(){return null},clear(){
    p.on('pageerror',e=>errs.push(name+': '+e.message));p.on('console',m=>{if(m.type()==='error'&&!/Failed to load|ERR_|net::/.test(m.text()))errs.push(name+' console: '+m.text())});
    await p.addInitScript(shim);await p.goto(URL);await p.evaluate(n=>{S.mpName=n;S.mpLastHost=null;save();},name);return p;};
  const host=await mk(hostShim,'Alhassan');
- await host.click('text=Play Together');await host.click('.big2 .btn.primary');await host.waitForTimeout(300);
+ await host.click('text=Play Together');await host.click('#mode-wifi');await host.click('.big2 .btn.primary');await host.waitForTimeout(300);
  console.log('host view:',await host.evaluate(()=>V+' role='+MP.role));
  const names=['Dareer','Sami','dareer'];const cl=[];
- for(const n of names){const p=await mk(clientShim,n);await p.click('text=Play Together');await p.click('.big2 .btn.ghost');cl.push(p);}
+ for(const n of names){const p=await mk(clientShim,n);await p.click('text=Play Together');await p.click('#mode-wifi');await p.click('.big2 .btn.ghost');cl.push(p);}
  const t0=Date.now();
  await cl[0].waitForFunction(()=>MP.status==='ok',null,{timeout:30000});console.log('client found host + joined in',(Date.now()-t0)/1000,'s, host ip',await cl[0].evaluate(()=>MP.host.ip));
  await cl[1].waitForFunction(()=>MP.status==='ok',null,{timeout:30000});

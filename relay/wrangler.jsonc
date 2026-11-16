@@ -1,0 +1,11 @@
+{
+  "name": "mafia-relay",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  // static files: version.json + MafiaDealer.apk for the in-app update check (written by publish.py)
+  "assets": { "directory": "./public" },
+  "durable_objects": { "bindings": [{ "name": "ROOM", "class_name": "Room" }, { "name": "GROUP", "class_name": "Group" }, { "name": "ACCOUNTS", "class_name": "Accounts" }] },
+  // free plan: Durable Objects must use the SQLite storage backend
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }, { "tag": "v2", "new_sqlite_classes": ["Group"] }, { "tag": "v3", "new_sqlite_classes": ["Accounts"] }]
+}

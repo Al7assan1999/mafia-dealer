@@ -3,12 +3,12 @@ const URL=require('url').pathToFileURL(require('path').resolve(__dirname,'../../
 const hostShim=()=>{const X=(m,u,b)=>{const x=new XMLHttpRequest();x.open(m,'http://127.0.0.1:8765'+u,false);x.send(b||null);return x.responseText;};
   window.Net={start(){},put(k,v){X('POST','/__put',JSON.stringify({k,v}))},take(){const r=X('GET','/__take');return r==='\u0000'?null:r},clear(){X('GET','/__clear')},ip(){return '0,0'}};};
 const clientShim=()=>{window.Net={start(){},put(){},take(){return null},clear(){},ip(){return '150995071,0'}};};
-(async()=>{const srv=spawn('python3',['mock_srv.py']);await new Promise(r=>setTimeout(r,800));
+(async()=>{const srv=spawn(process.platform==='win32'?'python':'python3',['mock_srv.py']);await new Promise(r=>setTimeout(r,800));
  const b=await chromium.launch();const errs=[];
  const mk=async(shim,name)=>{const ctx=await b.newContext({viewport:{width:390,height:800},reducedMotion:'reduce'});const p=await ctx.newPage();p.on('pageerror',e=>errs.push(name+': '+e.message));await p.addInitScript(shim);await p.goto(URL);await p.evaluate(n=>{S.mpName=n;save();},name);return p;};
- const host=await mk(hostShim,'Alhassan');await host.click('text=Play Together');await host.click('.big2 .btn.primary');
+ const host=await mk(hostShim,'Alhassan');await host.click('text=Play Together');await host.click('#mode-wifi');await host.click('.big2 .btn.primary');
  const names=['Dareer','Sami','Hokan','Farouq'];const cl=[];
- for(const n of names){const p=await mk(clientShim,n);await p.click('text=Play Together');await p.click('.big2 .btn.ghost');cl.push(p);}
+ for(const n of names){const p=await mk(clientShim,n);await p.click('text=Play Together');await p.click('#mode-wifi');await p.click('.big2 .btn.ghost');cl.push(p);}
  for(const p of cl)await p.waitForFunction(()=>MP.status==='ok',null,{timeout:20000});
  await host.waitForTimeout(800);await host.evaluate(()=>{S.counts={mafia:1,doctor:1,detective:1};render();});
  console.log('host deal enabled:',await host.$eval('text=Deal roles',e=>!e.disabled));await host.screenshot({path:'s2a.png',fullPage:true});
@@ -20,10 +20,10 @@ const clientShim=()=>{window.Net={start(){},put(){},take(){return null},clear(){
    console.log(names[i],'sees role',r.role,'mates',JSON.stringify(r.mates),'other roles leaked:',leaks.length?leaks:'none');}
  await cl[0].screenshot({path:'s2b.png'});
  // late joiner
- const late=await mk(clientShim,'Fater');await late.click('text=Play Together');await late.click('.big2 .btn.ghost');
+ const late=await mk(clientShim,'Fater');await late.click('text=Play Together');await late.click('#mode-wifi');await late.click('.big2 .btn.ghost');
  await late.waitForFunction(()=>MP.status==='started',null,{timeout:20000});console.log('late joiner ->',await late.evaluate(()=>MP.status));
- // Sami's app restarts and rejoins mid-deal
- await cl[1].reload();await cl[1].click('text=Play Together');await cl[1].click('.big2 .btn.ghost');
+ // Sami's app restarts and rejoins mid-deal on its own (no taps)
+ await cl[1].reload();
  await cl[1].waitForFunction(()=>MP.room&&MP.room.g,null,{timeout:20000});console.log('Sami after restart gets role again:',await cl[1].evaluate(()=>MP.room.g.role));
  // reveal & ready
  for(const p of cl){await p.dispatchEvent('#hold','mousedown');console.log('  card shows:',await p.$eval('.rv .rn',e=>e.textContent));await p.dispatchEvent('#hold','mouseup');await p.click('#memo');}

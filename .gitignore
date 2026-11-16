@@ -9,3 +9,12 @@ node_modules/
 __pycache__/
 *.png
 !build/icon.png
+voice/.venv/
+voice/hf_cache/
+relay/node_modules/
+relay/.wrangler/
+relay/.account
+relay/public/MafiaDealer.apk
+relay/public/version.json
+relay/.dev.vars
+relay/.tgsecret

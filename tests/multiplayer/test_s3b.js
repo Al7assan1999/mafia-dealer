@@ -3,12 +3,12 @@ const URL=require('url').pathToFileURL(require('path').resolve(__dirname,'../../
 const hostShim=()=>{const X=(m,u,b)=>{const x=new XMLHttpRequest();x.open(m,'http://127.0.0.1:8765'+u,false);x.send(b||null);return x.responseText;};
   window.Net={start(){},put(k,v){X('POST','/__put',JSON.stringify({k,v}))},take(){const r=X('GET','/__take');return r==='\u0000'?null:r},clear(){X('GET','/__clear')},ip(){return '0,0'}};};
 const clientShim=()=>{window.Net={start(){},put(){},take(){return null},clear(){},ip(){return '150995071,0'}};};
-(async()=>{const srv=spawn('python3',['mock_srv.py']);await new Promise(r=>setTimeout(r,800));
+(async()=>{const srv=spawn(process.platform==='win32'?'python':'python3',['mock_srv.py']);await new Promise(r=>setTimeout(r,800));
  const b=await chromium.launch();const errs=[];const ctxs={};
  const mk=async(shim,name)=>{const ctx=await b.newContext({viewport:{width:390,height:800},reducedMotion:'reduce'});ctxs[name]=ctx;const p=await ctx.newPage();p.on('pageerror',e=>errs.push(name+': '+e.message));await p.addInitScript(shim);await p.goto(URL);await p.evaluate(n=>{S.mpName=n;save();},name);return p;};
- const host=await mk(hostShim,'Alhassan');await host.click('text=Play Together');await host.click('.big2 .btn.primary');
+ const host=await mk(hostShim,'Alhassan');await host.click('text=Play Together');await host.click('#mode-wifi');await host.click('.big2 .btn.primary');
  const names=['Dareer','Sami','Hokan','Farouq','Halawy','Khaddour'];const P={Alhassan:host};
- for(const n of names){const p=await mk(clientShim,n);await p.click('text=Play Together');await p.click('.big2 .btn.ghost');P[n]=p;}
+ for(const n of names){const p=await mk(clientShim,n);await p.click('text=Play Together');await p.click('#mode-wifi');await p.click('.big2 .btn.ghost');P[n]=p;}
  for(const n of names)await P[n].waitForFunction(()=>MP.status==='ok',null,{timeout:20000});
  await host.waitForTimeout(800);await host.evaluate(()=>{S.counts={mafia:2,doctor:1,detective:0};render();});
  await host.click('button:has-text("Deal roles")');

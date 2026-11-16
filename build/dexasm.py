@@ -20,15 +20,15 @@ OPS = {
     'move-exception': (0x0d, '11x'), 'return-void': (0x0e, '10x'), 'return': (0x0f, '11x'), 'return-object': (0x11, '11x'),
     'const/4': (0x12, '11n'), 'const/16': (0x13, '21s'), 'const': (0x14, '31i'), 'const-string': (0x1a, '21c-s'),
     'check-cast': (0x1f, '21c-t'), 'new-instance': (0x22, '21c-t'), 'goto/16': (0x29, '20t'),
-    'if-eqz': (0x38, '21t'), 'if-nez': (0x39, '21t'), 'if-ltz': (0x3a, '21t'),
+    'if-lt': (0x34, '22t'), 'if-eqz': (0x38, '21t'), 'if-nez': (0x39, '21t'), 'if-ltz': (0x3a, '21t'),
     'iget': (0x52, '22c'), 'iget-object': (0x54, '22c'), 'iput': (0x59, '22c'), 'iput-object': (0x5b, '22c'),
-    'sget-object': (0x62, '21c-f'), 'sput-object': (0x69, '21c-f'),
+    'sget': (0x60, '21c-f'), 'sget-object': (0x62, '21c-f'), 'sput-object': (0x69, '21c-f'),
     'invoke-virtual': (0x6e, '35c'), 'invoke-super': (0x6f, '35c'), 'invoke-direct': (0x70, '35c'),
     'invoke-static': (0x71, '35c'), 'invoke-interface': (0x72, '35c'),
     'add-int/lit8': (0xd8, '22b'),
 }
 SIZE = {'10x': 1, '12x': 1, '11x': 1, '11n': 1, '21s': 2, '31i': 3, '21c-s': 2, '21c-t': 2, '21c-f': 2,
-        '20t': 2, '21t': 2, '22c': 2, '35c': 3, '22b': 2}
+        '20t': 2, '21t': 2, '22t': 2, '22c': 2, '35c': 3, '22b': 2}
 
 ACC_PUBLIC, ACC_PRIVATE, ACC_STATIC, ACC_CONSTRUCTOR = 0x1, 0x2, 0x8, 0x10000
 
@@ -108,6 +108,7 @@ def build(classes):
             elif fmt == '22b': assert -128 <= ins[3] < 128; u = [(ins[1] << 8) | code, ((ins[3] & 0xff) << 8) | ins[2]]
             elif fmt == '20t': off = labels[ins[1]] - a; assert off != 0; u = [code, off & 0xffff]
             elif fmt == '21t': off = labels[ins[2]] - a; u = [(ins[1] << 8) | code, off & 0xffff]
+            elif fmt == '22t': off = labels[ins[3]] - a; u = [(ins[2] << 12) | (ins[1] << 8) | code, off & 0xffff]
             elif fmt == '35c':
                 regs = list(ins[2:]); assert len(regs) <= 5 and all(r < 16 for r in regs), ins
                 outs = max(outs, len(regs)); c = regs + [0] * 5
