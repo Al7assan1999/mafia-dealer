@@ -31,10 +31,17 @@ An Android app that replaces the dealer in the Mafia party game. Built without t
 ```bash
 pip install cryptography androguard
 cd build
-python3 build_apk.py out/MafiaDealer.apk ../app/assets icon.png path/to/signing.pem
+python3 build_apk.py out/MafiaDealer.apk ../app/assets icon.png C:/Users/WGN/Desktop/Mafia/mafia-dealer-signing-key.pem
 python3 verify_apk.py out/MafiaDealer.apk
 ```
 `signing.pem` is the release key (private key + certificate). **It is not in this repo.** Use the same key for every build, or Android will refuse to install the update over the old app (and uninstalling loses the game history). If the file is missing, the script stops instead of making a new key.
+
+## Release
+```bash
+cd relay && npm install          # once
+python publish.py "what changed"   # keys: $MAFIA_KEYS or Desktop/Mafia (cf.key); needs relay/.account
+```
+Installed apps see the update via version.json and install it in-app.
 
 ## Regenerate the narrator
 Runs on the laptop CPU with Chatterbox (voice copied from synthetic Kokoro references, no real person), models from Hugging Face.

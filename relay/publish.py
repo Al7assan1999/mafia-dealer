@@ -11,7 +11,9 @@ assert os.path.exists(apk), "build the APK first (build/build_apk.py)"
 shutil.copy(apk, os.path.join(HERE, "public/MafiaDealer.apk"))
 json.dump({"code": int(code), "name": name, "url": f"{BASE}/MafiaDealer.apk", "notes": sys.argv[1] if len(sys.argv) > 1 else ""},
           open(os.path.join(HERE, "public/version.json"), "w", encoding="utf-8"), ensure_ascii=False)
-keys = os.path.join(ROOT, "../..")  # cf.key lives next to the signing key, outside the repo
+# cf.key lives next to the signing key, outside the repo: $MAFIA_KEYS, two folders up (old layout) or Desktop\Mafia
+keys = next(d for d in [os.environ.get("MAFIA_KEYS", ""), os.path.join(ROOT, "../.."), os.path.expanduser("~/Desktop/Mafia")]
+            if d and os.path.exists(os.path.join(d, "cf.key")))
 env = dict(os.environ, CLOUDFLARE_API_TOKEN=open(os.path.join(keys, "cf.key"), encoding="utf-8-sig").read().strip(),
            CLOUDFLARE_ACCOUNT_ID=open(os.path.join(HERE, ".account")).read().strip())
 subprocess.run("npx wrangler deploy", shell=True, cwd=HERE, env=env, check=True)

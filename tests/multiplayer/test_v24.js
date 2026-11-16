@@ -41,7 +41,8 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  await a.click('.prs:has-text("Fater") button:has-text("Kick")');await a.click('.sheet .btn.primary');
  await P.Fater.waitForFunction(()=>MP.status==='kicked',null,{timeout:10000});ok(await P.Fater.isVisible('text=The host removed you'),'kicked player sees "The host removed you from the room"');
  await P.Fater.evaluate(c=>{joinOnline(c);},code);await P.Fater.waitForTimeout(3000);
- ok(await P.Fater.evaluate(()=>MP.status==='kicked')&&!(await a.evaluate(()=>Object.values(MP.players).some(q=>q.name==='Fater'))),'kicked player cannot rejoin the room');
+ await P.Fater.waitForFunction(()=>MP.status==='ok',null,{timeout:15000});ok(await a.evaluate(()=>Object.values(MP.players).some(q=>q.name==='Fater')),'kicked player can join again (v2.8)');
+ await a.click('.prs:has-text("Fater") button:has-text("Kick")');await a.click('.sheet .btn.primary');await P.Fater.waitForFunction(()=>MP.status==='kicked',null,{timeout:10000});
  // deal + night with a short night timer
  await a.click('button:has-text("Deal roles")');
  for(const n of names.slice(0,4)){await P[n].waitForFunction(()=>MP.room&&MP.room.g,null,{timeout:8000});await P[n].dispatchEvent('#hold','mousedown');await P[n].dispatchEvent('#hold','mouseup');await P[n].click('#memo');}

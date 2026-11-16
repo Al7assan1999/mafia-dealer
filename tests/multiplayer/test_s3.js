@@ -57,9 +57,9 @@ const MODE=process.argv[2]||'cit';
   await host.click('button:has-text("Go to Night")');night++;if(night>6)break;}
  await host.waitForTimeout(500);
  console.log('WINNER',await host.evaluate(()=>G.winner),'hist',await host.evaluate(()=>G.hist.join(' / ')));
- const c=names[0];await P[c].waitForFunction(()=>MP.room.g&&MP.room.g.ph==='end',null,{timeout:8000});console.log(c,'end screen:',await P[c].$eval('.big .res',e=>e.textContent));
+ const c=names[0];await P[c].waitForFunction(()=>MP.room.g&&MP.room.g.ph==='end',null,{timeout:8000});console.log(c,'end screen:',await P[c].$eval('.recap .res',e=>e.textContent));
  await P[c].screenshot({path:'s3_end.png'});
- await host.click('text=Valid game');await host.click('button:has-text("Home")');
+ await host.click('text=Valid game');await host.click('button:has-text("Back to lobby")');
  console.log('logged games',await host.evaluate(()=>S.log.length),'host view',await host.evaluate(()=>V+' G='+!!G+' game='+!!MP.game));
  await P[c].waitForFunction(()=>MP.room&&!MP.room.g,null,{timeout:8000});console.log('clients back in lobby');
  console.log('errs',errs);srv.kill();await b.close();})();

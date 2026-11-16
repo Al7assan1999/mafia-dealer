@@ -9,7 +9,19 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## Current state: v2.7.1 (versionCode 23), published on the relay
+## Current state: v2.8 (versionCode 24), published on the relay
+v2.8 = fixes from the 7-hour game night (first batch, online mode):
+- **Critical:** players were skipped at night from the second game on. The phone keyed its sent night choice by night number only, so after Play again it thought it had already chosen and re-sent last game's choice, which the host accepted. Now keyed by deal + night (`nkeyN`), cleared on a new deal, and the host checks `o.deal===MP.game.deal`.
+- Rejoin: host rejections carry the hello stamp `h`; phones ignore stale rejections still stored on the relay/Net store (they blocked rejoining after "started"/"kicked"). Kicked players may rejoin.
+- End of game: every phone gets the recap card (`recap` in mpPriv), players have "Back to lobby" (`MP.endHide`); host end = Play again / Back to lobby. Vote tallies shown to players.
+- Log: each night records "Doctor protected X" and "The Mafia did not choose".
+- Share = just the code/address (no APK link); Copy buttons (native `Net.copy`, execCommand fallback); codes are selectable.
+- Ghost view and night timer work in Same room too; players see the host's rules in the lobby; Rules screen notes that the host's rules count.
+- Live table vote in multiplayer (`mpStartVote(true)`, `G.open`, `voteBoard()`).
+- New rule `skipVote` (default on): off = skip votes don't count, most-voted player is out.
+- Leaving returns to the mode's screen (`MP.lastMode`).
+- Test: `tests/multiplayer/test_feedback.js` (19 checks).
+## Previous: v2.7.1 (versionCode 23)
 **Accounts (v2.7)**, his decisions: username + password; a forgotten password is reset only through the linked Telegram; profile = display name, avatar (10 presets or own photo), favourite role; history keyed by account, names as fallback; single-phone and same-room work without an account; online needs one.
 - Relay `Accounts` Durable Object (singleton "global", SQLite tables users/sessions/codes). Passwords PBKDF2-SHA256 100k + salt; sessions are random 32-byte tokens stored as SHA-256; 5 wrong logins lock 15 min; reset/link codes expire in 15 min; a reset signs out other phones.
 - API: POST /acc/signup, /acc/login, /acc/profile, /acc/tglink, /acc/logout, /acc/delete, /acc/reset/start, /acc/reset/finish; GET /acc/me, /acc/reset/status; GET /a/<uid> avatar image; POST /tg/<TG_SECRET> Telegram webhook.

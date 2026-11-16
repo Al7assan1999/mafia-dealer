@@ -14,7 +14,7 @@ OS = "Ljava/io/OutputStream;"; SB = "Ljava/lang/StringBuilder;"
 INTENT = "Landroid/content/Intent;"; CN = "Landroid/content/ComponentName;"; SVC = "Landroid/app/Service;"
 NOTIF = "Landroid/app/Notification;"; NB = "Landroid/app/Notification$Builder;"; NCH = "Landroid/app/NotificationChannel;"
 NM = "Landroid/app/NotificationManager;"; PM = "Landroid/os/PowerManager;"; WL = "Landroid/os/PowerManager$WakeLock;"
-FL = "Landroid/net/wifi/WifiManager$WifiLock;"; IB = "Landroid/os/IBinder;"; URI = "Landroid/net/Uri;"; FILE = "Ljava/io/File;"; FOS = "Ljava/io/FileOutputStream;"; B64 = "Landroid/util/Base64;"
+FL = "Landroid/net/wifi/WifiManager$WifiLock;"; IB = "Landroid/os/IBinder;"; URI = "Landroid/net/Uri;"; CBM = "Landroid/content/ClipboardManager;"; CLIP = "Landroid/content/ClipData;"; FILE = "Ljava/io/File;"; FOS = "Ljava/io/FileOutputStream;"; B64 = "Landroid/util/Base64;"
 CP = "Landroid/content/ContentProvider;"; PFD = "Landroid/os/ParcelFileDescriptor;"; CUR = "Landroid/database/Cursor;"; CV = "Landroid/content/ContentValues;"; SA = "[Ljava/lang/String;"
 WCC = "Landroid/webkit/WebChromeClient;"; FCP = "Landroid/webkit/WebChromeClient$FileChooserParams;"; VCB = "Landroid/webkit/ValueCallback;"; URIA = "[Landroid/net/Uri;"
 F_CB = (CHROME, "cb", VCB); F_A = (CHROME, "a", ACT)
@@ -192,6 +192,16 @@ net = Class(NET, OBJ, [("S", CHM, ACC_PUBLIC | ACC_STATIC), ("Q", CLQ, ACC_PUBLI
         ('const-string', 2, APK_MIME), ('invoke-virtual', m(INTENT, "setDataAndType", INTENT, URI, STR), 0, 1, 2),
         ('const', 1, 0x10000001), ('invoke-virtual', m(INTENT, "addFlags", INTENT, "I"), 0, 1),  # NEW_TASK | GRANT_READ_URI_PERMISSION
         ('iget-object', 1, 4, F_C), ('invoke-virtual', m(CTX, "startActivity", "V", INTENT), 1, 0),
+        ('label', 't1'),
+        ('label', 'ret'), ('return-void',),
+        ('label', 'fail'), ('goto/16', 'ret'),
+        ('try', 't0', 't1', 'fail')], js=True),
+    Method(NET, "copy", "V", [STR], ACC_PUBLIC, 5, [  # p0=v3 text=v4: put the room code / address on the clipboard
+        ('label', 't0'),
+        ('iget-object', 0, 3, F_C), ('const-string', 1, "clipboard"), ('invoke-virtual', m(CTX, "getSystemService", OBJ, STR), 0, 1),
+        ('move-result-object', 0), ('check-cast', 0, CBM),
+        ('const-string', 1, "Mafia Dealer"), ('invoke-static', m(CLIP, "newPlainText", CLIP, CS, CS), 1, 4), ('move-result-object', 1),
+        ('invoke-virtual', m(CBM, "setPrimaryClip", "V", CLIP), 0, 1),
         ('label', 't1'),
         ('label', 'ret'), ('return-void',),
         ('label', 'fail'), ('goto/16', 'ret'),

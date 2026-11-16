@@ -68,7 +68,7 @@ const ok=(c,msg)=>{if(!c){console.log('FAIL',msg);process.exitCode=1;}else conso
  await host.waitForTimeout(500);
  ok(await host.evaluate(()=>G&&G.phase==='end'&&G.winner==='citizens'),'game finished: '+await host.evaluate(()=>G&&G.winner+' / '+G.hist.join(' / ')));
  await P.Farouq.waitForFunction(()=>MP.room.g&&MP.room.g.ph==='end',null,{timeout:10000});
- ok((await P.Farouq.$eval('.big .res',e=>e.textContent)).length>0,'end screen on a player phone: '+await P.Farouq.$eval('.big .res',e=>e.textContent));
+ ok((await P.Farouq.$eval('.recap .res',e=>e.textContent)).length>0,'end screen on a player phone: '+await P.Farouq.$eval('.recap .res',e=>e.textContent));
  ok(await P.Farouq.evaluate(()=>__narr.includes('citizensWin')),'winner narration on player phones');
  // a wrong code is rejected
  const x=await mk('Fater');await x.click('text=Play Together');await x.click('#mode-online');await x.fill('#ocode','000001');await x.click('button:has-text("Join online")');
