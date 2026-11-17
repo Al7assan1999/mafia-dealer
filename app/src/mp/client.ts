@@ -19,7 +19,8 @@ async function joinStart(manual?: string){if(needName())return;SND.unlock();S.mp
   if(!r||r.err){MP.status=r?r.err:'notfound';render();return;}
   MP.host=r;S.mpLastHost=r.ip;save();lsSet(JNK,{host:r});MP.status='joining';hello();
   MP.hb=0;MP.lastOk=Date.now();clearInterval(MP.timer);MP.timer=setInterval(clientTick,700);render();}
-function joinOnline(code){code=String(code||'').replace(/\D/g,'');if(code.length!==6){toast(t('enterCode'));return;}if(needName(true))return;SND.unlock();S.mpName=S.mpName.trim();save();
+/** Exactly 6 digits, nothing else (spaces from a pasted share text are dropped). */
+function joinOnline(code){code=String(code||'').replace(/\s/g,'');if(!/^\d{6}$/.test(code)){toast(t('enterCode'));return;}if(needName(true))return;SND.unlock();S.mpName=S.mpName.trim();save();
   clientStop(false);chReset();MP.role='client';MP.lastMode='online';MP.joinedAt=Date.now();MP.id=myId();MP.room=null;MP.host={name:'',ip:''};MP.online={code};MP.status='joining';MP.last=null;MP.roomName=null;MP.hostOn=0;MP.everOk=false;
   if(V!=='join')nav('join');else render();
   clientWs();lsSet(JNK,{online:{code}});MP.hb=0;MP.lastOk=Date.now();clearInterval(MP.timer);MP.timer=setInterval(clientTick,700);}

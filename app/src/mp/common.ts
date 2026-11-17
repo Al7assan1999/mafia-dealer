@@ -8,9 +8,11 @@ function buzzFx(){try{navigator.vibrate&&navigator.vibrate([90,60,90]);}catch(e)
 const nameBox=()=>`<div class="sec"><div class="flbl" style="margin-top:0">${t('yourName')}</div>${me()?`<div class="meline">${avatarHtml(me().avatar,me().id,40)}<div><b>${esc(me().display)}</b><small>${t('fromProfile')}</small></div></div>`:`<input class="search" style="margin:0" maxlength="18" value="${esc(S.mpName||'')}" oninput="S.mpName=this.value;persist()"><p class="mpinfo" style="margin:8px 0 0">${t('aNameTip')}</p>`}</div>`;
 function wifiView(){return head(t('modeWifi'))+nameBox()+`<p class="mpinfo">${t('mpInfo')}</p><div class="big2"><button class="btn primary" onclick="hostStart()">${t('host')}<small>${t('hostSub')}</small></button><button class="btn ghost" onclick="joinStart()">${t('join')}<small>${t('joinSub')}</small></button></div>`;}
 function onlineView(){return head(t('modeOnline'))+`<p class="mpinfo">${t('onlineSub')}</p>
-   <div class="sec"><div class="flbl" style="margin-top:0">${t('roomCode')}</div><input id="ocode" class="search codein" inputmode="numeric" maxlength="7" placeholder="000000">
-   <div class="big2"><button class="btn primary" onclick="hostStart(true)">${t('hostOnline')}</button><button class="btn ghost" onclick="joinOnline($('ocode').value)">${t('joinOnline')}</button></div>
-   </div>`;}
+   <button class="btn primary" onclick="hostStart(true)">${t('hostOnline')}</button>
+   <div class="sec mt"><div class="flbl" style="margin-top:0">${t('orJoin')}</div><div class="prow ojoin"><input id="ocode" class="search codein" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="000000" oninput="codeIn()" onkeydown="if(event.key==='Enter')codeGo()"><button class="btn primary" id="ojoin" disabled onclick="codeGo()">${t('joinOnline')}</button></div></div>`;}
+/** The room code box keeps digits only (a pasted "123 456" becomes 123456); Join works at exactly 6. */
+function codeIn(){const el=$('ocode') as HTMLInputElement,v=el.value.replace(/\D/g,'').slice(0,6);if(v!==el.value)el.value=v;($('ojoin') as any).disabled=v.length!==6;}
+function codeGo(){const v=($('ocode') as HTMLInputElement).value;if(/^\d{6}$/.test(v))joinOnline(v);else toast(t('enterCode'));}
 function needName(online?: boolean){if(online&&!me()){toast(t('needAcct'));nav('account');return true;}if(me())S.mpName=me().display;if(!(S.mpName||'').trim()){toast(t('needName'));return true;}if(!online&&!hasNet()){toast(t('mpNoNet'));return true;}return false;}
 /* the host snapshots the room + game so a killed or restarted app can resume it */
 const MPK='mafiaDealer.mp',JNK='mafiaDealer.join',FRESH=12*3600e3;

@@ -29,6 +29,27 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  // the host writes
  await host.click('#fdock .fchat');await host.click('#chat .prs:has-text("Everyone") .fl');await host.fill('#chin','welcome');await host.press('#chin','Enter');
  await wait(d,()=>CH.some(m=>m.x==='welcome'&&m.f===0));ok(true,'the host writes to Everyone');await host.evaluate(()=>chClose());
+ // v2.10.1: long chats scroll, open at the newest message, the keyboard stays up, Arabic types right to left
+ await host.evaluate(()=>{for(let i=0;i<40;i++){chRate={};chPost(0,-1,'line '+i);}hostPublish();});await wait(d,()=>CH.some(m=>m.x==='line 39'));
+ await d.evaluate(()=>chOpenList());await d.click('#chat .prs:has-text("Everyone") .fl');
+ const atEnd=()=>d.evaluate(()=>{const b=document.querySelector('#chm');return b.scrollHeight>b.clientHeight+50&&b.scrollHeight-b.scrollTop-b.clientHeight<5;});
+ ok(await atEnd(),'a long chat scrolls and opens at the newest message');
+ await d.evaluate(()=>{document.querySelector('#chm').scrollTop=0;});ok(await d.evaluate(()=>document.querySelector('#chm').scrollTop===0),'older messages: scrolled to the top');
+ await d.evaluate(()=>chClose());await d.click('#fdock .fchat');await d.click('#chat .prs:has-text("Everyone") .fl');ok(await atEnd(),'closed and opened again: at the newest message');
+ await d.click('#chin');await d.fill('#chin','one');await d.click('#chat .chf .pill');ok(await d.evaluate(()=>document.activeElement&&document.activeElement.id==='chin'),'Send keeps the typing box focused (keyboard stays up)');
+ await d.press('#chin','x');await d.press('#chin','Enter');ok(await d.evaluate(()=>document.activeElement.id==='chin'),'Enter keeps it focused too');await wait(d,()=>!chPend.length);ok(await atEnd(),'my new message scrolls into view');
+ ok(await d.evaluate(()=>document.querySelector('#chin').getAttribute('dir')==='auto'&&document.querySelector('#chm .cm span').getAttribute('dir')==='auto'),'box and bubbles use dir=auto (Arabic right to left)');
+ await d.fill('#chin','مرحبا');ok(await d.evaluate(()=>getComputedStyle(document.querySelector('#chin')).direction==='rtl'),'typing Arabic: the box turns right to left');await d.fill('#chin','');
+ // screen updates (room changes, game ticks) must not redraw the chat or pull it back down while reading older messages
+ await d.evaluate(()=>{const b=document.querySelector('#chm');b.scrollTop=b.scrollHeight-b.clientHeight-30;b.dispatchEvent(new Event('scroll'));window.__mut=0;new MutationObserver(()=>__mut++).observe(b,{childList:true,subtree:true});});
+ await d.waitForTimeout(100);await d.evaluate(()=>{for(let i=0;i<5;i++){render();dockDraw();chDraw();}});await host.evaluate(()=>hostPublish());await d.waitForTimeout(1500);
+ ok(await d.evaluate(()=>__mut===0),'nothing new: the messages are not redrawn ('+await d.evaluate(()=>__mut)+' changes)');
+ await d.evaluate(()=>{document.querySelector('#chm').scrollTop=100;document.querySelector('#chm').dispatchEvent(new Event('scroll'));});await d.evaluate(()=>{for(let i=0;i<5;i++)render();});
+ await host.evaluate(()=>{chRate={};chPost(0,-1,'while reading');hostPublish();});await wait(d,()=>CH.some(m=>m.x==='while reading'));await d.waitForTimeout(300);
+ ok(await d.evaluate(()=>document.querySelector('#chm').scrollTop===100),'reading older messages: a new message does not pull the view down');
+ await d.evaluate(()=>{chEnd();});await host.evaluate(()=>{chRate={};chPost(0,-1,'at the end');hostPublish();});await wait(d,()=>CH.some(m=>m.x==='at the end'));await d.waitForTimeout(300);ok(await atEnd(),'at the newest message: a new one stays in view');
+ await d.setViewportSize({width:390,height:450});await d.waitForTimeout(300);ok(await atEnd(),'the keyboard opens (screen shorter): still at the newest message');await d.setViewportSize({width:390,height:800});
+ await d.evaluate(()=>chOpenList());await d.click('#chat .prs:has-text("Sami") .fl');
  // typing is kept while messages arrive
  await d.fill('#chin','half typed');await host.evaluate(()=>{chPost(0,-1,'new one');hostPublish();});await wait(d,()=>CH.some(m=>m.x==='new one'));
  ok(await d.inputValue('#chin')==='half typed','a new message does not wipe what is being typed');await d.fill('#chin','');

@@ -569,4 +569,5 @@ const AR: Partial<Record<keyof typeof EN, string>> = {
   chatDeadTag: 'خارج',
   chatSlow: 'تمهّل قليلًا',
   chatSend: 'إرسال',
+  orJoin: 'أو انضم إلى غرفة صديق',
 };

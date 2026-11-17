@@ -569,4 +569,5 @@ const EN = {
   chatDeadTag: 'out',
   chatSlow: 'Slow down a little',
   chatSend: 'Send',
+  orJoin: 'Or join a friend\'s room',
 };

@@ -1,0 +1,20 @@
+// v2.10.1 Online screen: Host first, then the code box + Join; the code is exactly 6 digits (no relay needed).
+const {chromium}=require('playwright');
+const URL=require('url').pathToFileURL(require('path').resolve(__dirname,'../../app/assets/index.html')).href;
+const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
+(async()=>{const b=await chromium.launch();const errs=[];const p=await (await b.newContext({viewport:{width:390,height:800},reducedMotion:'reduce'})).newPage();
+ p.on('pageerror',e=>errs.push(e.message));await p.goto(URL);
+ await p.evaluate(()=>{S.acct={tok:'x'.repeat(64),u:{id:'u1',uname:'tester',display:'Tester',avatar:'p:0',fav:''}};S.relay='ws://127.0.0.1:9';save();nav('home');});
+ await p.click('#mode-online');
+ ok(await p.evaluate(()=>{const h=[...document.querySelectorAll('#app button')].find(x=>x.textContent.includes('Host online')),c=document.querySelector('#ocode');return !!(h.compareDocumentPosition(c)&Node.DOCUMENT_POSITION_FOLLOWING);}),'Host online comes first, the code box below it');
+ ok(await p.isDisabled('#ojoin'),'Join starts disabled');
+ await p.fill('#ocode','12a3');ok(await p.inputValue('#ocode')==='123'&&await p.isDisabled('#ojoin'),'letters are dropped; 3 digits: Join disabled');
+ await p.fill('#ocode','12345');ok(await p.isDisabled('#ojoin'),'5 digits: Join disabled');
+ await p.fill('#ocode','1234567');ok(await p.inputValue('#ocode')==='123456'&&!(await p.isDisabled('#ojoin')),'7 digits: cut to 6, Join enabled');
+ await p.fill('#ocode','482 913');ok(await p.inputValue('#ocode')==='482913','a pasted "482 913" becomes 482913');
+ await p.fill('#ocode','12345');await p.press('#ocode','Enter');ok(await p.evaluate(()=>!MP.role&&V==='online'),'Enter with 5 digits does nothing');
+ for(const bad of ['12345','1234567','12a456','']) ok(await p.evaluate(c=>{joinOnline(c);return !MP.role;},bad),'joinOnline refuses "'+bad+'"');
+ ok(await p.evaluate(()=>{joinOnline(' 482 913 ');const r=MP.role==='client'&&MP.online.code==='482913';clientStop(true);return r;}),'joinOnline accepts 6 digits (spaces dropped)');
+ await p.evaluate(()=>nav('online'));await p.fill('#ocode','654321');await p.click('#ojoin');ok(await p.evaluate(()=>MP.role==='client'&&MP.online.code==='654321'),'Join with 6 digits joins that room');
+ await p.evaluate(()=>{clientStop(true);S.lang='ar';nav('online');});ok(await p.isVisible('text=أو انضم إلى غرفة صديق'),'Arabic label');
+ console.log('errs',errs);if(errs.length)process.exitCode=1;await b.close();})();

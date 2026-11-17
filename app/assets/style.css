@@ -340,13 +340,15 @@ body.night .sky{opacity:1}[data-theme=noir] body.night .sky{opacity:.45}
 .corner .ib.pf{width:46px;height:46px;margin-top:-2px}.ib.flag{font-size:22px;line-height:1}.pfm .btn svg{width:20px;height:20px}
 /* v2.10 room chat: a panel over the room (#chat sits outside #app), and its button under the friends tab */
 #fdock .fchat{padding:11px 8px}#fdock .fchat>svg{width:21px;height:21px}#fdock .fchat .cnt{position:absolute;top:-6px;left:-6px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:var(--red);color:#fff;font-weight:800;font-size:11px;line-height:19px;font-style:normal;text-align:center}[dir=rtl] #fdock .fchat .cnt{left:auto;right:-6px}
-#chat .chw{position:fixed;inset:0;z-index:21;display:flex;flex-direction:column;padding:calc(12px + env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom));background:var(--bg);background-image:linear-gradient(var(--card2),var(--card2));animation:fadein .2s both}
+#chat .chw{position:fixed;top:0;right:0;bottom:0;left:0;z-index:21;display:flex;flex-direction:column;padding:calc(12px + env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom));background:var(--bg);background-image:linear-gradient(var(--card2),var(--card2));animation:fadein .2s both}
 #chat .chw>*{width:100%;max-width:560px;margin-inline:auto}
 .chh{display:flex;align-items:center;gap:10px;margin-bottom:10px}.chh b{flex:1;font-size:20px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.chh .ib{font-size:20px;font-weight:700}
-.chb{flex:1;overflow-y:auto}.chb .prs .fn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chb{flex:1;min-height:0;overflow-y:auto}.chb .prs .fn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .avt.chx{width:34px;height:34px;display:inline-grid;place-items:center;border-radius:50%;background:var(--card);color:var(--mute);font-weight:800;flex:none}.avt.chx svg{width:18px;height:18px}
-.chm{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:4px 2px}
+.chm{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px;padding:4px 2px}
 .cm{align-self:flex-start;max-width:82%;padding:8px 12px;border-radius:14px 14px 14px 4px;background:var(--card);border:1px solid var(--line);overflow-wrap:anywhere}
 .cm b{display:block;font-size:12px;color:var(--gold);margin-bottom:2px}.cm.me{align-self:flex-end;border-radius:14px 14px 4px 14px;background:var(--sel);border-color:transparent;color:#fff}.cm.pend{opacity:.55}
 [dir=rtl] .cm{border-radius:14px 14px 4px 14px}[dir=rtl] .cm.me{border-radius:14px 14px 14px 4px}
 .chf{margin:8px 0 0}
+/* v2.10.1 Online: the code box and Join on one row */
+.prow.ojoin{margin:0}.prow.ojoin .codein{flex:1;min-width:0;margin:0}.prow.ojoin .btn{width:auto;margin:0;padding:0 18px;flex:none}.prow.ojoin .btn:disabled{opacity:.45}
