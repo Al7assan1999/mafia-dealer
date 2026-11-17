@@ -1,5 +1,5 @@
 /* host */
-function hostStart(online){if(needName(online))return;SND.unlock();S.mpName=S.mpName.trim();save();
+function hostStart(online){if(roomMinned()){leaveFirst(()=>hostStart(online));return;}if(needName(online))return;SND.unlock();S.mpName=S.mpName.trim();save();
   chReset();MP.role='host';MP.players={};MP.kicked={};MP.seq=0;MP.pubAt=0;MP.game=null;
   MP.online=online?{code:String(100000+Math.floor(Math.random()*900000)),key:rnd(24)}:null;HN=MP.online?onlineNet(MP.online):window.Net;
   hostOpen();hostPublish();nav('host');}
@@ -37,6 +37,7 @@ function hostTick(){let m,ch=false;const now=Date.now();
   if(G&&G.mp&&G.phase==='mpNight'&&G.nightEnd){if(now>G.nightEnd){aliveIdx().forEach(i=>{if(!G.done[i]){G.done[i]=true;G.skipped=(G.skipped||0)+1;}});G.hostTurn=false;G.hostRes=false;G.nightEnd=0;hostPublish();mpCheckNight();if(G&&G.phase==='mpNight')render();}
     else{const e=$('mpprog');if(e)e.innerHTML=mpProg();}}
   if(ch&&G&&G.mp&&G.phase==='mpNight')mpCheckNight();
+  if(ch&&V!=='host')rbarDraw();
   if(ch&&V==='host'){if(G){if(G.mp&&$('mpprog'))$('mpprog').innerHTML=mpProg();if(G.mp&&G.open&&$('hboard'))$('hboard').innerHTML=boardHtml(voteBoard());}else if(MP.game&&$('rdy'))$('rdy').innerHTML=readyHtml();else render();}}
 function hostPublish(){MP.pubAt=Date.now();chHandles();
   const room={host:S.mpName,hv:APP.code,cv:1,rules:activeRules(),seq:MP.seq,players:([{name:S.mpName,on:true,host:true,uid:me()&&me().id,av:me()&&me().avatar,c:0,out:chOut(0)}] as RoomPlayer[]).concat(Object.values(MP.players).map(q=>({name:q.name,on:q.on,uid:q.uid,av:q.uav,c:(q.v||0)>=28?q.cn:undefined,out:chOut(q.cn)})))};
@@ -74,7 +75,7 @@ function hostView(){const g=MP.game;
      <div id="rdy" class="mt">${readyHtml()}</div>`;}
   const ps=([{name:S.mpName,on:true,host:true}] as RoomPlayer[]).concat(Object.values(MP.players).map(q=>({name:q.name,on:q.on,old:(q.v||0)<APP.code})));
   const ids=hostIds(),err=deckErr(ids.length,ids.map(id=>id==='host'?S.mpName:MP.players[id].name));
-  return head(t('host'))+`<div class="big"><div class="chip">${t('roomOpen')}</div><div class="who" style="font-size:28px">${esc(S.mpName)}</div>
+  return head(t('host'),minBtn())+`<div class="big"><div class="chip">${t('roomOpen')}</div><div class="who" style="font-size:28px">${esc(S.mpName)}</div>
    ${MP.online?`<div class="code sel">${MP.online.code.replace(/(\d{3})/,'$1 ')}</div><button class="mini" onclick="copyText(MP.online.code)">${t('copyCode')}</button><p class="hint" style="margin:8px 0 0">${t('codeHint')}</p>`
      :`<p class="hint" style="margin-bottom:0">${MP.myIp?`<span class="ipline sel">${t('hostAddr',{ip:MP.myIp})}</span> <button class="mini" onclick="copyText(MP.myIp)">${t('copy')}</button>`:t('hotspotMode')}</p>`}</div>
   <button class="btn ghost mt" onclick="shareRoom()">${IC.share}${t(MP.online?'shareCode':'shareAddr')}</button>

@@ -27,7 +27,8 @@ interface Settings {
   hideOnline?: boolean;  // "Show me as online" switched off
   fpanel?: boolean;  // friends drawer left open
   ftabY?: number;
-  bellSeen?: number;  // when the bell was last opened (newer notes count as new)  // where the friends tab was dragged to (px from the top)
+  bellSeen?: number;
+  nlog?: NLog[];  // the bell's history, 24 h  // when the bell was last opened (newer notes count as new)  // where the friends tab was dragged to (px from the top)
 }
 
 /** Another account as the relay shows it. rel: 'ok' friends, 'out' I asked, 'in' they asked, '' none, 'me'. on/st only for friends. */
@@ -36,6 +37,8 @@ interface Friend { id: string; uname: string; display: string; avatar: string; f
 interface Invite { id: number; code: string; at: number; from: Friend }
 /** A note from the relay (v2.11): kind 'acc' = from accepted my friend request. */
 interface Note { id: number; kind: string; at: number; from: Friend }
+/** The bell's history on this phone (v2.12): k inv | jr | req | acc; st '' waiting, else joined | letin | accepted | declined | dismissed | expired | gone. */
+interface NLog { key: string; k: string; id: any; from: Friend; at: number; code?: string; st: string; done?: number }
 
 /** What happened in a game, for the recap and the stats. Indexes are seats. */
 interface GameEv { first: number | null; saves: number[]; caught: string[]; kills?: number[]; outs?: number[] }

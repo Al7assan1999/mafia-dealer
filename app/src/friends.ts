@@ -22,7 +22,7 @@ const stTxt=(f: Friend)=>f.on?t(f.st==='game'?'fInGame':f.st==='room'?'fInRoom':
 /** Every 10 s while the app is open: tells the relay I'm here, picks up invites and friend requests. */
 function inboxTick(): Promise<void>{if(!S.acct||document.hidden)return Promise.resolve();
   return aReq('/acc/inbox',{st:myStatus(),op:myOpen()?1:0,hide:!!S.hideOnline}).then(j=>{FREL=j.rel||{};FON=j.on||0;FREQ=j.req||0;
-    INV=(j.inv||[]).filter(v=>!INVOFF.includes(v.id));JR=(j.jr||[]).filter(v=>!JROFF.includes(v.id));NOTES=j.nt||[];
+    INV=(j.inv||[]).filter(v=>!INVOFF.includes(v.id));JR=(j.jr||[]).filter(v=>!JROFF.includes(v.id));NOTES=j.nt||[];nInbox(j.inv||[],j.jr||[]);
     const back=INV.find(v=>jrAsked[v.from.id]>Date.now()-30*60e3);if(back){delete jrAsked[back.from.id];invJoin(back.id);}  // the friend I asked let me in
     invBar();
     const sig=JSON.stringify([FREL,FON,FREQ,j.sg||'']);if(sig===inboxSig)return;inboxSig=sig;
@@ -32,23 +32,23 @@ function inboxTick(): Promise<void>{if(!S.acct||document.hidden)return Promise.r
 
 /* the invite banner (#inv sits outside #app, so screens can change under it) */
 function invBar(){bellDraw();const el=$('inv');if(!el)return;
-  for(const v of INV.slice())if(MP.online&&MP.online.code===v.code)invDone(v.id);  // already in that room
+  for(const v of INV.slice())if(MP.online&&MP.online.code===v.code)invDone(v.id,'joined');  // already in that room
   const r=JR[0];
   if(r){el.innerHTML=`<div class="invbar">${avatarHtml(r.from.avatar,r.from.id,40)}<div><b>${esc(r.from.display)}</b><small>${t('fWantsJoin')}</small></div>
     <button class="btn primary" onclick="jrLet(${r.id})">${t('fLetIn')}</button><button class="x" aria-label="${t('cancel')}" onclick="jrDone(${r.id})">✕</button></div>`;return;}
   const v=INV[0];
   el.innerHTML=v?`<div class="invbar">${avatarHtml(v.from.avatar,v.from.id,40)}<div><b>${esc(v.from.display)}</b><small>${t('fInvites',{c:fmtCode(v.code)})}</small></div>
     <button class="btn primary" onclick="invJoin(${v.id})">${t('fJoin')}</button><button class="x" aria-label="${t('cancel')}" onclick="invDone(${v.id})">✕</button></div>`:'';}
-function invDone(id: number){INVOFF.push(id);INV=INV.filter(v=>v.id!==id);aReq('/acc/invite/done',{id}).catch(()=>{});invBar();}
+function invDone(id: number,st='dismissed'){nSet('inv',id,st);INVOFF.push(id);INV=INV.filter(v=>v.id!==id);aReq('/acc/invite/done',{id}).catch(()=>{});invBar();}
 /* asking to join a friend's online lobby: they answer with a normal invite */
-function jrDone(id: number){JROFF.push(id);JR=JR.filter(v=>v.id!==id);aReq('/acc/invite/done',{id}).catch(()=>{});invBar();}
-function jrLet(id: number){const r=JR.find(x=>x.id===id);jrDone(id);if(!r)return;
+function jrDone(id: number,st='dismissed'){nSet('jr',id,st);JROFF.push(id);JR=JR.filter(v=>v.id!==id);aReq('/acc/invite/done',{id}).catch(()=>{});invBar();}
+function jrLet(id: number){const r=JR.find(x=>x.id===id);jrDone(id,'letin');if(!r)return;
   if(!myOpen()){toast(t('fLetGone'));return;}inviteGo(r.from.id);}
 function joinAsk(id: string){const f=FR&&FR.friends.find(x=>x.id===id);jrAsked[id]=Date.now();fRedraw();setTimeout(fRedraw,AGAIN+50);
   aReq('/acc/joinreq',{id}).then(()=>{toast(t('fAskSent',{n:f?f.display:''}));
     clearInterval(jrTimer);const end=Date.now()+120e3;jrTimer=setInterval(()=>{if(Date.now()>end||!Object.keys(jrAsked).length)clearInterval(jrTimer);else inboxTick();},3000);})  // answer quickly
   .catch(e=>{delete jrAsked[id];fRedraw();aErr(e);});}
-function invJoin(id: number){const v=INV.find(x=>x.id===id);if(!v)return;invDone(id);joinCode(v.code);}
+function invJoin(id: number){const v=INV.find(x=>x.id===id);if(!v)return;invDone(id,'joined');joinCode(v.code);}
 /** Join an online room from an invite or an invite link; leaving a room or game asks first. */
 function joinCode(code: string){if(MP.online&&MP.online.code===code&&MP.role)return;
   const go=()=>{hush();if(G){stopTimer();if(!G.mp)save();G=null;}if(MP.role==='host')hostStop();else if(MP.role==='client')clientStop(true);
@@ -60,14 +60,14 @@ function deepLink(){let u='';try{u=(window.Net&&Net.link&&Net.link())||'';}catch
 
 /* lists and actions */
 function friendsLoad(quiet?: boolean){if(!me())return Promise.resolve();
-  return aReq('/acc/friends').then(j=>{FR=j;FREQ=j.inc.length;for(const l of [j.friends,j.inc,j.out])for(const f of l)FREL[f.id]=f.rel;fListsDraw();dockDraw();bellDraw();})
+  return aReq('/acc/friends').then(j=>{FR=j;FREQ=j.inc.length;nReqs(j.inc);for(const l of [j.friends,j.inc,j.out])for(const f of l)FREL[f.id]=f.rel;fListsDraw();dockDraw();bellDraw();})
   .catch(e=>{if(!FR){FR={friends:[],inc:[],out:[]};fListsDraw();dockDraw();}if(!quiet)aErr(e);});}
 function openFriends(){if(S.fpanel){S.fpanel=false;save();}nav('friends');friendsLoad();}
 function friendAdd(){const u=($('fun').value||'').trim().replace(/^@/,'');if(u)friendReq({uname:u});}
-function friendReq(body: {uname?: string; id?: string}){aReq('/acc/friend/request',body).then(j=>{FREL[j.user.id]=j.rel;if(FP&&FP.id===j.user.id)FP.rel=j.rel;
+function friendReq(body: {uname?: string; id?: string}){aReq('/acc/friend/request',body).then(j=>{FREL[j.user.id]=j.rel;if(j.rel==='ok')nSet('req',j.user.id,'accepted');if(FP&&FP.id===j.user.id)FP.rel=j.rel;
   toast(t(j.rel==='ok'?'fNowFriends':'fReqSent',{n:j.user.display}));if($('fun'))$('fun').value='';friendsLoad(true);render();}).catch(aErr);}
 function friendDo(act: string,id: string){
-  const run=()=>aReq('/acc/friend/'+act,{id}).then(j=>{FREL[id]=j.rel;if(FP&&FP.id===id)FP.rel=j.rel;if(act==='accept')toast(t('fAccepted'));friendsLoad(true);render();}).catch(aErr);
+  const run=()=>aReq('/acc/friend/'+act,{id}).then(j=>{FREL[id]=j.rel;if(act==='accept'||act==='decline')nSet('req',id,act==='accept'?'accepted':'declined');if(FP&&FP.id===id)FP.rel=j.rel;if(act==='accept')toast(t('fAccepted'));friendsLoad(true);render();}).catch(aErr);
   if(act!=='remove'||FREL[id]!=='ok'){run();return;}
   const f=FP&&FP.id===id?FP:FR&&FR.friends.find(x=>x.id===id);ask(t('fRemoveQ',{n:esc(f?f.display:'')}),t('fRemoveD'),t('fRemove'),run);}
 function openFriend(id: string){const f=FR&&[...FR.friends,...FR.inc,...FR.out].find(x=>x.id===id);openAcct(id,f?f.display:'',f);}
@@ -165,7 +165,7 @@ function inviteGo(id: string){const code=MP.online&&MP.online.code;if(!code)retu
   aReq('/acc/invite',{id,code}).then(j=>toast(t(j.tg?'fInvTg':'fInvSent'))).catch(e=>{delete invSent[id+code];fRedraw();aErr(e);});}
 
 /* the notification bell (Home, next to the profile): invites, join requests, friend requests, 'X accepted your request' */
-const bellN=()=>INV.length+JR.length+FREQ+NOTES.filter(n=>n.at>(S.bellSeen||0)).length;
+const bellN=()=>INV.length+JR.length+FREQ+(S.nlog||[]).filter(n=>n.k==='acc'&&n.at>(S.bellSeen||0)).length;
 const bellBtn=()=>me()?`<button class="ib bell" id="bellb" onclick="bellOpen()" aria-label="${t('notifT')}" title="${t('notifT')}">${IC.bell}${bellN()?`<i class="cnt">${bellN()}</i>`:''}</button>`:'';
 function bellBtnDraw(){const b=$('bellb');if(b)b.outerHTML=bellBtn();}
 function bellOpen(){S.bellSeen=Date.now();save();friendsLoad(true);
@@ -175,11 +175,38 @@ function bellDraw(){const el=$('bellsh');if(el)el.innerHTML=bellHtml();bellBtnDr
 const ago=(ts: number)=>{const s=(Date.now()-ts)/1000,[v,u]=s<3600?[Math.max(1,Math.round(s/60)),'minute']:s<86400?[Math.round(s/3600),'hour']:[Math.round(s/86400),'day'];
   try{return new (Intl as any).RelativeTimeFormat(S.lang,{style:'short',numeric:'auto'}).format(-v,u);}catch(e){return '';}};
 function bellHtml(){const x=(fn: string)=>`<button class="mini nx" aria-label="${t('cancel')}" onclick="${fn}">✕</button>`;
-  const item=(f: Friend,txt: string,btns: string,at?: number)=>`<div class="prs bi">${avatarHtml(f.avatar,f.id,40)}<div class="fn"><b>${esc(f.display)}</b><span>${txt}${at?' · '+ago(at):''}</span></div>${btns}</div>`;
-  const rows=[...JR.map(r=>item(r.from,t('fWantsJoin'),`<button class="mini pri" onclick="bellClose();jrLet(${r.id})">${t('fLetIn')}</button>`+x(`jrDone(${r.id})`),r.at)),
-    ...INV.map(v=>item(v.from,t('fInvites',{c:fmtCode(v.code)}),`<button class="mini pri" onclick="bellClose();invJoin(${v.id})">${t('fJoin')}</button>`+x(`invDone(${v.id})`),v.at)),
-    ...(FR?FR.inc:[]).map(f=>item(f,t('nReq'),reqBtns(f))),
-    ...NOTES.map(n=>item(n.from,t('nAcc'),x(`noteDone(${n.id})`),n.at))];
-  return `<div class="sh"><h3>${t('notifT')}</h3>${NOTES.length?`<button class="link" onclick="noteDone(0)">${t('nClear')}</button>`:''}</div>
-    ${rows.join('')||`<div class="fempty">${IC.bell}<p>${t('nNone')}</p></div>`}<button class="btn ghost mt" onclick="bellClose()">${t('ok')}</button>`;}
-function noteDone(id: number){NOTES=id?NOTES.filter(n=>n.id!==id):[];aReq('/acc/note/done',id?{id}:{all:1}).catch(()=>{});bellDraw();}
+  const L=(S.nlog||[]).slice().sort((p,q)=>(p.st?1:0)-(q.st?1:0)||q.at-p.at);  // waiting for an answer first, then the newest
+  const row=(n: NLog)=>{const f=n.from,ro=!!n.st||n.k==='acc';
+    const txt=n.k==='inv'?t('fInvites',{c:fmtCode(n.code||'')}):n.k==='jr'?t('fWantsJoin'):n.k==='req'?t('nReq'):t('nAcc');
+    const btns=n.st?`<span class="nst ${n.st}">${t('ns_'+n.st)}</span>`
+      :n.k==='inv'?`<button class="mini pri" onclick="bellClose();invJoin(${n.id})">${t('fJoin')}</button>`+x(`invDone(${n.id})`)
+      :n.k==='jr'?`<button class="mini pri" onclick="bellClose();jrLet(${n.id})">${t('fLetIn')}</button>`+x(`jrDone(${n.id})`)
+      :n.k==='req'?reqBtns(f):'';
+    return `<div class="prs bi${n.st?' ro':''}">${avatarHtml(f.avatar,f.id,40)}<div class="fn"><b>${esc(f.display)}</b><span>${txt} · ${ago(n.at)}</span></div>${btns}</div>`;};
+  return `<div class="sh"><h3>${t('notifT')}</h3>${L.some(n=>n.st||n.k==='acc')?`<button class="link" onclick="nClear()">${t('nClear')}</button>`:''}</div>
+    ${L.map(row).join('')||`<div class="fempty">${IC.bell}<p>${t('nNone')}</p></div>`}<p class="mpinfo" style="margin:8px 2px 0">${t('nKept')}</p><button class="btn ghost mt" onclick="bellClose()">${t('ok')}</button>`;}
+/* the bell's history (v2.12): kept 24 h on this phone; once answered (or gone) an item stays as a read-only row */
+const NDAY=24*3600e3,INV_TTL=30*60e3;
+function nSave(fn: (L: NLog[])=>boolean){const L=S.nlog||(S.nlog=[]);if(fn(L)){save();bellDraw();}}
+/** New invites, join requests and notes from the inbox check; ones the relay no longer has are expired (or gone). */
+function nInbox(inv: Invite[],jr: Invite[]){const now=Date.now();
+  nSave(L=>{let ch=false;
+    const add=(k: string,v: Invite)=>{const key=k+':'+v.id;if(L.some(n=>n.key===key))return;
+      for(let i=L.length-1;i>=0;i--)if(L[i].k===k&&!L[i].st&&L[i].from.id===v.from.id&&(L[i].code||'')===(v.code||''))L.splice(i,1);  // sent again: the new one replaces it
+      L.push({key,k,id:v.id,from:v.from,at:v.at||now,code:v.code||'',st:''});ch=true;};
+    for(const v of inv)add('inv',v);for(const v of jr)add('jr',v);
+    for(const v of NOTES){if(!L.some(n=>n.key==='acc:'+v.id)){L.push({key:'acc:'+v.id,k:'acc',id:v.id,from:v.from,at:v.at||now,st:''});ch=true;}
+      aReq('/acc/note/done',{id:v.id}).catch(()=>{});}  // kept here from now on
+    NOTES=[];
+    for(const n of L)if(!n.st&&(n.k==='inv'||n.k==='jr')&&!(n.k==='inv'?inv:jr).some(v=>v.id===n.id)){n.st=now-n.at>=INV_TTL?'expired':'gone';n.done=now;ch=true;}
+    const keep=L.filter(n=>(!n.st&&n.k!=='acc')||now-n.at<NDAY);if(keep.length!==L.length){L.length=0;L.push(...keep);ch=true;}
+    return ch;});}
+/** Friend requests waiting (from the friends list); answered elsewhere they turn read-only. */
+function nReqs(inc: Friend[]){const now=Date.now();
+  nSave(L=>{let ch=false;
+    for(const f of inc)if(!L.some(n=>n.key==='req:'+f.id&&!n.st)){for(let i=L.length-1;i>=0;i--)if(L[i].key==='req:'+f.id)L.splice(i,1);L.push({key:'req:'+f.id,k:'req',id:f.id,from:f,at:now,st:''});ch=true;}
+    for(const n of L)if(n.k==='req'&&!n.st&&!inc.some(f=>f.id===n.id)){n.st=FREL[n.id]==='ok'?'accepted':'gone';n.done=now;ch=true;}
+    return ch;});}
+function nSet(k: string,id: any,st: string){nSave(L=>{const n=L.find(x=>x.key===k+':'+id&&!x.st);if(!n)return false;n.st=st;n.done=Date.now();return true;});}
+/** Clear: the answered items and the notes go; ones still waiting for an answer stay. */
+function nClear(){nSave(L=>{const keep=L.filter(n=>!n.st&&n.k!=='acc');L.length=0;L.push(...keep);return true;});}

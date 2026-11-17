@@ -39,7 +39,7 @@ function chRecv(ch: ChatMsg[],mc?: number){if(mc)chMe=mc;if(!ch)return;const old
 function chResend(){const now=Date.now();chPend=chPend.filter(p=>now-p.t0<60e3);for(const p of chPend)if(now-p.at>3000){p.at=now;send({t:'chat',to:p.to,x:p.x,k:p.k});}}
 
 /* both */
-const chatShown=()=>MP.role==='host'?(V==='host'||!!(G&&G.mp)):MP.role==='client'&&V==='join'&&MP.status==='ok'&&!!(MP.room&&MP.room.cv);
+const chatShown=()=>MP.role==='host'?(V==='host'||!!(G&&G.mp)||roomMinned()):MP.role==='client'&&(V==='join'||roomMinned())&&MP.status==='ok'&&!!(MP.room&&MP.room.cv);
 const chMine=()=>MP.role==='host'?0:chMe;
 const chMsgs=()=>MP.role==='host'?CH.filter(m=>chVis(m,0)):CH;
 const chKey=(m: ChatMsg,h: number)=>m.to===-1?-1:m.f===h?m.to:m.f;

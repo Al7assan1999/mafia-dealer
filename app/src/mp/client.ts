@@ -10,7 +10,7 @@ async function findHost(tok: number,want?: string): Promise<any>{const my=parseI
   for(let i=0;i<c.length;i+=64){if(tok!==MP.scanTok)return null;MP.pct=Math.round(i/c.length*100);const e=$('pct');if(e)e.textContent=t('searchPct',{n:MP.pct});
     const res=await Promise.all(c.slice(i,i+64).map(ip=>probe(ip,1800).then(n=>ok(n)?{ip,name:n}:null)));const f=res.find(Boolean);if(f)return f;}
   return{err:'notfound'};}
-async function joinStart(manual?: string){if(needName())return;SND.unlock();S.mpName=S.mpName.trim();save();
+async function joinStart(manual?: string){if(roomMinned()){leaveFirst(()=>joinStart(manual));return;}if(needName())return;SND.unlock();S.mpName=S.mpName.trim();save();
   clientStop(false);chReset();MP.role='client';MP.lastMode='wifi';MP.joinedAt=Date.now();MP.id=myId();MP.room=null;MP.host=null;MP.status='search';MP.pct=0;const tok=++MP.scanTok;
   if(V!=='join')nav('join');else render();
   let r;
@@ -20,7 +20,7 @@ async function joinStart(manual?: string){if(needName())return;SND.unlock();S.mp
   MP.host=r;S.mpLastHost=r.ip;save();lsSet(JNK,{host:r});MP.status='joining';hello();
   MP.hb=0;MP.lastOk=Date.now();clearInterval(MP.timer);MP.timer=setInterval(clientTick,700);render();}
 /** Exactly 6 digits, nothing else (spaces from a pasted share text are dropped). */
-function joinOnline(code){code=String(code||'').replace(/\s/g,'');if(!/^\d{6}$/.test(code)){toast(t('enterCode'));return;}if(needName(true))return;SND.unlock();S.mpName=S.mpName.trim();save();
+function joinOnline(code){code=String(code||'').replace(/\s/g,'');if(!/^\d{6}$/.test(code)){toast(t('enterCode'));return;}if(roomMinned()){leaveFirst(()=>joinOnline(code));return;}if(needName(true))return;SND.unlock();S.mpName=S.mpName.trim();save();
   clientStop(false);chReset();MP.role='client';MP.lastMode='online';MP.joinedAt=Date.now();MP.id=myId();MP.room=null;MP.host={name:'',ip:''};MP.online={code};MP.status='joining';MP.last=null;MP.roomName=null;MP.hostOn=0;MP.everOk=false;
   if(V!=='join')nav('join');else render();
   clientWs();lsSet(JNK,{online:{code}});MP.hb=0;MP.lastOk=Date.now();clearInterval(MP.timer);MP.timer=setInterval(clientTick,700);}
@@ -50,11 +50,13 @@ async function clientTick(){if(MP.busy||MP.role!=='client')return;MP.busy=true;c
       if(st.err==='kicked'&&st.kicked>(MP.joinedAt||0)){MP.status='kicked';clientStop(false);lsSet(JNK,null);}
       else if(st.err&&!(MP.hellos||[]).includes(st.h)){MP.status='joining';if(Date.now()-MP.helloAt>2000)hello();}  // an old rejection still stored on the relay: ask again
       else if(st.err){MP.status=st.err==='name'?'taken':st.err==='started'?'started':st.err==='kicked'?'kicked':'full';clientStop(false);lsSet(JNK,null);}
-      else{const ping=MP.room&&st.seq>MP.room.seq;MP.room=st;MP.status='ok';MP.everOk=true;chRecv(st.ch,st.mc);if(ping){buzzFx();toast(t('pingedYou'));}
+      else{const ping=MP.room&&st.seq>MP.room.seq;MP.room=st;MP.status='ok';MP.everOk=true;chRecv(st.ch,st.mc);if(st.g&&V!=='join'&&!G){buzzFx();nav('join');}  // minimized: roles dealt, back to the roomif(ping){buzzFx();toast(t('pingedYou'));}
         if(st.g&&!st.g.ph&&MP.readyDeal===st.g.deal&&!st.g.meReady&&MP.hb%2===0)send({t:'ready',deal:st.g.deal});
         const g=st.g;if(g&&MP.sent&&MP.hb%2===0){if(g.ph==='night'&&MP.sent.k===nkeyN(g))send({t:'act',n:g.n,deal:g.deal,sel:MP.sent.sel});if(g.ph==='vote'&&MP.sent.k==='v'+g.v)send({t:'vote',v:g.v,sel:MP.sent.sel});}}}}
   catch(e){const gone=Date.now()-MP.lastOk;if(gone>4000)MP.status='lost';if(gone>8000&&!MP.online)rescan();}
   MP.busy=false;if(MP.status==='ok')chResend();if(MP.role==='client'&&++MP.hb%3===0)send({t:'hb'});
+  if(V!=='join'&&MP.role==='client'&&['kicked','closed','noroom','started','taken','full'].includes(MP.status))nav('join');  // minimized: show what happened
+  else if(V!=='join')rbarDraw();
   if(V==='join'){const sig=joinSig();if(sig!==MP.sig)render();else{const e=$('lat');if(e&&!MP.online)e.textContent=t('lat',{n:MP.lat});}}}
 function clientStop(bye){if(bye)chReset();clearInterval(MP.timer);MP.timer=null;MP.scanTok++;if(bye&&MP.role==='client'&&MP.host)send({t:'bye'});if(MP.ws){const w=MP.ws;MP.ws=null;setTimeout(()=>{try{w.close();}catch(e){}},300);}if(bye){MP.role=null;MP.online=null;lsSet(JNK,null);}}
 async function rescan(){if(MP.rescan||Date.now()-(MP.rescanAt||0)<3000)return;MP.rescan=true;const tok=MP.scanTok,want=MP.host.name;
@@ -117,7 +119,7 @@ function joinView(){const st=MP.status;MP.sig=joinSig();let b='';
      ${MP.room?`<div class="sec mt"><div class="sh"><h3>${t('playersIn',{n:MP.room.players.length})}</h3></div>${roomList(MP.room.players)}</div>`:''}
      ${st==='ok'&&MP.room&&MP.room.g&&!MP.room.g.ph?`<div class="big mt"><div class="res" style="font-size:20px">${t('youReady')}</div><p class="hint" style="margin:0">${t('waitOthers')} ${t('readyN',{n:MP.room.g.readyN,m:MP.room.g.total})}</p></div>`
        :st==='ok'?`<p class="mpinfo" style="text-align:center;margin:4px 0 12px">${t('waitDeal')}</p>${MP.room.mu?`<p class="hint" style="text-align:center">${t('buzzMuted')}</p>`:`<button class="btn primary" onclick="send({t:'buzz'});toast(t('buzzSent'))">${t('buzzHost')}</button>`}${copyRow()}<button class="btn ghost mt" onclick="shareRoom()">${IC.share}${t(MP.online?'shareCode':'shareAddr')}</button>${MP.online&&me()?`<button class="btn ghost mt" onclick="dockOpen(true)">${IC.friend}${t('fInviteT')}</button>`:''}${rulesChips(MP.room.rules)}`:''}`;}
-  return head(joinTitle())+(MP.room&&MP.room.hv>APP.code?`<div class="banner"><div>${t('hostNewer')}</div></div>`:'')+b+`<button class="danger" onclick="leaveAsk()">${t('leave')}</button>`;}
+  return head(joinTitle(),roomLobby()?minBtn():'')+(MP.room&&MP.room.hv>APP.code?`<div class="banner"><div>${t('hostNewer')}</div></div>`:'')+b+`<button class="danger" onclick="leaveAsk()">${t('leave')}</button>`;}
 function joinTitle(){const g=MP.room&&MP.room.g,h=MP.host&&MP.host.name;
   if(g&&g.ph){if(g.ph==='night'||g.ph==='nightDone')return t('night')+' '+g.n;if(g.ph==='vote'||g.ph==='voted')return t(g.open?'tableVote':'ballot');if(g.ph==='end')return t('gameOver');
     if(g.ph==='dead')return t('outT');return t(LBL[g.label]||'roomOf',{n:esc(h||'')})+(g.label==='morning'||g.label==='day'?' '+g.day:'');}

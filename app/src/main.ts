@@ -17,7 +17,7 @@ function render(){
   if(G&&G.mp&&MP.role==='host'&&S.host.kick==='any'&&G.phase!=='end')h+=`<button class="pfab" onclick="playersSheet()" aria-label="${t('playersT')}">${IC.users}</button>`;
   const key=G?ph+'|'+G.i+'|'+G.day+'|'+G.revealed+'|'+G.mode+'|'+G.logId:'v:'+V;const app=$('app');
   app.classList.toggle('anim',key!==lastRenderKey);lastRenderKey=key;
-  app.innerHTML=h;dockDraw();
+  app.innerHTML=h;dockDraw();rbarDraw();
   if(G&&['morning','verdict','end'].includes(ph)&&!G.revealed&&!revealTimer)arm(1.5);
   if($('hold'))bindHold();
 }

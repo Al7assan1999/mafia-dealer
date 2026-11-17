@@ -1,6 +1,6 @@
 /* ---------- game flow ---------- */
 function shuffle(a){for(let i=a.length-1;i>0;i--){const r=crypto.getRandomValues(new Uint32Array(1))[0]%(i+1);[a[i],a[r]]=[a[r],a[i]];}return a;}
-function startGame(){
+function startGame(){if(roomMinned()){leaveFirst(startGame);return;}
   if(new Set(S.players.map(nkey)).size<S.players.length){render();return;}
   const names=S.players.map((p,i)=>p.trim()||t('pname')+' '+(i+1));
   const deck=[];for(const r of ['mafia','doctor','detective'])for(let k=0;k<S.counts[r];k++)deck.push(r);
@@ -11,6 +11,6 @@ function startGame(){
   resumeOffer=false;SND.unlock();NARR.welcome();enterGame();save();render();
 }
 function enterGame(){try{history.pushState({g:1},'');}catch(e){}}
-function resumeGame(){SND.unlock();G=S.game;G.ev=G.ev||{first:null,saves:[],caught:[]};resumeOffer=false;enterGame();render();}
+function resumeGame(){if(roomMinned()){leaveFirst(resumeGame);return;}SND.unlock();G=S.game;G.ev=G.ev||{first:null,saves:[],caught:[]};resumeOffer=false;enterGame();render();}
 function discardGame(){S.game=null;G=null;resumeOffer=false;save();render();}
 function go(phase: string,extra?: Partial<Game>){G.phase=phase;G.sel=null;G.revealed=false;if(extra)Object.assign(G,extra);save();if(G.mp)hostPublish();render();window.scrollTo(0,0);}

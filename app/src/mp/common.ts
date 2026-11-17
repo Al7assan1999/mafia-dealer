@@ -6,6 +6,7 @@ function myId(){let id=null;try{id=localStorage.getItem('mafiaDealer.id');}catch
 function parseIp(str){const [a,b]=String(str||'0,0').split(',').map(Number);const d=n=>n?[n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255].join('.'):'';return{ip:d(a),gw:d(b)};}
 function buzzFx(){try{navigator.vibrate&&navigator.vibrate([90,60,90]);}catch(e){}SND.unlock();SND.hit(false);const f=$('flash');if(f){f.classList.remove('go');void f.offsetWidth;f.classList.add('go');}}
 const nameBox=()=>`<div class="sec"><div class="flbl" style="margin-top:0">${t('yourName')}</div>${me()?`<div class="meline">${avatarHtml(me().avatar,me().id,40)}<div><b>${esc(me().display)}</b><small>${t('fromProfile')}</small></div></div>`:`<input class="search" style="margin:0" maxlength="18" value="${esc(S.mpName||'')}" oninput="S.mpName=this.value;persist()"><p class="mpinfo" style="margin:8px 0 0">${t('aNameTip')}</p>`}</div>`;
+const minBtn=()=>`<button class="ib" onclick="roomMin()" aria-label="${t('minT')}" title="${t('minT')}">${IC.minimize}</button>`;
 function wifiView(){return head(t('modeWifi'))+nameBox()+`<p class="mpinfo">${t('mpInfo')}</p><div class="big2"><button class="btn primary" onclick="hostStart()">${t('host')}<small>${t('hostSub')}</small></button><button class="btn ghost" onclick="joinStart()">${t('join')}<small>${t('joinSub')}</small></button></div>`;}
 function onlineView(){return head(t('modeOnline'))+`<p class="mpinfo">${t('onlineSub')}</p>
    <button class="btn primary" onclick="hostStart(true)">${t('hostOnline')}</button>

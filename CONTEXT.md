@@ -9,7 +9,14 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## Current state: v2.11 (versionCode 30), published on the relay 2026-11-17 (relay version d0131aa9)
+## Current state: v2.12 (versionCode 31), built 2026-11-17, not published yet (app only; the relay is unchanged since v2.11)
+Alhassan's list (plan approved; his choices: minimize "Lobby only", return "Bar at the top", bell history "On this phone"):
+- Minimize a room (lobby only, host and players): a Minimize button in the lobby header (`roomMin`) goes Home while the room keeps running. On every menu screen a bar at the top (`#rbar`, `rbarDraw`) says "Your room · N players" / "In X's room" and goes back (`roomBack`); the chat button stays. Minimized players are pulled back when roles are dealt (with buzzFx) or when the room ends for them (kicked, closed...). Starting an Offline game, hosting or joining another room while minimized asks "Leave this room?" first (`leaveFirst`). `roomMinned()` counts only a live room (host, or a player whose status is ok/lost/joining/search). During a game nothing changes.
+- The invite / Ask-to-join banner comes from the top, just under the header row (and under the room bar), so Back, profile and bell stay tappable.
+- Bell history (`S.nlog`, 24 h on this phone): invites, join requests, friend requests and "accepted" notes stay after being handled, read-only with their result (Joined, Let in, Accepted, Declined, Dismissed, Expired after 30 min, No longer available). "Accepted" notes are taken off the relay when they reach the phone. A request still waiting stays past 24 h. The count is only what still needs an answer plus new notes. Clear removes the handled items and the notes.
+- Tests: new `test_room212.js` (17, Wi-Fi mock); `test_notify_app.js` now 26.
+
+## Previous: v2.11 (versionCode 30), published on the relay 2026-11-17 (relay version d0131aa9)
 Open question for Alhassan (decide later): Let in currently sends a normal invite back (the asker auto-joins if their app still remembers asking); option: make it its own "X let you in" message.
 Alhassan's list of 2026-11-17 (plan approved; his choices: Friends "Tabs + status pills", bell "Banner + bell", accepted notes kept 7 days, Telegram "App link + fallback page"):
 - Fixed: the tutorial was see-through in Noir. Noir's `--bgfx` ends with a colour, so `background:var(--bgfx),var(--bg)` was invalid (a colour may only be the last layer) and dropped; Noir now uses `var(--bgfx)` alone.
