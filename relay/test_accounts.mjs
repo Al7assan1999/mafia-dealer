@@ -87,6 +87,27 @@ r = await call("/acc/inbox", { st: "room", op: 1 }, tB); ok(!r.j.jr.length, "and
 for (const v of (await call("/acc/inbox", {}, tok2)).j.inv) await call("/acc/invite/done", { id: v.id }, tok2);
 r = await call("/acc/joinreq", { id: idC }, tB); ok(r.st === 403, "ask to join needs a friend");
 await call("/acc/inbox", { st: "", op: 0 }, tB);
+// v2.11: notes ("X accepted your request"), invite / ask again after 5 s, the invite link page and the app link file
+r = await call("/acc/inbox", {}, tok2); ok(r.j.nt.some(n => n.kind === "acc" && n.from.id === idB && n.from.display), "the one who asked gets a note when the request is accepted");
+const nid = r.j.nt.find(n => n.from.id === idB).id; await call("/acc/note/done", { id: nid }, tok2); r = await call("/acc/inbox", {}, tok2); ok(!r.j.nt.some(n => n.id === nid), "a cleared note is gone");
+r = await call("/acc/invite", { id: idB, code: "777111" }, tok2); const i1 = (await call("/acc/inbox", {}, tB)).j.inv.find(v => v.code === "777111");
+r = await call("/acc/invite", { id: idB, code: "777111" }, tok2); ok(r.j.dup, "invite again within 5 s: ignored");
+await new Promise(res => setTimeout(res, 5200));
+r = await call("/acc/invite", { id: idB, code: "777111" }, tok2); ok(r.j.ok && !r.j.dup, "invite again after 5 s: sent");
+r = await call("/acc/inbox", {}, tB); const i2 = r.j.inv.filter(v => v.code === "777111"); ok(i2.length === 1 && i2[0].id !== i1.id, "it replaces the old invite (a new one, so a new banner)");
+for (const v of r.j.inv) await call("/acc/invite/done", { id: v.id }, tB);
+await call("/acc/inbox", { st: "room", op: 1 }, tB);
+r = await call("/acc/joinreq", { id: idB }, tok2); r = await call("/acc/joinreq", { id: idB }, tok2); ok(r.j.dup, "ask again within 5 s: ignored");
+await new Promise(res => setTimeout(res, 5200));
+const j1 = (await call("/acc/inbox", { st: "room", op: 1 }, tB)).j.jr[0].id; r = await call("/acc/joinreq", { id: idB }, tok2);
+r = await call("/acc/inbox", { st: "room", op: 1 }, tB); ok(!r.j.dup && r.j.jr.length === 1 && r.j.jr[0].id !== j1, "ask again after 5 s: a new request replaces the old");
+for (const v of r.j.jr) await call("/acc/invite/done", { id: v.id }, tB);
+await call("/acc/inbox", { st: "", op: 0 }, tB);
+let pg = await fetch(BASE + "/j/482913"); let html = await pg.text();
+ok(pg.status === 200 && html.includes("482 913") && html.includes("intent://") && html.includes("package=com.mafiadealer.app") && html.includes("/MafiaDealer.apk"), "invite link page: the code, Open the app, Download");
+pg = await fetch(BASE + "/j/48291"); ok(!(await pg.text()).includes("intent://"), "a link without 6 digits is not a join page");
+const al = await (await fetch(BASE + "/.well-known/assetlinks.json")).json();
+ok(al[0].target.package_name === "com.mafiadealer.app" && al[0].target.sha256_cert_fingerprints[0].startsWith("E8:13:D5:AC"), "app link file: the package and the signing key fingerprint");
 r = await call("/acc/tglink", {}, tC); await tg("/start " + r.j.code, 777003);
 r = await call("/acc/invite", { id: idC, code: code6 }, tok2); ok(r.j.ok && r.j.tg === true, "invite a friend whose app is closed: goes to their Telegram");
 r = await call("/acc/user/" + idB, null, tok2); ok(r.j.user.rel === "ok" && r.j.user.uname === unB && "on" in r.j.user, "friend profile card");

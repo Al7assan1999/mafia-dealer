@@ -14,16 +14,16 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  // request by @username from the Friends screen
  ok(await a.isVisible('#fdock .ftab'),'signed in: friends tab on the screen edge');
  await a.click('#fdock .ftab');await a.waitForSelector('.fdrawer');ok(true,'the tab opens the drawer');
- await a.click('.fdh .ib >> nth=0');await a.waitForSelector('#fun');ok(!(await a.isVisible('.fdrawer')),'+ in the drawer opens the full Friends screen');await a.fill('#fun','@'+uB);await a.click('.prow .pill');
- await a.waitForSelector(`.sec:has-text("Requests you sent") :text("@${uB}")`,{timeout:12000});ok(true,'request sent: shows under "Requests you sent"');
+ await a.click('.fdh .ib >> nth=0');await a.waitForSelector('#fun');ok(!(await a.isVisible('.fdrawer')),'+ in the drawer opens the full Friends screen');await a.fill('#fun','@'+uB);await a.click('.prow.fadd .btn');
+ await a.waitForFunction(()=>FR&&FR.out.length===1,null,{timeout:12000});await a.click('.ftabs button:has-text("Sent")');await a.waitForSelector(`.flist :text("@${uB}")`,{timeout:12000});ok(true,'request sent: shows in the Sent tab');await a.click('.ftabs button:has-text("Friends")');
  // B sees the request on Home, accepts it on the Friends screen
  await tick(bp);await bp.waitForSelector('#fdock .ftab .rdot',{timeout:12000});ok(true,'B: red dot on the tab for the request');
  await bp.click('#fdock .ftab');await bp.waitForSelector('.fdrawer .prs:has-text("Alhassan") button.mini:has-text("Accept")',{timeout:12000});await bp.click('.fdrawer button.mini:has-text("Accept")');
- await bp.waitForSelector('.fdrawer .flbl:has-text("Friends (1)")',{timeout:12000});ok(await bp.isVisible('.fdrawer .prs:has-text("Alhassan")'),'B accepts in the drawer: Alhassan is in the list');
+ await bp.waitForSelector('.fdrawer .prs.fr:has-text("Alhassan") .stp',{timeout:12000});ok(!(await bp.isVisible('.fdrawer button.mini:has-text("Accept")')),'B accepts in the drawer: Alhassan is in the list');
  await bp.evaluate(()=>history.back());await wait(bp,()=>!S.fpanel);ok(await bp.evaluate(()=>V==='home'&&!!document.querySelector('#fdock .ftab')),'phone Back minimizes the drawer and stays on Home');
  // online status
- await tick(bp);await a.evaluate(()=>friendsLoad());await a.waitForSelector('.sec:has-text("Friends (1)") .prs:has-text("Dareer") .dot.on',{timeout:12000});
- ok(await a.isVisible('.prs:has-text("Dareer") :text("Online")'),'A sees Dareer online');
+ await tick(bp);await a.evaluate(()=>friendsLoad());await a.waitForSelector('.flist .prs:has-text("Dareer") .fav.on',{timeout:12000});
+ ok(await a.isVisible('.flist .flbl:has-text("Online · 1")')&&await a.isVisible('.prs:has-text("Dareer") .stp.on:has-text("Online")'),'A sees Dareer online (Online group, green pill and ring)');
  await a.evaluate(()=>nav('home'));await tick(a);await a.waitForSelector('#fdock .ftab .avt',{timeout:12000});
  ok(await a.waitForFunction(()=>document.querySelector('#fdock .ftab b').textContent==='1',null,{timeout:12000}).then(()=>true,()=>false),'tab: avatar and count of online friends');
  // A hosts online and invites B

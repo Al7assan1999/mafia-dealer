@@ -69,7 +69,7 @@ input{font:inherit;color:inherit}
 .rsum .go,.wide .go{position:absolute;inset-inline-end:16px;top:50%;transform:translateY(-50%);font-size:24px;color:var(--mute)}[dir=rtl] .rsum .go,[dir=rtl] .wide .go{transform:translateY(-50%) scaleX(-1)}
 .rec{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;margin-top:4px;border-radius:var(--rs);border:1px dashed color-mix(in srgb,var(--gold) 50%,transparent);color:var(--gold);font-size:13.5px;text-align:start}
 .rec svg{width:18px;height:18px;flex:none}.rec span{flex:1}.rec b{font-size:13px}
-.preset{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.preset{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 -16px 14px;padding:8px 16px;position:sticky;top:0;z-index:6;background:var(--bg);box-shadow:0 10px 18px -12px #000c}
 .preset button{padding:12px 10px;border-radius:var(--rs);background:var(--card);border:1.5px solid var(--line);text-align:start;display:flex;flex-direction:column;gap:3px;backdrop-filter:var(--blur)}
 .preset button b{font-size:15px}.preset button small{font-size:12.5px;color:var(--mute);line-height:1.35}.preset button.on{border-color:var(--sel);background:var(--selbg)}.preset button:disabled{cursor:default}
 .rgrp .sh h3{display:flex;align-items:center;gap:8px}.gi{display:grid;place-items:center;width:26px;height:26px;border-radius:var(--rx);background:var(--card2);color:var(--gold)}.gi svg{width:15px;height:15px}
@@ -111,7 +111,9 @@ input{font:inherit;color:inherit}
 .pstat{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}.pstat span{font-size:12px;color:var(--mute);display:flex;flex-direction:column;gap:2px}.pstat b{font-family:var(--head);font-size:24px;color:var(--text)}
 .form{display:flex;gap:6px;flex-wrap:wrap}.form span{width:34px;height:34px;border-radius:var(--rx);display:grid;place-items:center;font-weight:800;font-size:13px}
 .form .w{background:color-mix(in srgb,var(--green) 20%,transparent);color:var(--green)}.form .l{background:color-mix(in srgb,var(--red2) 18%,transparent);color:var(--red2)}
-.intro{position:fixed;inset:0;z-index:40;background:var(--bgfx),var(--bg);display:flex;flex-direction:column;justify-content:center;padding:28px 22px;text-align:center}
+.intro{position:fixed;inset:0;z-index:40;background:var(--bgfx),var(--bg);}
+[data-theme=noir] .intro{background:var(--bgfx);}  /* noir --bgfx already ends with its colour: a colour may only be the last layer */
+.intro{display:flex;flex-direction:column;justify-content:center;padding:28px 22px;text-align:center}
 .intro .icard{animation:rise .4s cubic-bezier(.2,.8,.2,1) both}
 .intro .iorb{width:110px;height:110px;margin:0 auto 22px;border-radius:32px;display:grid;place-items:center;background:var(--mark);box-shadow:var(--mark-sh);color:#fff}.intro .iorb svg{width:54px;height:54px}
 [data-theme=noir] .intro .iorb{background:none;border:2px solid var(--red);color:var(--red);border-radius:6px;transform:rotate(-4deg)}
@@ -168,6 +170,8 @@ input{font:inherit;color:inherit}
 
 /* home */
 .hero{text-align:center;padding:104px 0 28px}
+body.home{padding-bottom:16px}
+@media (max-height:780px){body.home .hero{padding:60px 0 18px}body.home .logo{width:72px;height:72px;margin-bottom:12px}body.home .crown{margin-top:12px}body.home .ver{margin-top:10px}}
 .logo{width:86px;height:86px;border-radius:26px;margin:0 auto 16px;display:grid;place-items:center;background:var(--mark);box-shadow:var(--mark-sh)}
 .logo svg{width:48px;height:48px}
 [data-theme=noir] .logo{border:2px solid var(--red);border-radius:6px;transform:rotate(-6deg)}
@@ -336,7 +340,7 @@ body.night .sky{opacity:1}[data-theme=noir] body.night .sky{opacity:.45}
 .fdh{display:flex;align-items:center;gap:8px;margin-bottom:6px}.fdh b{flex:1;font-size:20px}.fdh .ib{font-size:22px;font-weight:700}
 .fdrawer .flbl{margin:14px 0 2px}
 /* v2.10 top icons: round profile (start side on Home), language flag */
-.ib.pf{width:50px;height:50px;border-radius:50%;border-color:var(--line2)}.ib.pf svg{width:24px;height:24px}#app>.ib.pf{position:absolute;top:0;inset-inline-start:0;z-index:2}
+.ib.pf{width:50px;height:50px;border-radius:50%;border-color:var(--line2)}.ib.pf svg{width:24px;height:24px}#app>.pfrow{position:absolute;top:0;inset-inline-start:0;z-index:2;display:flex;align-items:center;gap:8px}
 .corner .ib.pf{width:46px;height:46px;margin-top:-2px}.ib.flag{font-size:22px;line-height:1}.pfm .btn svg{width:20px;height:20px}
 /* v2.10 room chat: a panel over the room (#chat sits outside #app), and its button under the friends tab */
 #fdock .fchat{padding:11px 8px}#fdock .fchat>svg{width:21px;height:21px}#fdock .fchat .cnt{position:absolute;top:-6px;left:-6px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:var(--red);color:#fff;font-weight:800;font-size:11px;line-height:19px;font-style:normal;text-align:center}[dir=rtl] #fdock .fchat .cnt{left:auto;right:-6px}
@@ -352,3 +356,25 @@ body.night .sky{opacity:1}[data-theme=noir] body.night .sky{opacity:.45}
 .chf{margin:8px 0 0}
 /* v2.10.1 Online: the code box and Join on one row */
 .prow.ojoin{margin:0}.prow.ojoin .codein{flex:1;min-width:0;margin:0}.prow.ojoin .btn{width:auto;margin:0;padding:0 18px;flex:none}.prow.ojoin .btn:disabled{opacity:.45}
+.role .rt .lim{display:block;margin-top:3px;color:var(--gold);font-size:12.5px;font-weight:700}.step button:disabled{opacity:.3;cursor:default}
+/* v2.11 bell (Home, next to the profile) */
+.ib.bell{position:relative}.ib .cnt,.seg .cnt{position:absolute;top:-6px;inset-inline-end:-6px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:var(--red);color:#fff;font-size:11px;font-weight:800;line-height:19px;font-style:normal;text-align:center}
+.bellsh{max-height:80vh;overflow-y:auto}.bellsh .sh{margin-bottom:4px}.prs.bi .fn{flex:1}.prs.bi .fn span{white-space:normal}.mini.nx{padding:5px 9px}
+/* v2.11 friends: my card, add box, tabs, rows with a status ring and pill */
+.mecard{display:flex;flex-direction:column;gap:12px}.mecard .btn{margin:0}.mecard .meline b{font-size:19px}
+.prow.fadd{position:relative;margin:0 0 14px}.prow.fadd>svg{position:absolute;inset-inline-start:14px;top:50%;width:19px;height:19px;transform:translateY(-50%);color:var(--dim);pointer-events:none}
+.prow.fadd input{flex:1;min-width:0;padding-inline-start:42px}.prow.fadd .btn{width:auto;margin:0;padding:0 20px;flex:none}
+.seg.ftabs{display:flex;margin-bottom:12px}.seg.ftabs button{flex:1;position:relative;padding:10px 6px}.seg.ftabs .cnt{position:static;display:inline-block;min-width:18px;height:18px;line-height:18px;margin-inline-start:4px;background:var(--line2);color:var(--text)}
+.seg.ftabs button.on .cnt{background:#fff3}.seg.ftabs button.hot .cnt{background:var(--red);color:#fff}
+.flist{padding-top:6px}.flist>.flbl:first-child,.fdrawer .flbl:first-of-type{margin-top:4px}
+.fav{position:relative;display:inline-grid;flex:none;border-radius:50%}.fav .avt{border-radius:50%!important}
+.fav.on,.fav.room,.fav.game{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--green)}.fav.room{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--gold)}.fav.game{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--red2)}.fav.off{opacity:.75}
+.fav::after{content:'';position:absolute;bottom:-1px;inset-inline-end:-1px;width:11px;height:11px;border-radius:50%;border:2px solid var(--bg);display:none}
+.fav.on::after{display:block;background:var(--green)}.fav.room::after{display:block;background:var(--gold)}.fav.game::after{display:block;background:var(--red2)}
+.prs.fr{padding:11px 0}.prs.fr .fl{gap:12px}.prs.fr .fn b{font-size:16px}
+.stp{display:inline-block!important;margin-top:4px;padding:2px 9px;border-radius:99px;font-size:11.5px!important;font-weight:800!important;background:var(--bg2);color:var(--mute)!important}
+.stp.on{background:color-mix(in srgb,var(--green) 16%,transparent);color:var(--green)!important}.stp.room{background:color-mix(in srgb,var(--gold) 16%,transparent);color:var(--gold)!important}.stp.game{background:color-mix(in srgb,var(--red2) 16%,transparent);color:var(--red2)!important}
+.prs .un{display:block;color:var(--mute);font-size:12.5px;font-weight:600;margin-top:2px}
+.mini.pri{background:var(--sel);border-color:var(--sel);color:#fff}.mini:disabled{opacity:.55}
+.fempty{text-align:center;padding:22px 10px;color:var(--mute)}.fempty svg{width:38px;height:38px;opacity:.5}.fempty p{margin-top:8px;font-size:14px;line-height:1.5}
+[data-theme=noir] .fav,[data-theme=noir] .fav .avt{border-radius:4px!important}

@@ -19,13 +19,13 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  await a.click('#fdock .ftab');await a.click('.fdrawer .prs:has-text("Dareer") .fl');await wait(a,()=>V==='profile');
  await a.evaluate(()=>back());await a.waitForTimeout(500);ok(await a.evaluate(()=>V==='home'),'drawer > profile > drawer > profile > Back: back on Home (was stuck)');
  // 2. top icons
- ok(await a.evaluate(()=>{const p=document.querySelector('#app>.ib.pf').getBoundingClientRect(),g=document.querySelector('.corner .ib').getBoundingClientRect();return p.left<50&&p.width>g.width&&getComputedStyle(document.querySelector('#app>.ib.pf')).borderRadius==='50%';}),'profile: on the left, round, bigger');
+ ok(await a.evaluate(()=>{const p=document.querySelector('.pfrow .ib.pf').getBoundingClientRect(),g=document.querySelector('.corner .ib').getBoundingClientRect();return p.left<50&&p.width>g.width&&getComputedStyle(document.querySelector('.pfrow .ib.pf')).borderRadius==='50%';}),'profile: on the left, round, bigger');
  ok((await a.textContent('.ib.flag'))==='\u{1F1EC}\u{1F1E7}','language button shows the UK flag in English');
  await a.click('.ib.flag');ok((await a.textContent('.ib.flag'))==='\u{1F1F8}\u{1F1E6}'&&await a.evaluate(()=>S.lang==='ar'),'tap: Arabic, the Saudi flag');
- ok(await a.evaluate(()=>document.querySelector('#app>.ib.pf').getBoundingClientRect().right>300),'Arabic: profile moves to the right');await a.click('.ib.flag');
- await a.click('#app>.ib.pf');ok(await a.isVisible('#modal .sheet:has-text("Show profile")')&&await a.isVisible('#modal .sheet button:has-text("Sign out")'),'profile tap: menu with Show profile and Sign out');
+ ok(await a.evaluate(()=>document.querySelector('.pfrow .ib.pf').getBoundingClientRect().right>300),'Arabic: profile moves to the right');await a.click('.ib.flag');
+ await a.click('.pfrow .ib.pf');ok(await a.isVisible('#modal .sheet:has-text("Show profile")')&&await a.isVisible('#modal .sheet button:has-text("Sign out")'),'profile tap: menu with Show profile and Sign out');
  await a.click('#modal button:has-text("Show profile")');ok(await a.evaluate(()=>V==='account'),'Show profile opens my profile');await a.evaluate(()=>nav('home'));
- await a.click('#app>.ib.pf');await a.click('#modal button:has-text("Sign out")');ok(await a.isVisible('#modal .sheet:has-text("Sign out?")'),'Sign out from the menu asks first');await a.click('#modal .btn.ghost');
+ await a.click('.pfrow .ib.pf');await a.click('#modal button:has-text("Sign out")');ok(await a.isVisible('#modal .sheet:has-text("Sign out?")'),'Sign out from the menu asks first');await a.click('#modal .btn.ghost');
  // 3. drag the side column
  const y0=await a.evaluate(()=>document.querySelector('#fdock .fside').getBoundingClientRect().top);
  await a.evaluate(()=>{const el=document.querySelector('#fdock .ftab'),r=el.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+20;

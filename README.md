@@ -21,8 +21,8 @@ An Android app that replaces the dealer in the Mafia party game. Built without t
 | `app/assets/style.css` | All styles, both themes |
 | `app/assets/audio.js` | Narrator clips and name clips in two voices (base64 Opus), packed by `voice/pack.py` |
 | `build/dexasm.py` | Minimal Dalvik assembler (writes `classes.dex`) |
-| `build/app_dex.py` | Native classes: `MainActivity` (WebView), `Voice` (TTS bridge, unused now), `Net` (JS bridge), `Srv` (HTTP server thread) |
-| `build/build_apk.py` | Writes the binary manifest, `resources.arsc`, zips and v2-signs the APK |
+| `build/app_dex.py` | Native classes: `MainActivity` (WebView, invite links via `onNewIntent`), `Voice` (TTS bridge, unused now), `Net` (JS bridge, `link()`), `Srv` (HTTP server thread) |
+| `build/build_apk.py` | Writes the binary manifest (incl. the verified app link `https://<relay>/j/<code>`), `resources.arsc`, zips and v2-signs the APK |
 | `build/verify_apk.py` | Independent checks of the APK (zip, v2 signature, dex via androguard, manifest, resources) |
 | `tests/` | Playwright tests (single-phone game) |
 | `tests/multiplayer/` | `mock_srv.py` mirrors the in-app server; tests simulate a host and several phones |
@@ -47,7 +47,7 @@ constants it uses.
 | `game/flow.ts`, `deal.ts`, `night.ts`, `day.ts`, `end.ts` | The single-phone game, phase by phase (the host reuses it) |
 | `screens/*.ts` | Setup, rules, settings, home, history, stats and profiles, guide |
 | `update.ts`, `accounts.ts`, `group.ts` | Update check and in-app install; accounts; shared group history |
-| `friends.ts` | Friends: list, requests, profile card, room invites and Ask to join (banner), online status, the side drawer |
+| `friends.ts` | Friends: screen (tabs, Online/Offline groups), requests, profile card, room invites and Ask to join (banner + bell), notifications bell, invite links, the side drawer |
 | `chat.ts` | Room chat (Everyone + 1:1) through the host, memory only |
 | `mp/common.ts`, `relay.ts`, `host.ts`, `hostGame.ts`, `client.ts` | Multiplayer: shared state, relay socket, host room, host game, player phone |
 | `main.ts` | `render()`, quitting, the intro, start-up |

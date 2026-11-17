@@ -15,6 +15,23 @@ const GCODE = /^[A-Z2-9]{8}$/, CORS = { "Access-Control-Allow-Origin": "*", "Acc
 const ACORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET,POST,OPTIONS", "Access-Control-Allow-Headers": "content-type,authorization" };
 const accounts = env => env.ACCOUNTS.get(env.ACCOUNTS.idFromName("global"));
 
+// App links (v2.11): Android checks this file, then opens https://<relay>/j/<code> straight in the app (same signing key as every build).
+const ASSETLINKS = [{ relation: ["delegate_permission/common.handle_all_urls"], target: { namespace: "android_app", package_name: "com.mafiadealer.app",
+  sha256_cert_fingerprints: ["E8:13:D5:AC:B2:78:DE:1D:D2:6F:E5:51:1D:57:AF:00:FC:2D:B5:15:94:33:E5:DF:B5:CB:B3:54:ED:64:64:71"] } }];
+// Without the app (or an old one) the link shows this page: open the app, download it, or type the code.
+function joinPage(u, code) {
+  const c = code.slice(0, 3) + " " + code.slice(3), apk = u.origin + "/MafiaDealer.apk";
+  const intent = `intent://${u.host}/j/${code}#Intent;scheme=https;package=com.mafiadealer.app;S.browser_fallback_url=${encodeURIComponent(apk)};end`;
+  return new Response(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mafia Dealer · ${c}</title>
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b0a10;color:#f3f0f7;font-family:system-ui,sans-serif;text-align:center;padding:24px;box-sizing:border-box}
+main{max-width:360px}h1{font-size:24px;margin:0 0 6px}p{color:#a49fb0;line-height:1.5;margin:6px 0}.code{font-size:40px;font-weight:800;letter-spacing:6px;color:#ffb347;margin:14px 0;direction:ltr}
+a{display:block;padding:15px;border-radius:14px;font-weight:800;text-decoration:none;margin:12px 0;font-size:17px}.p{background:linear-gradient(135deg,#ff2e63,#ff7a3d);color:#fff}.g{border:1px solid #ffffff2a;color:#f3f0f7}.ar{direction:rtl}</style></head>
+<body><main><h1>Mafia Dealer</h1><p>You're invited to a room.</p><p class="ar">أنت مدعو إلى غرفة.</p><div class="code">${c}</div>
+<a class="p" href="${intent}">Open Mafia Dealer · افتح التطبيق</a><a class="g" href="${apk}">Download the app · حمّل التطبيق</a>
+<p>Already have the app? Open it, tap Online and enter the code.</p><p class="ar">لديك التطبيق؟ افتحه، اضغط «عبر الإنترنت» وأدخل الرمز.</p></main></body></html>`,
+    { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+}
+
 export default {
   async fetch(req, env) {
     const u = new URL(req.url);
@@ -22,6 +39,9 @@ export default {
       if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: ACORS });
       return accounts(env).fetch(req);
     }
+    if (u.pathname === "/.well-known/assetlinks.json") return Response.json(ASSETLINKS);
+    const j = u.pathname.match(/^\/j\/(\d{6})$/);
+    if (j) return joinPage(u, j[1]);
     const g = u.pathname.match(/^\/g\/([A-Z2-9]+)(\/(add|edit))?$/);
     if (g) {
       if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
@@ -163,7 +183,7 @@ async function sha(x) { return [...new Uint8Array(await crypto.subtle.digest("SH
 
 // ---------------------------------------------------------------- accounts
 const UNAME = /^[A-Za-z0-9_.]{3,20}$/, ROLES = ["", "mafia", "doctor", "detective", "citizen"], CODE_TTL = 15 * 60e3;
-const ONLINE_MS = 2 * 60e3, INVITE_TTL = 30 * 60e3, MAX_FRIENDS = 300, INVITES_PER_HOUR = 30;
+const ONLINE_MS = 2 * 60e3, INVITE_TTL = 30 * 60e3, MAX_FRIENDS = 300, INVITES_PER_HOUR = 30, NOTE_TTL = 7 * 24 * 3600e3, AGAIN_MS = 5e3;
 const rnd = n => [...crypto.getRandomValues(new Uint8Array(n))].map(b => b.toString(16).padStart(2, "0")).join("");
 async function pbkdf2(pass, salt) {
   const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(pass), "PBKDF2", false, ["deriveBits"]);
@@ -187,6 +207,8 @@ export class Accounts {
     for (const c of ["seen INTEGER DEFAULT 0", "st TEXT DEFAULT ''", "hide INTEGER DEFAULT 0", "op INTEGER DEFAULT 0"]) try { this.sql.exec("ALTER TABLE users ADD COLUMN " + c); } catch (e) {}  // already there
     // invites.kind (v2.10): 'i' = come to my room (code), 'j' = let me into yours (no code; answered with an 'i')
     try { this.sql.exec("ALTER TABLE invites ADD COLUMN kind TEXT DEFAULT 'i'"); } catch (e) {}
+    // notes (v2.11): things to tell someone later, kept 7 days: kind 'acc' = frm accepted uid's friend request
+    this.sql.exec("CREATE TABLE IF NOT EXISTS notes(id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT, kind TEXT, frm TEXT, created INTEGER)");
   }
   rel(me, id) {  // 'ok' friends, 'out' I asked, 'in' they asked, '' nothing
     const r = this.one("SELECT * FROM friends WHERE (a=? AND b=?) OR (a=? AND b=?)", me, id, id, me);
@@ -194,6 +216,7 @@ export class Accounts {
   }
   onl(r) { return !r.hide && r.seen > Date.now() - ONLINE_MS; }
   card(r, rel) { const c = Object.assign(this.pub(r), { rel }); delete c.tg; if (rel === "ok") { c.on = this.onl(r); c.st = c.on ? r.st || "" : ""; c.op = c.st === "room" && !!r.op; } return c; }
+  note(uid, kind, frm) { this.sql.exec("DELETE FROM notes WHERE uid=? AND kind=? AND frm=?", uid, kind, frm); this.sql.exec("INSERT INTO notes(uid,kind,frm,created) VALUES(?,?,?,?)", uid, kind, frm, Date.now()); }
   one(q, ...b) { return this.sql.exec(q, ...b).toArray()[0] || null; }
   pub(r) { return { id: r.id, uname: r.uname, display: r.display, fav: r.fav || "", avatar: r.avatar && r.avatar.startsWith("data:") ? "i:" + r.av : (r.avatar || "p:0"), tg: !!r.tg }; }
   async session(uid) { const tok = rnd(32); this.sql.exec("INSERT INTO sessions VALUES(?,?,?)", await sha(tok), uid, Date.now()); return tok; }
@@ -211,6 +234,7 @@ export class Accounts {
     if (req.method === "POST") { const t = await req.text(); if (t.length > 300000) return out({ err: "too big" }, 413); try { body = t ? JSON.parse(t) : {}; } catch (e) { return out({ err: "bad json" }, 400); } }
     this.sql.exec("DELETE FROM codes WHERE created<?", Date.now() - CODE_TTL);
     this.sql.exec("DELETE FROM invites WHERE created<?", Date.now() - INVITE_TTL);
+    this.sql.exec("DELETE FROM notes WHERE created<?", Date.now() - NOTE_TTL);
 
     if (p === "/internal/verify") {  // called by Room objects only (this path is not routed from outside)
       const m = String(body.tok || ""); if (!/^[a-f0-9]{64}$/.test(m)) return out({}, 403);
@@ -298,6 +322,7 @@ export class Accounts {
       if (!same(await pbkdf2(String(body.pass || ""), me.salt), me.hash)) return out({ err: "wrong" }, 401);
       for (const t of ["sessions", "codes"]) this.sql.exec(`DELETE FROM ${t} WHERE uid=?`, me.id);
       this.sql.exec("DELETE FROM friends WHERE a=? OR b=?", me.id, me.id); this.sql.exec("DELETE FROM invites WHERE frm=? OR too=?", me.id, me.id);
+      this.sql.exec("DELETE FROM notes WHERE uid=? OR frm=?", me.id, me.id);
       this.sql.exec("DELETE FROM users WHERE id=?", me.id); return out({ ok: true });
     }
     // ---- friends
@@ -311,7 +336,9 @@ export class Accounts {
         const id = f.a === me.id ? f.b : f.a; rel[id] = f.state === "ok" ? "ok" : f.a === me.id ? "out" : "in";
         if (f.state === "ok" && this.onl(f)) { on++; sg += id + (f.st || "") + (f.op ? 1 : 0) + ","; }
       }
-      return out({ inv: list("i"), jr: list("j"), rel, on, sg, req: Object.values(rel).filter(x => x === "in").length });
+      const nt = this.sql.exec("SELECT n.id AS nid, n.kind AS nkind, n.created AS nat, u.* FROM notes n JOIN users u ON u.id=n.frm WHERE n.uid=? ORDER BY n.created DESC LIMIT 20", me.id).toArray()
+        .map(r => ({ id: r.nid, kind: r.nkind, at: r.nat, from: this.card(r, rel[r.id] || "") }));
+      return out({ inv: list("i"), jr: list("j"), nt, rel, on, sg, req: Object.values(rel).filter(x => x === "in").length });
     }
     if (p === "/acc/friends") {
       const rows = this.sql.exec("SELECT f.a, f.state, u.* FROM friends f JOIN users u ON u.id = CASE WHEN f.a=? THEN f.b ELSE f.a END WHERE f.a=? OR f.b=?", me.id, me.id, me.id).toArray();
@@ -329,14 +356,14 @@ export class Accounts {
       if (r.id === me.id) return out({ err: "self" }, 400);
       const rel = this.rel(me.id, r.id);
       if (rel === "ok" || rel === "out") return out({ rel, user: this.card(r, rel) });
-      if (rel === "in") { this.sql.exec("UPDATE friends SET state='ok' WHERE a=? AND b=?", r.id, me.id); return out({ rel: "ok", user: this.card(r, "ok") }); }  // they asked first: that's a yes
+      if (rel === "in") { this.sql.exec("UPDATE friends SET state='ok' WHERE a=? AND b=?", r.id, me.id); this.note(r.id, "acc", me.id); return out({ rel: "ok", user: this.card(r, "ok") }); }  // they asked first: that's a yes
       if (this.one("SELECT COUNT(*) n FROM friends WHERE a=? OR b=?", me.id, me.id).n >= MAX_FRIENDS) return out({ err: "full" }, 409);
       this.sql.exec("INSERT INTO friends VALUES(?,?,'req',?)", me.id, r.id, Date.now());
       return out({ rel: "out", user: this.card(r, "out") });
     }
     if (p === "/acc/friend/accept") {
       const id = String(body.id || ""); if (this.rel(me.id, id) !== "in") return out({ err: "norequest" }, 404);
-      this.sql.exec("UPDATE friends SET state='ok' WHERE a=? AND b=?", id, me.id); return out({ rel: "ok" });
+      this.sql.exec("UPDATE friends SET state='ok' WHERE a=? AND b=?", id, me.id); this.note(id, "acc", me.id); return out({ rel: "ok" });
     }
     if (p === "/acc/friend/decline" || p === "/acc/friend/remove") {  // decline a request, cancel mine, or unfriend: the other side is not told
       const id = String(body.id || "");
@@ -349,19 +376,27 @@ export class Accounts {
       if (!CODE.test(code)) return out({ err: "code" }, 400);
       const r = this.rel(me.id, id) === "ok" && this.one("SELECT * FROM users WHERE id=?", id); if (!r) return out({ err: "notfriend" }, 403);
       this.sql.exec("DELETE FROM invites WHERE kind='j' AND frm=? AND too=?", id, me.id);  // they asked to join: this is the answer
-      if (this.one("SELECT id FROM invites WHERE kind='i' AND frm=? AND too=? AND code=?", me.id, id, code)) return out({ ok: true, dup: true });  // one invite per friend per room
+      const old = this.one("SELECT id, created FROM invites WHERE kind='i' AND frm=? AND too=? AND code=?", me.id, id, code);  // one invite per friend per room
+      if (old && Date.now() - old.created < AGAIN_MS) return out({ ok: true, dup: true });
       if (this.one("SELECT COUNT(*) n FROM invites WHERE frm=? AND created>?", me.id, Date.now() - 60 * 60e3).n >= INVITES_PER_HOUR) return out({ err: "slow" }, 429);
+      if (old) this.sql.exec("DELETE FROM invites WHERE id=?", old.id);  // invited again: a new invite (new banner)
       this.sql.exec("INSERT INTO invites(frm,too,code,created) VALUES(?,?,?,?)", me.id, id, code, Date.now());
       const tg = !!r.tg && !(r.seen > Date.now() - ONLINE_MS);  // app closed: Telegram reaches them (the real status, even when hidden)
-      if (tg) await this.tg(r.tg, `${me.display} (@${me.uname}) invited you to a Mafia Dealer room.\nOpen the app, tap Online and join with code ${code.slice(0, 3)} ${code.slice(3)}.\nThe invite expires in 30 minutes.`);
+      if (tg) await this.tg(r.tg, `${me.display} (@${me.uname}) invited you to a Mafia Dealer room.\nTap to join: ${u.origin}/j/${code}\nThe invite expires in 30 minutes.`);
       return out({ ok: true, tg });
     }
     if (p === "/acc/joinreq") {  // ask a friend in an online lobby to let me in: they answer with a normal invite (in the app only, they are online)
       const id = String(body.id || ""), r = this.rel(me.id, id) === "ok" && this.one("SELECT * FROM users WHERE id=?", id); if (!r) return out({ err: "notfriend" }, 403);
       if (!this.onl(r) || r.st !== "room" || !r.op) return out({ err: "notopen" }, 409);
-      if (this.one("SELECT id FROM invites WHERE kind='j' AND frm=? AND too=?", me.id, id)) return out({ ok: true, dup: true });
+      const old = this.one("SELECT id, created FROM invites WHERE kind='j' AND frm=? AND too=?", me.id, id);
+      if (old && Date.now() - old.created < AGAIN_MS) return out({ ok: true, dup: true });
       if (this.one("SELECT COUNT(*) n FROM invites WHERE frm=? AND created>?", me.id, Date.now() - 60 * 60e3).n >= INVITES_PER_HOUR) return out({ err: "slow" }, 429);
+      if (old) this.sql.exec("DELETE FROM invites WHERE id=?", old.id);
       this.sql.exec("INSERT INTO invites(frm,too,code,created,kind) VALUES(?,?,?,?,'j')", me.id, id, "", Date.now());
+      return out({ ok: true });
+    }
+    if (p === "/acc/note/done") {  // one note (id) or all of them
+      if (body.all) this.sql.exec("DELETE FROM notes WHERE uid=?", me.id); else this.sql.exec("DELETE FROM notes WHERE id=? AND uid=?", Number(body.id), me.id);
       return out({ ok: true });
     }
     if (p === "/acc/invite/done") { this.sql.exec("DELETE FROM invites WHERE id=? AND too=?", Number(body.id), me.id); return out({ ok: true }); }

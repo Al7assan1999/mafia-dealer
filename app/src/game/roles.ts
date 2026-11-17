@@ -1,7 +1,10 @@
 /* ---------- setup ---------- */
 function fixCounts(){const c=S.counts;c.doctor=1;c.mafia=Math.max(1,Math.min(10,c.mafia|0));c.detective=c.mafia>=2?Math.min(1,Math.max(0,c.detective|0)):0;}
 const maxMafia=n=>Math.max(1,Math.floor((n-2)/2));
-function deckErr(n,names){fixCounts();const c=n-S.counts.mafia-S.counts.doctor-S.counts.detective;
+/** Would this many Mafia / Detectives still make a game for n players? (the + buttons stop before it would not) */
+const deckOk=(n,m,d)=>n>=4&&m<=maxMafia(n)&&n-m-1-d>=0&&n-2*m>=2;
+function deckErr(n,names){fixCounts();if(n>=4){S.counts.mafia=Math.min(S.counts.mafia,maxMafia(n));fixCounts();}  // fewer players now: back inside the limits
+  const c=n-S.counts.mafia-S.counts.doctor-S.counts.detective;
   if(n<4)return t('need3');if(c<0)return t('toomany');if((n-S.counts.mafia)-S.counts.mafia<2)return t('mafiaGap',{n:maxMafia(n)});
   if(names&&new Set(names.map(nkey)).size<n)return t('dupNames');return '';}
 /* ---------- rules: presets + their own screen ---------- */

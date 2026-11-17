@@ -10,7 +10,7 @@ function setupView(){
   h+=`<div class="cta"><button class="btn primary" ${err?'disabled':''} onclick="startGame()">${t('deal')}</button></div>`;
   return h;
 }
-const roleRow=(r,right)=>`<div class="role"><div class="ric" style="background:${RC[r]}1f;color:${RC[r]}">${IC[r]}</div><div class="rt"><b style="color:${RC[r]}">${t(r)}</b><span>${t('d_'+r)}</span></div>${right}</div>`;
+const roleRow=(r,right,lim?: string)=>`<div class="role"><div class="ric" style="background:${RC[r]}1f;color:${RC[r]}">${IC[r]}</div><div class="rt"><b style="color:${RC[r]}">${t(r)}</b><span>${t('d_'+r)}</span>${lim?`<small class="lim">${lim}</small>`:''}</div>${right}</div>`;
 const tog=(k: string,a: string,b?: string)=>`<div class="tg" onclick="flip('${k}')"><div class="rt"><b>${a}</b>${b?`<span>${b}</span>`:''}</div><div class="sw ${S.rules[k]?'on':''}"></div></div>`;
 const fmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
 function persist(){save();}
@@ -18,7 +18,7 @@ function addSaved(i){const n=S.roster[i];if(!n)return;const k=S.players.findInde
 function fixName(i){if(!S.players[i].trim()){S.players[i]=t('pname')+' '+(i+1);render();}persist();}
 function addPlayer(){if(S.players.length>=20)return;S.players.push(t('pname')+' '+(S.players.length+1));persist();render();setTimeout(()=>{const ins=document.querySelectorAll<HTMLInputElement>('.prow input');const l=ins[ins.length-1];if(l){l.focus();l.select();}},50);}
 function delPlayer(i){const n=S.players[i];ask(t('rmQ',{n:esc(n)}),t('rmD'),t('remove'),()=>{S.players.splice(i,1);persist();render();});}
-function cnt(r,d){S.counts[r]=(S.counts[r]|0)+d;fixCounts();persist();render();}
+function cnt(r,d){S.counts[r]=(S.counts[r]|0)+d;fixCounts();deckErr(V==='host'?hostIds().length:S.players.length,null);persist();render();}
 function flip(k){S.rules[k]=!S.rules[k];persist();render();}
 function tim(d){S.rules.timer=Math.max(30,Math.min(900,S.rules.timer+d));timer.left=S.rules.timer;persist();render();}
 function toggleLang(){S.lang=S.lang==='en'?'ar':'en';persist();render();}

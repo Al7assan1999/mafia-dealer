@@ -1,8 +1,9 @@
 function deckRules(n,err){const c=n-S.counts.mafia-S.counts.doctor-S.counts.detective;
   let h=`<div class="sec"><div class="sh"><h3>${t('deck')}</h3><span class="badge ${err?'bad':'ok'}">${n} ${t('players').toLowerCase()}</span></div>`;
-  h+=roleRow('mafia',`<div class="step"><button onclick="cnt('mafia',-1)">−</button><i>${S.counts.mafia}</i><button onclick="cnt('mafia',1)">+</button></div>`);
+  const m=S.counts.mafia,d=S.counts.detective,mUp=deckOk(n,m+1,m+1>=2?d:0),dUp=d<1&&deckOk(n,m,d+1);
+  h+=roleRow('mafia',`<div class="step"><button ${m<=1?'disabled':''} onclick="cnt('mafia',-1)">−</button><i>${m}</i><button ${mUp?'':'disabled'} onclick="cnt('mafia',1)">+</button></div>`,mUp||n<4?'':t('maxMafia',{m:maxMafia(n),n}));
   h+=roleRow('doctor',`<div class="step"><span class="auto">${t('docOne')}</span><i>1</i></div>`);
-  h+=roleRow('detective',S.counts.mafia>=2?`<div class="step"><button onclick="cnt('detective',-1)">−</button><i>${S.counts.detective}</i><button onclick="cnt('detective',1)">+</button></div>`
+  h+=roleRow('detective',S.counts.mafia>=2?`<div class="step"><button ${d<=0?'disabled':''} onclick="cnt('detective',-1)">−</button><i>${d}</i><button ${dUp?'':'disabled'} onclick="cnt('detective',1)">+</button></div>`
     :`<div class="step"><span class="auto">${t('detNeed2')}</span><i>0</i></div>`);
   h+=roleRow('citizen',`<div class="step"><span class="auto">${t('auto')}</span><i>${Math.max(c,0)}</i></div>`);
   const rm=recMafia(n);if(n>=4&&S.counts.mafia!==rm)h+=`<button class="rec" onclick="S.counts.mafia=${rm};fixCounts();persist();render()">${IC.crown}<span>${t('recM',{n:rm})}</span><b>${t('apply')}</b></button>`;

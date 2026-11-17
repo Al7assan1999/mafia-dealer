@@ -21,8 +21,7 @@ function gJoin(code){code=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,''
   gReq('').then(j=>{if(!j.exists){S.group=old;toast(t('gNotFound'));render();return;}S.gsent=[];S.gcache=j.games;save();render();gSync().then(()=>{toast(t('gJoined'));render();});})
    .catch(()=>{S.group=old;toast(t('gOffline'));render();});}
 function gLeave(){ask(t('gLeaveQ'),t('gLeaveD'),t('gLeave'),()=>{S.group=null;S.gcache=null;S.gsent=[];save();render();});}
-function gShare(){const txt=t('gShareTxt',{c:S.group.code});try{if(window.Net&&Net.share){Net.share(txt);return;}}catch(e){}
-  if(navigator.share)navigator.share({text:txt}).catch(()=>{});else if(navigator.clipboard)navigator.clipboard.writeText(txt).then(()=>toast(t('copied')),()=>{});}
+function gShare(){shareText(t('gShareTxt',{c:S.group.code}));}
 function groupBlock(){
   if(!S.group)return `<p class="mpinfo" style="margin:0 0 12px">${t('gIntro')}</p><button class="btn primary" onclick="gCreate()">${IC.users}${t('gCreate')}</button>
    <div class="flbl" style="margin-top:14px">${t('gHave')}</div><div class="prow"><input id="gcode" maxlength="9" placeholder="ABCD2345" autocapitalize="characters" style="letter-spacing:3px;text-transform:uppercase;font-size:17px;direction:ltr"><button class="pill" onclick="gJoin($('gcode').value)">${t('gJoinBtn')}</button></div>`;

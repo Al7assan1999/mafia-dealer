@@ -26,13 +26,16 @@ interface Settings {
   devKey?: string; group?: { code: string } | null; gcache?: LogEntry[] | null; gsent?: number[]; gsync?: number;
   hideOnline?: boolean;  // "Show me as online" switched off
   fpanel?: boolean;  // friends drawer left open
-  ftabY?: number;  // where the friends tab was dragged to (px from the top)
+  ftabY?: number;
+  bellSeen?: number;  // when the bell was last opened (newer notes count as new)  // where the friends tab was dragged to (px from the top)
 }
 
 /** Another account as the relay shows it. rel: 'ok' friends, 'out' I asked, 'in' they asked, '' none, 'me'. on/st only for friends. */
 interface Friend { id: string; uname: string; display: string; avatar: string; fav: string; rel: string; on?: boolean; st?: string; op?: boolean }  // op: in an online lobby (can ask to join)
 /** A room invite from a friend (relay /acc/inbox). */
 interface Invite { id: number; code: string; at: number; from: Friend }
+/** A note from the relay (v2.11): kind 'acc' = from accepted my friend request. */
+interface Note { id: number; kind: string; at: number; from: Friend }
 
 /** What happened in a game, for the recap and the stats. Indexes are seats. */
 interface GameEv { first: number | null; saves: number[]; caught: string[]; kills?: number[]; outs?: number[] }

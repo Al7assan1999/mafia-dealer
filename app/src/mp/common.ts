@@ -31,5 +31,7 @@ const copyRow=()=>{const k=roomKey();return k?`<div class="copyrow"><span class=
 function shareRoom(){const host=MP.role==='host'?S.mpName:(MP.host&&MP.host.name)||'',u=(S.latest&&S.latest.url)||relayUrl().replace(/^ws/,'http')+'/MafiaDealer.apk';
   const ip=MP.role==='host'?MP.myIp:(MP.host&&MP.host.ip);
   const txt=MP.online?t('shareTxt2',{c:MP.online.code}):ip?t('shareIpTxt2',{ip}):t('shareHotTxt2',{n:host});
-  try{if(window.Net&&Net.share){Net.share(txt);return;}}catch(e){}
+  shareText(txt);}
+/** The phone's share sheet (native bridge, then Web Share, then the clipboard). */
+function shareText(txt: string){try{if(window.Net&&Net.share){Net.share(txt);return;}}catch(e){}
   if(navigator.share)navigator.share({text:txt}).catch(()=>{});else if(navigator.clipboard)navigator.clipboard.writeText(txt).then(()=>toast(t('copied')),()=>{});}

@@ -56,7 +56,9 @@ ATTR = {"theme": 0x01010000, "label": 0x01010001, "icon": 0x01010002, "name": 0x
         "screenOrientation": 0x0101001e, "configChanges": 0x0101001f, "minSdkVersion": 0x0101020c,
         "versionCode": 0x0101021b, "versionName": 0x0101021c, "targetSdkVersion": 0x01010270,
         "allowBackup": 0x01010280, "hardwareAccelerated": 0x010102d3, "usesCleartextTraffic": 0x010104ec,
-        "foregroundServiceType": 0x01010599, "authorities": 0x01010018, "grantUriPermissions": 0x0101001b}
+        "foregroundServiceType": 0x01010599, "authorities": 0x01010018, "grantUriPermissions": 0x0101001b,
+        "launchMode": 0x0101001d, "scheme": 0x01010027, "host": 0x01010028, "pathPrefix": 0x0101002b, "autoVerify": 0x010104ee}
+RELAY_HOST = "mafia-relay.mafiadealer.workers.dev"  # invite links https://<relay>/j/<code> open the app (v2.11)
 T_REF, T_STR, T_DEC, T_HEX, T_BOOL = 0x01, 0x03, 0x10, 0x11, 0x12
 
 def build_manifest():
@@ -75,10 +77,18 @@ def build_manifest():
         ("application", [("a", "label", T_STR, "Mafia Dealer"), ("a", "icon", T_REF, 0x7f010000),
                          ("a", "allowBackup", T_BOOL, True), ("a", "hardwareAccelerated", T_BOOL, True), ("a", "usesCleartextTraffic", T_BOOL, True)], [
             ("activity", [("a", "name", T_STR, PKG + ".MainActivity"), ("a", "exported", T_BOOL, True),
-                          ("a", "screenOrientation", T_DEC, 1), ("a", "configChanges", T_HEX, 0x4a0)], [
+                          ("a", "screenOrientation", T_DEC, 1), ("a", "configChanges", T_HEX, 0x4a0),
+                          ("a", "launchMode", T_DEC, 2)], [  # singleTask: a link opens the running app (onNewIntent), not a second copy
                 ("intent-filter", [], [
                     ("action", [("a", "name", T_STR, "android.intent.action.MAIN")], []),
                     ("category", [("a", "name", T_STR, "android.intent.category.LAUNCHER")], []),
+                ]),
+                # verified app link (the relay serves /.well-known/assetlinks.json with this key's fingerprint)
+                ("intent-filter", [("a", "autoVerify", T_BOOL, True)], [
+                    ("action", [("a", "name", T_STR, "android.intent.action.VIEW")], []),
+                    ("category", [("a", "name", T_STR, "android.intent.category.DEFAULT")], []),
+                    ("category", [("a", "name", T_STR, "android.intent.category.BROWSABLE")], []),
+                    ("data", [("a", "scheme", T_STR, "https"), ("a", "host", T_STR, RELAY_HOST), ("a", "pathPrefix", T_STR, "/j/")], []),
                 ])]),
             ("service", [("a", "name", T_STR, PKG + ".Keep"), ("a", "exported", T_BOOL, False),
                          ("a", "foregroundServiceType", T_HEX, 0x10)], []),  # 0x10 = connectedDevice

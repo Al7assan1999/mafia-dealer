@@ -13,6 +13,7 @@ interface NativeNet {
   ip(): string; running(): boolean; keep(on: boolean): void;
   share(text: string): void; copy(text: string): void; open(url: string): void;
   saveApk(b64: string): boolean; install(): void;
+  link?(): string;  // v2.11: the invite link the app was opened with (once), null otherwise
 }
 declare const Net: NativeNet;
 interface Window { Net?: NativeNet; webkitAudioContext?: typeof AudioContext }

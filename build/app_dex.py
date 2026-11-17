@@ -25,7 +25,7 @@ m = lambda c, n, r, *ps: (c, n, r, tuple(ps))
 COLOR = 0xff0b0a0f
 HEADER = "HTTP/1.1 200 OK\r\nAccess-Control-Allow-Origin: *\r\nCache-Control: no-store\r\nContent-Type: text/plain; charset=utf-8\r\nConnection: close\r\n\r\n"
 F_W = (MAIN, "w", WV); F_T = (VOICE, "t", TTS); F_US = (LOC, "US", LOC)
-F_S = (NET, "S", CHM); F_Q = (NET, "Q", CLQ); F_TH = (NET, "T", SRV); F_C = (NET, "c", CTX); F_P = (SRV, "p", "I")
+F_L = (NET, "L", STR); F_S = (NET, "S", CHM); F_Q = (NET, "Q", CLQ); F_TH = (NET, "T", SRV); F_C = (NET, "c", CTX); F_P = (SRV, "p", "I")
 F_SDK = ("Landroid/os/Build$VERSION;", "SDK_INT", "I"); F_WL = (KEEP, "w", WL); F_FL = (KEEP, "f", FL)
 
 main = Class(MAIN, ACT, [("w", WV, ACC_PRIVATE)], [
@@ -40,6 +40,8 @@ main = Class(MAIN, ACT, [("w", WV, ACC_PRIVATE)], [
         ('invoke-virtual', m(WIN, "setNavigationBarColor", "V", "I"), 0, 1),
         ('new-instance', 0, WV), ('invoke-direct', m(WV, "<init>", "V", CTX), 0, 3), ('iput-object', 0, 3, F_W),
         ('invoke-virtual', m(WV, "setBackgroundColor", "V", "I"), 0, 1),
+        ('invoke-virtual', m(ACT, "getIntent", INTENT), 3), ('move-result-object', 1),  # opened from an invite link? the page asks Net.link()
+        ('invoke-virtual', m(INTENT, "getDataString", STR), 1), ('move-result-object', 1), ('sput-object', 1, F_L),
         ('new-instance', 1, CHROME), ('invoke-direct', m(CHROME, "<init>", "V", ACT), 1, 3),
         ('invoke-virtual', m(WV, "setWebChromeClient", "V", WCC), 0, 1),  # <input type=file> opens the phone's picker
         ('invoke-virtual', m(WV, "getSettings", WS), 0), ('move-result-object', 1),
@@ -72,6 +74,14 @@ main = Class(MAIN, ACT, [("w", WV, ACC_PRIVATE)], [
         ('label', 'ret'), ('return-void',),
         ('label', 'fail'), ('const/4', 0, 0), ('sput-object', 0, F_CB), ('goto/16', 'ret'),
         ('try', 't0', 't1', 'fail')]),
+    Method(MAIN, "onNewIntent", "V", [INTENT], ACC_PUBLIC, 5, [  # p0=v3 intent=v4: an invite link while the app is open
+        ('invoke-super', m(ACT, "onNewIntent", "V", INTENT), 3, 4),
+        ('invoke-virtual', m(ACT, "setIntent", "V", INTENT), 3, 4),
+        ('invoke-virtual', m(INTENT, "getDataString", STR), 4), ('move-result-object', 0),
+        ('if-eqz', 0, 'done'), ('sput-object', 0, F_L),
+        ('iget-object', 0, 3, F_W), ('const-string', 1, "window.deepLink&&deepLink()"), ('const/4', 2, 0),
+        ('invoke-virtual', m(WV, "evaluateJavascript", "V", STR, VCB), 0, 1, 2),
+        ('label', 'done'), ('return-void',)]),
     Method(MAIN, "onBackPressed", "V", [], ACC_PUBLIC, 3, [  # p0=v2
         ('iget-object', 0, 2, F_W), ('invoke-virtual', m(WV, "canGoBack", "Z"), 0), ('move-result', 1),
         ('if-eqz', 1, 'super'), ('invoke-virtual', m(WV, "goBack", "V"), 0), ('return-void',),
@@ -93,7 +103,7 @@ voice = Class(VOICE, OBJ, [("t", TTS, ACC_PRIVATE)], [
 ])
 
 # ---- Net: JS bridge + shared store/queue (static so a restarted activity reuses the running server)
-net = Class(NET, OBJ, [("S", CHM, ACC_PUBLIC | ACC_STATIC), ("Q", CLQ, ACC_PUBLIC | ACC_STATIC),
+net = Class(NET, OBJ, [("L", STR, ACC_PUBLIC | ACC_STATIC), ("S", CHM, ACC_PUBLIC | ACC_STATIC), ("Q", CLQ, ACC_PUBLIC | ACC_STATIC),
                        ("T", SRV, ACC_PUBLIC | ACC_STATIC), ("c", CTX, ACC_PRIVATE)], [
     Method(NET, "<clinit>", "V", [], ACC_STATIC | ACC_CONSTRUCTOR, 1, [
         ('new-instance', 0, CHM), ('invoke-direct', m(CHM, "<init>", "V"), 0), ('sput-object', 0, F_S),
@@ -106,6 +116,8 @@ net = Class(NET, OBJ, [("S", CHM, ACC_PUBLIC | ACC_STATIC), ("Q", CLQ, ACC_PUBLI
         ('new-instance', 0, SRV), ('invoke-direct', m(SRV, "<init>", "V", "I"), 0, 2), ('sput-object', 0, F_TH),
         ('invoke-virtual', m(SRV, "start", "V"), 0),
         ('label', 'done'), ('return-void',)], js=True),
+    Method(NET, "link", STR, [], ACC_PUBLIC, 3, [  # p0=v2: the invite link the app was opened with, once
+        ('sget-object', 0, F_L), ('const/4', 1, 0), ('sput-object', 1, F_L), ('return-object', 0)], js=True),
     Method(NET, "running", "Z", [], ACC_PUBLIC, 2, [  # p0=v1
         ('sget-object', 0, F_TH), ('if-eqz', 0, 'no'), ('const/4', 0, 1), ('return', 0),
         ('label', 'no'), ('const/4', 0, 0), ('return', 0)], js=True),

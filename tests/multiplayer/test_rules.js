@@ -15,11 +15,11 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  await setup(4,{mafia:1,doctor:1,detective:1});let r=await st();
  ok(r.c.doctor===1&&r.c.detective===0&&!r.err,'4 players, 1 Mafia: valid; Detective forced to 0 (needs 2+ Mafia), Doctor 1');
  ok(await p.isVisible('.role:has-text("Detective") >> text=needs 2+ Mafia')&&await p.isVisible('.role:has-text("Doctor") >> text=always one'),'Doctor shows "always one", Detective shows "needs 2+ Mafia"');
- await p.click('.role:has-text("Mafia") .step button:has-text("+")');r=await st();ok(r.c.mafia===2&&r.err.includes('at least 2 fewer')&&r.dis,'4 players, 2 Mafia: blocked (Mafia must be 2 fewer than the rest)');
- await setup(5,{mafia:2,doctor:1,detective:0});r=await st();ok(!!r.err&&r.dis,'5 players, 2 Mafia: blocked (3 vs 2)');
+ ok(await p.isDisabled('.role:has-text("Mafia") .step button:has-text("+")')&&await p.isVisible('.role:has-text("Mafia") >> text=Max 1 Mafia for 4 players'),'4 players: Mafia + is off (2 Mafia would not be 2 fewer than the rest), the row says why');r=await st();ok(r.c.mafia===1&&!r.err,'still 1 Mafia, valid');
+ await setup(5,{mafia:2,doctor:1,detective:0});r=await st();ok(r.c.mafia===1&&!r.err&&!r.dis,'5 players with 2 Mafia saved: pulled back to 1 (3 vs 2 is not allowed)');
  await setup(6,{mafia:2,doctor:3,detective:0});r=await st();ok(!r.err&&r.c.doctor===1,'6 players, 2 Mafia: valid; Doctor count can never be more than 1');
- await p.click('.role:has-text("Detective") .step button:has-text("+")');await p.click('.role:has-text("Detective") .step button:has-text("+")');r=await st();
- ok(r.c.detective===1,'with 2 Mafia the Detective can be added, but only one');
+ await p.click('.role:has-text("Detective") .step button:has-text("+")');r=await st();
+ ok(r.c.detective===1&&await p.isDisabled('.role:has-text("Detective") .step button:has-text("+")'),'with 2 Mafia the Detective can be added, but only one (+ turns off)');
  await p.click('.role:has-text("Mafia") .step button:has-text("−")');r=await st();ok(r.c.mafia===1&&r.c.detective===0,'back to 1 Mafia: Detective is removed automatically');
  await setup(5,{mafia:1,doctor:1,detective:0});ok(await p.evaluate(()=>recMafia(5)===1&&recMafia(10)===3&&recMafia(6)===2),'recommended Mafia always respects the rule');
  // removing a player asks first

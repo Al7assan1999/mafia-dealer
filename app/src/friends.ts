@@ -2,7 +2,10 @@
 let FR: {friends: Friend[]; inc: Friend[]; out: Friend[]}=null;  // the full lists, for the drawer and the Friends screen
 let FREL: Record<string,string>={},FON=0,FREQ=0;  // from the inbox check: relation per account, friends online, requests waiting
 let INV: Invite[]=[];const INVOFF: number[]=[];  // invites waiting; ones already joined or dismissed here
-const invSent: Record<string,boolean>={};  // friend id + room code already invited
+const invSent: Record<string,number>={};  // friend id + room code: when I invited (Invite again after 5 s)
+let NOTES: Note[]=[];  // notes from the relay: 'X accepted your request' (7 days)
+let FTAB='f';  // Friends screen tab: f friends, r requests, s sent
+const AGAIN=5000;
 let FP: Friend=null;  // the account card on the profile screen
 let inboxSig='';
 let JR: Invite[]=[];const JROFF: number[]=[];  // friends asking to join my room (code is empty); ones answered here
@@ -19,7 +22,7 @@ const stTxt=(f: Friend)=>f.on?t(f.st==='game'?'fInGame':f.st==='room'?'fInRoom':
 /** Every 10 s while the app is open: tells the relay I'm here, picks up invites and friend requests. */
 function inboxTick(): Promise<void>{if(!S.acct||document.hidden)return Promise.resolve();
   return aReq('/acc/inbox',{st:myStatus(),op:myOpen()?1:0,hide:!!S.hideOnline}).then(j=>{FREL=j.rel||{};FON=j.on||0;FREQ=j.req||0;
-    INV=(j.inv||[]).filter(v=>!INVOFF.includes(v.id));JR=(j.jr||[]).filter(v=>!JROFF.includes(v.id));
+    INV=(j.inv||[]).filter(v=>!INVOFF.includes(v.id));JR=(j.jr||[]).filter(v=>!JROFF.includes(v.id));NOTES=j.nt||[];
     const back=INV.find(v=>jrAsked[v.from.id]>Date.now()-30*60e3);if(back){delete jrAsked[back.from.id];invJoin(back.id);}  // the friend I asked let me in
     invBar();
     const sig=JSON.stringify([FREL,FON,FREQ,j.sg||'']);if(sig===inboxSig)return;inboxSig=sig;
@@ -28,7 +31,7 @@ function inboxTick(): Promise<void>{if(!S.acct||document.hidden)return Promise.r
     if(!G&&!typing&&!$('modal').innerHTML&&(V==='host'&&!MP.game||V==='join'&&!(MP.room&&MP.room.g)))render();}).catch(()=>{});}  // "+ Add" in lobbies
 
 /* the invite banner (#inv sits outside #app, so screens can change under it) */
-function invBar(){const el=$('inv');if(!el)return;
+function invBar(){bellDraw();const el=$('inv');if(!el)return;
   for(const v of INV.slice())if(MP.online&&MP.online.code===v.code)invDone(v.id);  // already in that room
   const r=JR[0];
   if(r){el.innerHTML=`<div class="invbar">${avatarHtml(r.from.avatar,r.from.id,40)}<div><b>${esc(r.from.display)}</b><small>${t('fWantsJoin')}</small></div>
@@ -41,18 +44,23 @@ function invDone(id: number){INVOFF.push(id);INV=INV.filter(v=>v.id!==id);aReq('
 function jrDone(id: number){JROFF.push(id);JR=JR.filter(v=>v.id!==id);aReq('/acc/invite/done',{id}).catch(()=>{});invBar();}
 function jrLet(id: number){const r=JR.find(x=>x.id===id);jrDone(id);if(!r)return;
   if(!myOpen()){toast(t('fLetGone'));return;}inviteGo(r.from.id);}
-function joinAsk(id: string){const f=FR&&FR.friends.find(x=>x.id===id);jrAsked[id]=Date.now();dockDraw();
+function joinAsk(id: string){const f=FR&&FR.friends.find(x=>x.id===id);jrAsked[id]=Date.now();fRedraw();setTimeout(fRedraw,AGAIN+50);
   aReq('/acc/joinreq',{id}).then(()=>{toast(t('fAskSent',{n:f?f.display:''}));
     clearInterval(jrTimer);const end=Date.now()+120e3;jrTimer=setInterval(()=>{if(Date.now()>end||!Object.keys(jrAsked).length)clearInterval(jrTimer);else inboxTick();},3000);})  // answer quickly
-  .catch(e=>{delete jrAsked[id];dockDraw();aErr(e);});}
-function invJoin(id: number){const v=INV.find(x=>x.id===id);if(!v)return;invDone(id);
+  .catch(e=>{delete jrAsked[id];fRedraw();aErr(e);});}
+function invJoin(id: number){const v=INV.find(x=>x.id===id);if(!v)return;invDone(id);joinCode(v.code);}
+/** Join an online room from an invite or an invite link; leaving a room or game asks first. */
+function joinCode(code: string){if(MP.online&&MP.online.code===code&&MP.role)return;
   const go=()=>{hush();if(G){stopTimer();if(!G.mp)save();G=null;}if(MP.role==='host')hostStop();else if(MP.role==='client')clientStop(true);
-    $('modal').innerHTML='';MP.lastMode='online';V='home';joinOnline(v.code);};
+    $('modal').innerHTML='';MP.lastMode='online';V='home';joinOnline(code);};
   if(G||MP.role)ask(t('fLeaveQ'),t('fLeaveD'),t('fJoin'),go);else go();}
+/** The app was opened (or brought back) by an invite link https://<relay>/j/<code> (Android app link, v2.11). */
+function deepLink(){let u='';try{u=(window.Net&&Net.link&&Net.link())||'';}catch(e){}
+  const m=/\/j\/(\d{6})(?:[/?#]|$)/.exec(u);if(m)joinCode(m[1]);}
 
 /* lists and actions */
 function friendsLoad(quiet?: boolean){if(!me())return Promise.resolve();
-  return aReq('/acc/friends').then(j=>{FR=j;for(const l of [j.friends,j.inc,j.out])for(const f of l)FREL[f.id]=f.rel;fListsDraw();dockDraw();})
+  return aReq('/acc/friends').then(j=>{FR=j;FREQ=j.inc.length;for(const l of [j.friends,j.inc,j.out])for(const f of l)FREL[f.id]=f.rel;fListsDraw();dockDraw();bellDraw();})
   .catch(e=>{if(!FR){FR={friends:[],inc:[],out:[]};fListsDraw();dockDraw();}if(!quiet)aErr(e);});}
 function openFriends(){if(S.fpanel){S.fpanel=false;save();}nav('friends');friendsLoad();}
 function friendAdd(){const u=($('fun').value||'').trim().replace(/^@/,'');if(u)friendReq({uname:u});}
@@ -68,21 +76,47 @@ function openAcct(id: string,name: string,f?: Friend){if(S.fpanel){S.fpanel=fals
   if(me())aReq('/acc/user/'+id).then(j=>{if(PROF!=='a:'+id)return;FP=j.user;PROFN=j.user.display;if(V==='profile')render();}).catch(()=>{});}
 
 /* screens */
-const fRow=(f: Friend,btns: string,noLink?: boolean)=>`<div class="prs">${f.rel==='ok'?`<span class="dot ${f.on?'on':''}"></span>`:''}
-  <${noLink?'div':'button'} class="fl" ${noLink?'':`onclick="openFriend('${f.id}')"`}>${avatarHtml(f.avatar,f.id,32)}<div class="fn"><b>${esc(f.display)}</b><span>${f.rel==='ok'?stTxt(f):'<bdi dir="ltr">@'+esc(f.uname)+'</bdi>'}</span></div></${noLink?'div':'button'}>${btns}</div>`;
+/** Status for the avatar ring and the pill: on | room | game | off ('' when not a friend). */
+const stCls=(f: Friend)=>f.rel!=='ok'?'':!f.on?'off':f.st==='game'?'game':f.st==='room'?'room':'on';
+const fAv=(f: Friend,size: number)=>`<span class="fav ${stCls(f)}">${avatarHtml(f.avatar,f.id,size)}</span>`;
+const fSub=(f: Friend)=>f.rel==='ok'?`<span class="stp ${stCls(f)}">${stTxt(f)}</span>`:`<bdi dir="ltr" class="un">@${esc(f.uname)}</bdi>`;
+const fRow=(f: Friend,btns: string,noLink?: boolean)=>`<div class="prs fr">
+  <${noLink?'div':'button'} class="fl" ${noLink?'':`onclick="openFriend('${f.id}')"`}>${fAv(f,40)}<div class="fn"><b>${esc(f.display)}</b>${fSub(f)}</div></${noLink?'div':'button'}>${btns}</div>`;
 /** "+ Add" next to a signed-in player in a room, until there is a request either way. */
 const plusBtn=(uid: string)=>uid&&me()&&uid!==me().id&&!FREL[uid]?`<button class="mini" onclick="friendReq({id:'${uid}'})" aria-label="${t('fAddFriend')}">+ ${t('fAddBtn')}</button>`:'';
+/** In an online lobby: Invite; a friend in one: Ask to join. After a tap: Invited/Asked for 5 s, then Invite/Ask again. */
+const roomCode=()=>myOpen()?MP.online.code:'';
+function fAct(f: Friend){if(f.rel!=='ok')return '';const code=roomCode(),now=Date.now();
+  const b=(at: number,fn: string,k: string[])=>{const wait=now-at<AGAIN;return `<button class="mini${wait?'':' pri'}" ${wait?'disabled':''} onclick="${fn}">${t(wait?k[1]:at?k[2]:k[0])}</button>`;};
+  if(code)return b(invSent[f.id+code]||0,`inviteGo('${f.id}')`,['fInviteBtn','fInvited','fInviteAgain']);
+  if(f.op)return b(jrAsked[f.id]||0,`joinAsk('${f.id}')`,['fAskJoin','fAsked','fAskAgain']);
+  return '';}
+const reqBtns=(f: Friend)=>`<button class="mini pri" onclick="friendDo('accept','${f.id}')">${t('fAccept')}</button><button class="mini bad" onclick="friendDo('decline','${f.id}')">${t('fDecline')}</button>`;
+/** Friends grouped Online / Offline, each with its main action. */
+function fGroups(list: Friend[]){const on=list.filter(f=>f.on),off=list.filter(f=>!f.on);
+  const g=(k: string,l: Friend[])=>l.length?`<div class="flbl">${t(k)} · ${l.length}</div>${l.map(f=>fRow(f,fAct(f))).join('')}`:'';
+  return g('fOnlineG',on)+g('fOfflineG',off);}
+const fEmpty=(icon: string,txt: string)=>`<div class="fempty">${icon}<p>${txt}</p></div>`;
 function friendsView(){
   if(!me())return head(t('friendsT'))+`<p class="mpinfo">${t('fWhy')}</p><button class="btn primary" onclick="nav('account')">${t('aIn')} / ${t('aUp')}</button>`;
-  const add=`<div class="sec"><div class="flbl" style="margin-top:0">${t('fAdd')}</div><div class="prow" style="margin:0"><input id="fun" maxlength="21" autocapitalize="none" autocomplete="off" placeholder="@username" style="direction:ltr" onkeydown="if(event.key==='Enter')friendAdd()"><button class="pill" onclick="friendAdd()">${t('fAddBtn')}</button></div></div>`;
-  return head(t('friendsT'))+add+`<div id="flists">${fListsHtml()}</div>`;}
+  const u=me();
+  const card=`<div class="sec mecard"><div class="meline">${avatarHtml(u.avatar,u.id,56)}<div><b>${esc(u.display)}</b><small style="direction:ltr">@${esc(u.uname)}</small></div></div>
+    <button class="btn ghost" onclick="shareMe()">${IC.share}${t('fShareMe')}</button></div>`;
+  const add=`<div class="prow fadd">${IC.search}<input id="fun" maxlength="21" autocapitalize="none" autocomplete="off" placeholder="@username" style="direction:ltr" onkeydown="if(event.key==='Enter')friendAdd()"><button class="btn primary" onclick="friendAdd()">${t('fAddBtn')}</button></div>`;
+  return head(t('friendsT'))+card+add+`<div id="flists">${fListsHtml()}</div>`;}
+function shareMe(){const u=me();if(u)shareText(t('fShareTxt',{u:u.uname,l:relayHttp()+'/MafiaDealer.apk'}));}
 /** Only the lists are redrawn when they load, so the username box keeps what is being typed. */
 function fListsDraw(){if(V!=='friends')return;const el=$('flists');if(el)el.innerHTML=fListsHtml();else render();}
+const fRedraw=()=>{dockDraw();fListsDraw();};
+function fTab(k: string){FTAB=k;fListsDraw();}
 function fListsHtml(){const F=FR;if(!F)return `<div class="big"><div class="spin"></div></div>`;
-  const inc=F.inc.length?`<div class="sec"><div class="sh"><h3>${t('fRequests')}</h3><span class="badge new">${F.inc.length}</span></div>${F.inc.map(f=>fRow(f,`<button class="mini" onclick="friendDo('accept','${f.id}')">${t('fAccept')}</button><button class="mini bad" onclick="friendDo('decline','${f.id}')">${t('fDecline')}</button>`)).join('')}</div>`:'';
-  const list=`<div class="sec"><div class="sh"><h3>${t('fList',{n:F.friends.length})}</h3></div>${F.friends.length?F.friends.map(f=>fRow(f,'')).join(''):`<p class="mpinfo" style="margin:0">${t('fNone')}</p>`}</div>`;
-  const out=F.out.length?`<div class="sec"><div class="sh"><h3>${t('fSent')}</h3></div>${F.out.map(f=>fRow(f,`<button class="mini" onclick="friendDo('remove','${f.id}')">${t('cancel')}</button>`)).join('')}</div>`:'';
-  return inc+list+out;}
+  const n=(x: number)=>x?` <i class="cnt">${x}</i>`:'';
+  const tabs=`<div class="seg ftabs">${[['f',t('fTabF')+n(F.friends.length)],['r',t('fTabR')+n(F.inc.length)],['s',t('fTabS')+n(F.out.length)]]
+    .map(([k,l])=>`<button class="${FTAB===k?'on':''}${k==='r'&&F.inc.length?' hot':''}" onclick="fTab('${k}')">${l}</button>`).join('')}</div>`;
+  const body=FTAB==='r'?(F.inc.length?F.inc.map(f=>fRow(f,reqBtns(f))).join(''):fEmpty(IC.friend,t('fNoReq')))
+    :FTAB==='s'?(F.out.length?F.out.map(f=>fRow(f,`<button class="mini" onclick="friendDo('remove','${f.id}')">${t('cancel')}</button>`)).join(''):fEmpty(IC.friend,t('fNoSent')))
+    :(F.friends.length?fGroups(F.friends):fEmpty(IC.users,t('fNone')));
+  return tabs+`<div class="sec flist">${body}</div>`;}
 /** The account card at the top of a profile, with Add / Accept / Cancel / Remove. */
 function acctCard(id: string){const mine=me()&&me().id===id,f: Friend=mine?Object.assign({rel:'me'},me()):FP&&FP.id===id?FP:null;
   const btn=!me()||mine||!f?'':f.rel==='ok'?`<button class="btn ghost" onclick="friendDo('remove','${id}')">${t('fRemove')}</button>`
@@ -94,7 +128,6 @@ function acctCard(id: string){const mine=me()&&me().id===id,f: Friend=mine?Objec
 /* the friends drawer (#fdock, outside #app): a tab on the screen edge, slides out over menus and room lobbies, never during a game */
 const DOCKV=['home','wifi','online','history','stats','profile','guide','settings','rules'];
 const dockShown=()=>!!me()&&!G&&(DOCKV.includes(V)||V.indexOf('game:')===0||V==='host'&&MP.role==='host'&&!MP.game||V==='join'&&!(MP.room&&MP.room.g));
-const dockInvite=()=>MP.online&&(V==='host'&&MP.role==='host'||V==='join'&&MP.status==='ok')?MP.online.code:'';  // in an online lobby: Invite buttons
 let dockAnim=false;  // slide in only when it opens (redrawing must not replay the animation)
 function dockOpen(open: boolean){if(!!S.fpanel===open)return;S.fpanel=open;save();
   if(open){dockAnim=true;try{history.pushState({v:1},'');}catch(e){}friendsLoad(true);}  // phone Back minimizes it first
@@ -109,14 +142,10 @@ function dockDraw(){const el=$('fdock');if(!el)return;
   const tab=dockShown(),cb=chatShown();if(!cb&&chView)chClose();else if(chView)chDraw();  // out of the game now: the chat rules change
   if(!tab&&!cb){el.innerHTML='';return;}
   if(!tab||!S.fpanel){el.innerHTML=sideHtml(tab,cb);return;}
-  const F=FR,code=dockInvite(),a=dockAnim?' anim':'';dockAnim=false;
+  const F=FR,code=roomCode(),a=dockAnim?' anim':'';dockAnim=false;
   const rows=!F?`<div class="spin" style="margin:18px auto"></div>`
-    :(F.inc.length?`<div class="flbl">${t('fRequests')}</div>${F.inc.map(f=>fRow(f,`<button class="mini" onclick="friendDo('accept','${f.id}')">${t('fAccept')}</button><button class="mini bad" onclick="friendDo('decline','${f.id}')">${t('fDecline')}</button>`)).join('')}`:'')
-     +`<div class="flbl">${t('fList',{n:F.friends.length})}</div>`
-     +(F.friends.length?F.friends.map(f=>{const sent=code&&invSent[f.id+code],asked=!!jrAsked[f.id];
-        return fRow(f,code?`<button class="mini" ${sent?'disabled':''} onclick="inviteGo('${f.id}')">${t(sent?'fInvited':'fInviteBtn')}</button>`
-          :f.op?`<button class="mini" ${asked?'disabled':''} onclick="joinAsk('${f.id}')">${t(asked?'fAsked':'fAskJoin')}</button>`:'');}).join('')
-      :`<p class="mpinfo" style="margin:4px 0">${t(code?'fNoneInv':'fNone')}</p>`);
+    :(F.inc.length?`<div class="flbl">${t('fRequests')} · ${F.inc.length}</div>${F.inc.map(f=>fRow(f,reqBtns(f))).join('')}`:'')
+     +(F.friends.length?fGroups(F.friends):`<p class="mpinfo" style="margin:4px 0">${t(code?'fNoneInv':'fNone')}</p>`);
   el.innerHTML=`<div class="fdim${a}" onclick="dockOpen(false)"></div><aside class="fdrawer${a}" ontouchstart="dockSwipe(event,0)">
     <div class="fdh"><b>${t('friendsT')}</b><button class="ib" onclick="openFriends()" aria-label="${t('fAddFriend')}" title="${t('fAddFriend')}">${IC.friend}</button><button class="ib" onclick="dockOpen(false)" aria-label="${t('fMin')}" title="${t('fMin')}">${S.lang==='ar'?'‹':'›'}</button></div>
     ${code?`<p class="mpinfo" style="margin:0 0 4px">${t('fInviteD',{c:fmtCode(code)})}</p>`:''}${rows}</aside>`;}
@@ -132,5 +161,25 @@ function dockSwipe(e: TouchEvent,kind: number){const p=e.touches[0],x0=p.clientX
     const dx=ev.changedTouches[0].clientX-x0,inward=rtl?dx>40:dx<-40,outward=rtl?dx<-50:dx>50;
     if(kind===1&&inward)dockOpen(true);else if(kind===0&&outward)dockOpen(false);};
   document.addEventListener('touchmove',move,{passive:false});document.addEventListener('touchend',end);}
-function inviteGo(id: string){const code=MP.online&&MP.online.code;if(!code)return;invSent[id+code]=true;dockDraw();
-  aReq('/acc/invite',{id,code}).then(j=>toast(t(j.tg?'fInvTg':'fInvSent'))).catch(e=>{delete invSent[id+code];dockDraw();aErr(e);});}
+function inviteGo(id: string){const code=MP.online&&MP.online.code;if(!code)return;invSent[id+code]=Date.now();fRedraw();setTimeout(fRedraw,AGAIN+50);
+  aReq('/acc/invite',{id,code}).then(j=>toast(t(j.tg?'fInvTg':'fInvSent'))).catch(e=>{delete invSent[id+code];fRedraw();aErr(e);});}
+
+/* the notification bell (Home, next to the profile): invites, join requests, friend requests, 'X accepted your request' */
+const bellN=()=>INV.length+JR.length+FREQ+NOTES.filter(n=>n.at>(S.bellSeen||0)).length;
+const bellBtn=()=>me()?`<button class="ib bell" id="bellb" onclick="bellOpen()" aria-label="${t('notifT')}" title="${t('notifT')}">${IC.bell}${bellN()?`<i class="cnt">${bellN()}</i>`:''}</button>`:'';
+function bellBtnDraw(){const b=$('bellb');if(b)b.outerHTML=bellBtn();}
+function bellOpen(){S.bellSeen=Date.now();save();friendsLoad(true);
+  $('modal').innerHTML=`<div class="modal" onclick="if(event.target===this)bellClose()"><div class="sheet bellsh" id="bellsh">${bellHtml()}</div></div>`;bellBtnDraw();}
+function bellClose(){if($('bellsh'))$('modal').innerHTML='';bellBtnDraw();}
+function bellDraw(){const el=$('bellsh');if(el)el.innerHTML=bellHtml();bellBtnDraw();}
+const ago=(ts: number)=>{const s=(Date.now()-ts)/1000,[v,u]=s<3600?[Math.max(1,Math.round(s/60)),'minute']:s<86400?[Math.round(s/3600),'hour']:[Math.round(s/86400),'day'];
+  try{return new (Intl as any).RelativeTimeFormat(S.lang,{style:'short',numeric:'auto'}).format(-v,u);}catch(e){return '';}};
+function bellHtml(){const x=(fn: string)=>`<button class="mini nx" aria-label="${t('cancel')}" onclick="${fn}">✕</button>`;
+  const item=(f: Friend,txt: string,btns: string,at?: number)=>`<div class="prs bi">${avatarHtml(f.avatar,f.id,40)}<div class="fn"><b>${esc(f.display)}</b><span>${txt}${at?' · '+ago(at):''}</span></div>${btns}</div>`;
+  const rows=[...JR.map(r=>item(r.from,t('fWantsJoin'),`<button class="mini pri" onclick="bellClose();jrLet(${r.id})">${t('fLetIn')}</button>`+x(`jrDone(${r.id})`),r.at)),
+    ...INV.map(v=>item(v.from,t('fInvites',{c:fmtCode(v.code)}),`<button class="mini pri" onclick="bellClose();invJoin(${v.id})">${t('fJoin')}</button>`+x(`invDone(${v.id})`),v.at)),
+    ...(FR?FR.inc:[]).map(f=>item(f,t('nReq'),reqBtns(f))),
+    ...NOTES.map(n=>item(n.from,t('nAcc'),x(`noteDone(${n.id})`),n.at))];
+  return `<div class="sh"><h3>${t('notifT')}</h3>${NOTES.length?`<button class="link" onclick="noteDone(0)">${t('nClear')}</button>`:''}</div>
+    ${rows.join('')||`<div class="fempty">${IC.bell}<p>${t('nNone')}</p></div>`}<button class="btn ghost mt" onclick="bellClose()">${t('ok')}</button>`;}
+function noteDone(id: number){NOTES=id?NOTES.filter(n=>n.id!==id):[];aReq('/acc/note/done',id?{id}:{all:1}).catch(()=>{});bellDraw();}

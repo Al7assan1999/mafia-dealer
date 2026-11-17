@@ -14,7 +14,7 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  const d=await mk(clientShim,'Dareer'),s=await mk(clientShim,'Sami');
  for(const p of [d,s]){await p.click('#mode-wifi');await p.click('.big2 .btn.ghost');await wait(p,()=>MP.status==='ok'&&MP.room&&MP.room.cv);}
  ok(await host.isVisible('#fdock .fchat')&&await d.isVisible('#fdock .fchat'),'chat button in the host and player lobbies (signed out too)');
- await d.click('#fdock .fchat');await d.waitForSelector('#chat .chw');
+ await wait(d,()=>MP.room.players.length===3);await d.click('#fdock .fchat');await d.waitForSelector('#chat .chw');
  const names=await d.$$eval('#chat .prs .fn b',e=>e.map(x=>x.textContent));ok(names.join()==='Everyone,Alhassan,Sami','list: Everyone, the host, the other player ('+names+')');
  // Everyone
  await d.click('#chat .prs:has-text("Everyone") .fl');await d.fill('#chin','hi all');await d.press('#chin','Enter');
