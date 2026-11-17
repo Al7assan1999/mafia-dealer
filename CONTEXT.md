@@ -9,7 +9,7 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## Current state: v2.10 (versionCode 28), built 2026-11-17, not published yet
+## Current state: v2.10 (versionCode 28), published on the relay 2026-11-17 (relay version 0f039169)
 Alhassan's list of 2026-11-17 (he approved the plan; more requests are coming):
 - Fixed: profile > friends drawer > another profile > Back looped on the profile (`profRet` was set to 'profile'); `openAcct`/`openProfile` keep the first return screen.
 - Ask to join (the other way round from an invite), his choice "friend lets you in": in the drawer, a friend in an **online lobby** (users.op, sent by the inbox check; not a Wi-Fi room, not a game) has "Ask to join". The friend gets a banner "X wants to join your room" with Let in; Let in sends a normal invite and the asker's app joins by itself (`jrAsked`, inbox checked every 3 s for 2 min). Relay: `invites.kind` 'i' invite / 'j' join request, `/acc/joinreq` (friend, online lobby, one at a time, shares the 30/hour limit), an invite back deletes the request; inbox returns `jr` and `sg` (friends' status digest, so the list reloads when someone enters a room). No Telegram for join requests.
@@ -19,7 +19,7 @@ Alhassan's list of 2026-11-17 (he approved the plan; more requests are coming):
 - Top icons: profile on the left (right in Arabic), round and bigger, tap = menu Show profile / Sign out (signed out: straight to sign-in); language = the current language's flag emoji (UK / Saudi; desktop Chromium shows "GB"/"SA" letters, Android shows flags); theme = a palette icon.
 - Home: the second button is just "Wi-Fi / Hotspot" («واي فاي / نقطة اتصال»); share texts say "Wi-Fi / Hotspot > Join". The Telegram invite text says "tap Online" (was Play Together).
 - Tests: new `tests/multiplayer/test_chat_wifi.js` (21, mock server) and `test_social_app.js` (21, local relay); `relay/test_accounts.mjs` now 63.
-- To publish: deploy the relay together with the APK (`relay/publish.py`), since Ask to join and online chat need the new relay.
+- Released with the relay (Ask to join and online chat need it). Right after a deploy the plain APK link can serve the old file for a few seconds (edge cache); a cache-busted URL shows the new one.
 
 ## Previous: v2.9.2 (versionCode 27), published on the relay 2026-11-16
 - Home: "Offline game" (was New game), "Local Network (Wi-Fi/Hotspot)" (was Play Together > Same room) and "Online" are the three main buttons; the Play Together screen is gone, its name box moved to Local Network. Share texts and the sign-in note use the new names.
