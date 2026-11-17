@@ -9,7 +9,7 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## Current state: v2.13 (versionCode 32), built 2026-11-17, not published yet (needs the relay too)
+## Current state: v2.13 (versionCode 32), published on the relay 2026-11-17 (relay version 9c882d0b)
 Alhassan's list (plan approved):
 - "X let you in" is its own message: the relay marks the invite that answers an Ask to join (`invites.ans`); the asker sees "Dareer let you in" (banner / bell / Telegram text) and joins by itself, even after restarting the app (no longer depends on `jrAsked`). The host sees "Sami can join now". Fixed on the way: Let in also deleted the request at the same moment as sending the invite, so the relay sometimes no longer saw the request and sent a plain invite (the asker then did not join); Let in now leaves the request for the relay to remove.
 - A friend already in my room shows "In your room" instead of Invite (host and players, `roomUids`).
