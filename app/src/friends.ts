@@ -5,17 +5,24 @@ let INV: Invite[]=[];const INVOFF: number[]=[];  // invites waiting; ones alread
 const invSent: Record<string,boolean>={};  // friend id + room code already invited
 let FP: Friend=null;  // the account card on the profile screen
 let inboxSig='';
+let JR: Invite[]=[];const JROFF: number[]=[];  // friends asking to join my room (code is empty); ones answered here
+const jrAsked: Record<string,number>={};  // friends I asked to let me in: their invite back joins by itself
+let jrTimer: any;
 
 const fmtCode=(c: string)=>`<bdi dir="ltr" style="white-space:nowrap">${c.slice(0,3)} ${c.slice(3)}</bdi>`;  // HTML: reads 482 913 in Arabic too, never wraps
 /** What friends see about me: '' | 'room' | 'game'. */
 const myStatus=()=>G||(MP.role==='host'&&MP.game)||(MP.role==='client'&&MP.room&&MP.room.g)?'game':MP.role?'room':'';
+/** In an online lobby before a game: friends may ask to join. */
+const myOpen=()=>!!(MP.online&&!G&&(MP.role==='host'&&!MP.game||MP.role==='client'&&MP.status==='ok'&&!(MP.room&&MP.room.g)));
 const stTxt=(f: Friend)=>f.on?t(f.st==='game'?'fInGame':f.st==='room'?'fInRoom':'fOnline'):t('fOffline');
 
 /** Every 10 s while the app is open: tells the relay I'm here, picks up invites and friend requests. */
 function inboxTick(): Promise<void>{if(!S.acct||document.hidden)return Promise.resolve();
-  return aReq('/acc/inbox',{st:myStatus(),hide:!!S.hideOnline}).then(j=>{FREL=j.rel||{};FON=j.on||0;FREQ=j.req||0;
-    INV=(j.inv||[]).filter(v=>!INVOFF.includes(v.id));invBar();
-    const sig=JSON.stringify([FREL,FON,FREQ]);if(sig===inboxSig)return;inboxSig=sig;
+  return aReq('/acc/inbox',{st:myStatus(),op:myOpen()?1:0,hide:!!S.hideOnline}).then(j=>{FREL=j.rel||{};FON=j.on||0;FREQ=j.req||0;
+    INV=(j.inv||[]).filter(v=>!INVOFF.includes(v.id));JR=(j.jr||[]).filter(v=>!JROFF.includes(v.id));
+    const back=INV.find(v=>jrAsked[v.from.id]>Date.now()-30*60e3);if(back){delete jrAsked[back.from.id];invJoin(back.id);}  // the friend I asked let me in
+    invBar();
+    const sig=JSON.stringify([FREL,FON,FREQ,j.sg||'']);if(sig===inboxSig)return;inboxSig=sig;
     if(dockShown()||V==='friends')friendsLoad(true);else dockDraw();  // someone came online, a request arrived...
     const typing=document.activeElement&&document.activeElement.tagName==='INPUT';
     if(!G&&!typing&&!$('modal').innerHTML&&(V==='host'&&!MP.game||V==='join'&&!(MP.room&&MP.room.g)))render();}).catch(()=>{});}  // "+ Add" in lobbies
@@ -23,10 +30,21 @@ function inboxTick(): Promise<void>{if(!S.acct||document.hidden)return Promise.r
 /* the invite banner (#inv sits outside #app, so screens can change under it) */
 function invBar(){const el=$('inv');if(!el)return;
   for(const v of INV.slice())if(MP.online&&MP.online.code===v.code)invDone(v.id);  // already in that room
+  const r=JR[0];
+  if(r){el.innerHTML=`<div class="invbar">${avatarHtml(r.from.avatar,r.from.id,40)}<div><b>${esc(r.from.display)}</b><small>${t('fWantsJoin')}</small></div>
+    <button class="btn primary" onclick="jrLet(${r.id})">${t('fLetIn')}</button><button class="x" aria-label="${t('cancel')}" onclick="jrDone(${r.id})">✕</button></div>`;return;}
   const v=INV[0];
   el.innerHTML=v?`<div class="invbar">${avatarHtml(v.from.avatar,v.from.id,40)}<div><b>${esc(v.from.display)}</b><small>${t('fInvites',{c:fmtCode(v.code)})}</small></div>
     <button class="btn primary" onclick="invJoin(${v.id})">${t('fJoin')}</button><button class="x" aria-label="${t('cancel')}" onclick="invDone(${v.id})">✕</button></div>`:'';}
 function invDone(id: number){INVOFF.push(id);INV=INV.filter(v=>v.id!==id);aReq('/acc/invite/done',{id}).catch(()=>{});invBar();}
+/* asking to join a friend's online lobby: they answer with a normal invite */
+function jrDone(id: number){JROFF.push(id);JR=JR.filter(v=>v.id!==id);aReq('/acc/invite/done',{id}).catch(()=>{});invBar();}
+function jrLet(id: number){const r=JR.find(x=>x.id===id);jrDone(id);if(!r)return;
+  if(!myOpen()){toast(t('fLetGone'));return;}inviteGo(r.from.id);}
+function joinAsk(id: string){const f=FR&&FR.friends.find(x=>x.id===id);jrAsked[id]=Date.now();dockDraw();
+  aReq('/acc/joinreq',{id}).then(()=>{toast(t('fAskSent',{n:f?f.display:''}));
+    clearInterval(jrTimer);const end=Date.now()+120e3;jrTimer=setInterval(()=>{if(Date.now()>end||!Object.keys(jrAsked).length)clearInterval(jrTimer);else inboxTick();},3000);})  // answer quickly
+  .catch(e=>{delete jrAsked[id];dockDraw();aErr(e);});}
 function invJoin(id: number){const v=INV.find(x=>x.id===id);if(!v)return;invDone(id);
   const go=()=>{hush();if(G){stopTimer();if(!G.mp)save();G=null;}if(MP.role==='host')hostStop();else if(MP.role==='client')clientStop(true);
     $('modal').innerHTML='';MP.lastMode='online';V='home';joinOnline(v.code);};
@@ -46,7 +64,7 @@ function friendDo(act: string,id: string){
   const f=FP&&FP.id===id?FP:FR&&FR.friends.find(x=>x.id===id);ask(t('fRemoveQ',{n:esc(f?f.display:'')}),t('fRemoveD'),t('fRemove'),run);}
 function openFriend(id: string){const f=FR&&[...FR.friends,...FR.inc,...FR.out].find(x=>x.id===id);openAcct(id,f?f.display:'',f);}
 /** A profile for an account: stats from the games here plus its card from the relay. */
-function openAcct(id: string,name: string,f?: Friend){if(S.fpanel){S.fpanel=false;save();}PROF='a:'+id;PROFN=name;FP=f||null;profRet=V;nav('profile');
+function openAcct(id: string,name: string,f?: Friend){if(S.fpanel){S.fpanel=false;save();}PROF='a:'+id;PROFN=name;FP=f||null;if(V!=='profile')profRet=V;nav('profile');
   if(me())aReq('/acc/user/'+id).then(j=>{if(PROF!=='a:'+id)return;FP=j.user;PROFN=j.user.display;if(V==='profile')render();}).catch(()=>{});}
 
 /* screens */
@@ -81,24 +99,38 @@ let dockAnim=false;  // slide in only when it opens (redrawing must not replay t
 function dockOpen(open: boolean){if(!!S.fpanel===open)return;S.fpanel=open;save();
   if(open){dockAnim=true;try{history.pushState({v:1},'');}catch(e){}friendsLoad(true);}  // phone Back minimizes it first
   dockDraw();}
+let dockDrag=0;  // when the side column was last dragged: that touch is not a tap
+const tabTap=(f: string)=>`if(Date.now()-dockDrag>400)${f}`;
+/** The side column: the friends tab (menus, lobbies) and the chat button (rooms, games). Dragged up and down together. */
+function sideHtml(tab: boolean,cb: boolean){const F=FR,on=tab&&F?F.friends.filter(f=>f.on).slice(0,3):[],y=S.ftabY!=null?`top:${Math.min(S.ftabY,innerHeight-170)}px`:'';
+  return `<div class="fside" style="${y}">${tab?`<button class="ftab" onclick="${tabTap('dockOpen(true)')}" ontouchstart="dockSwipe(event,1)" aria-label="${t('friendsT')}">${IC.friend}${on.map(f=>avatarHtml(f.avatar,f.id,26)).join('')}<b>${FON}</b>${FREQ?'<i class="rdot"></i>':''}</button>`:''}
+    ${cb?`<button class="ftab fchat" onclick="${tabTap('chOpenList()')}" ontouchstart="dockSwipe(event,2)" aria-label="${t('chatT')}">${IC.chat}${chUnread()?`<i class="cnt">${chUnread()}</i>`:''}</button>`:''}</div>`;}
 function dockDraw(){const el=$('fdock');if(!el)return;
-  if(!dockShown()){el.innerHTML='';return;}
-  const F=FR;
-  if(!S.fpanel){const on=F?F.friends.filter(f=>f.on).slice(0,3):[];
-    el.innerHTML=`<button class="ftab" onclick="dockOpen(true)" ontouchstart="dockSwipe(event,1)" aria-label="${t('friendsT')}">${IC.friend}${on.map(f=>avatarHtml(f.avatar,f.id,26)).join('')}<b>${FON}</b>${FREQ?'<i class="rdot"></i>':''}</button>`;return;}
-  const code=dockInvite(),a=dockAnim?' anim':'';dockAnim=false;
+  const tab=dockShown(),cb=chatShown();if(!cb&&chView)chClose();else if(chView)chDraw();  // out of the game now: the chat rules change
+  if(!tab&&!cb){el.innerHTML='';return;}
+  if(!tab||!S.fpanel){el.innerHTML=sideHtml(tab,cb);return;}
+  const F=FR,code=dockInvite(),a=dockAnim?' anim':'';dockAnim=false;
   const rows=!F?`<div class="spin" style="margin:18px auto"></div>`
     :(F.inc.length?`<div class="flbl">${t('fRequests')}</div>${F.inc.map(f=>fRow(f,`<button class="mini" onclick="friendDo('accept','${f.id}')">${t('fAccept')}</button><button class="mini bad" onclick="friendDo('decline','${f.id}')">${t('fDecline')}</button>`)).join('')}`:'')
      +`<div class="flbl">${t('fList',{n:F.friends.length})}</div>`
-     +(F.friends.length?F.friends.map(f=>{const sent=code&&invSent[f.id+code];return fRow(f,code?`<button class="mini" ${sent?'disabled':''} onclick="inviteGo('${f.id}')">${t(sent?'fInvited':'fInviteBtn')}</button>`:'');}).join('')
+     +(F.friends.length?F.friends.map(f=>{const sent=code&&invSent[f.id+code],asked=!!jrAsked[f.id];
+        return fRow(f,code?`<button class="mini" ${sent?'disabled':''} onclick="inviteGo('${f.id}')">${t(sent?'fInvited':'fInviteBtn')}</button>`
+          :f.op?`<button class="mini" ${asked?'disabled':''} onclick="joinAsk('${f.id}')">${t(asked?'fAsked':'fAskJoin')}</button>`:'');}).join('')
       :`<p class="mpinfo" style="margin:4px 0">${t(code?'fNoneInv':'fNone')}</p>`);
   el.innerHTML=`<div class="fdim${a}" onclick="dockOpen(false)"></div><aside class="fdrawer${a}" ontouchstart="dockSwipe(event,0)">
     <div class="fdh"><b>${t('friendsT')}</b><button class="ib" onclick="openFriends()" aria-label="${t('fAddFriend')}" title="${t('fAddFriend')}">${IC.friend}</button><button class="ib" onclick="dockOpen(false)" aria-label="${t('fMin')}" title="${t('fMin')}">${S.lang==='ar'?'‹':'›'}</button></div>
     ${code?`<p class="mpinfo" style="margin:0 0 4px">${t('fInviteD',{c:fmtCode(code)})}</p>`:''}${rows}</aside>`;}
-/** Swipe the tab inward to open, the drawer outward to minimize (edge swipes belong to Android's Back gesture). */
-function dockSwipe(e: TouchEvent,opening: number){const x0=e.touches[0].clientX,rtl=S.lang==='ar';
-  const end=(ev: TouchEvent)=>{document.removeEventListener('touchend',end);const dx=ev.changedTouches[0].clientX-x0,inward=rtl?dx>40:dx<-40,outward=rtl?dx<-50:dx>50;
-    if(opening&&inward)dockOpen(true);else if(!opening&&outward)dockOpen(false);};
-  document.addEventListener('touchend',end);}
+/** Side column: drag up/down to move it (remembered), swipe the tab inward to open. Drawer: swipe outward to minimize.
+ *  (Edge swipes belong to Android's Back gesture.) kind: 0 drawer, 1 friends tab, 2 chat button. */
+function dockSwipe(e: TouchEvent,kind: number){const p=e.touches[0],x0=p.clientX,y0=p.clientY,rtl=S.lang==='ar';
+  const col=kind?(e.currentTarget as HTMLElement).parentElement:null,top0=col?col.getBoundingClientRect().top:0;let drag=false,y=top0;
+  const move=(ev: TouchEvent)=>{if(!col)return;const q=ev.touches[0],dy=q.clientY-y0;
+    if(!drag&&Math.abs(dy)>10&&Math.abs(dy)>Math.abs(q.clientX-x0))drag=true;
+    if(drag){ev.preventDefault();y=Math.round(Math.max(8,Math.min(top0+dy,innerHeight-col.offsetHeight-8)));col.style.top=y+'px';}};
+  const end=(ev: TouchEvent)=>{document.removeEventListener('touchmove',move);document.removeEventListener('touchend',end);
+    if(drag){dockDrag=Date.now();S.ftabY=y;save();return;}
+    const dx=ev.changedTouches[0].clientX-x0,inward=rtl?dx>40:dx<-40,outward=rtl?dx<-50:dx>50;
+    if(kind===1&&inward)dockOpen(true);else if(kind===0&&outward)dockOpen(false);};
+  document.addEventListener('touchmove',move,{passive:false});document.addEventListener('touchend',end);}
 function inviteGo(id: string){const code=MP.online&&MP.online.code;if(!code)return;invSent[id+code]=true;dockDraw();
   aReq('/acc/invite',{id,code}).then(j=>toast(t(j.tg?'fInvTg':'fInvSent'))).catch(e=>{delete invSent[id+code];dockDraw();aErr(e);});}

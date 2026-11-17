@@ -4,7 +4,7 @@ An Android app that replaces the dealer in the Mafia party game. Built without t
 
 ## Modes
 - **Pass & Play**: one phone, passed around the table.
-- **Local Network (Wi-Fi/Hotspot)**: every player uses their own phone on the same Wi-Fi or hotspot. The host phone runs a small HTTP server inside the app; the other phones find it automatically.
+- **Wi-Fi / Hotspot**: every player uses their own phone on the same Wi-Fi or hotspot. The host phone runs a small HTTP server inside the app; the other phones find it automatically.
 - **Play Online**: friends anywhere join with a 6-digit room code through a small Cloudflare relay (`relay/`). The host phone still runs the game; narration plays on every phone.
 
 ## Features
@@ -47,7 +47,8 @@ constants it uses.
 | `game/flow.ts`, `deal.ts`, `night.ts`, `day.ts`, `end.ts` | The single-phone game, phase by phase (the host reuses it) |
 | `screens/*.ts` | Setup, rules, settings, home, history, stats and profiles, guide |
 | `update.ts`, `accounts.ts`, `group.ts` | Update check and in-app install; accounts; shared group history |
-| `friends.ts` | Friends: list, requests, profile card, room invites (sheet + banner), online status |
+| `friends.ts` | Friends: list, requests, profile card, room invites and Ask to join (banner), online status, the side drawer |
+| `chat.ts` | Room chat (Everyone + 1:1) through the host, memory only |
 | `mp/common.ts`, `relay.ts`, `host.ts`, `hostGame.ts`, `client.ts` | Multiplayer: shared state, relay socket, host room, host game, player phone |
 | `main.ts` | `render()`, quitting, the intro, start-up |
 

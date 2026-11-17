@@ -100,16 +100,20 @@ export class Room {
           try { p.send(JSON.stringify({ k: "room", v: "" })); p.send(JSON.stringify({ k: "p_" + id, v: "" })); } catch (e) {}
         }
       } else if (o.t === "bc") this.toPlayers({ bc: o.v });
+      else if (o.t === "to" && typeof o.id === "string" && ID.test(o.id)) {  // room chat (v2.10): live to one player, never stored
+        const m = JSON.stringify({ c: o.v }); for (const p of this.ctx.getWebSockets("p:" + o.id)) try { p.send(m); } catch (e) {}
+      }
     } else {
       const who = ws.deserializeAttachment();
+      let chat = false;
       try {  // replace any account fields the phone sent with the verified ones (or remove them)
-        const o = JSON.parse(decodeURIComponent(msg)); delete o.uid; delete o.uname; delete o.uav;
+        const o = JSON.parse(decodeURIComponent(msg)); chat = o.t === "chat"; delete o.uid; delete o.uname; delete o.uav;
         if (who) { o.uid = who.uid; o.uname = who.display; o.uav = who.av; }
         msg = encodeURIComponent(JSON.stringify(o));
       } catch (e) { return; }
       const hosts = this.ctx.getWebSockets("host");
       if (hosts.length) for (const h of hosts) try { h.send(JSON.stringify({ a: msg })); } catch (e) {}
-      else {  // host away: keep the action until it reconnects
+      else if (!chat) {  // host away: keep the action until it reconnects (chat is never stored: the phone sends it again)
         const q = (await this.s.get("q")) || [];
         q.push(msg); await this.s.put("q", q.slice(-QMAX));
       }
@@ -179,14 +183,17 @@ export class Accounts {
     this.sql.exec("CREATE TABLE IF NOT EXISTS friends(a TEXT, b TEXT, state TEXT, created INTEGER, PRIMARY KEY(a,b))");
     this.sql.exec("CREATE TABLE IF NOT EXISTS invites(id INTEGER PRIMARY KEY AUTOINCREMENT, frm TEXT, too TEXT, code TEXT, created INTEGER)");
     // online status: seen = last inbox check, st = '' | 'room' | 'game', hide = "Show me as online" switched off
-    for (const c of ["seen INTEGER DEFAULT 0", "st TEXT DEFAULT ''", "hide INTEGER DEFAULT 0"]) try { this.sql.exec("ALTER TABLE users ADD COLUMN " + c); } catch (e) {}  // already there
+    // op (v2.10) = in an online lobby, friends may ask to join
+    for (const c of ["seen INTEGER DEFAULT 0", "st TEXT DEFAULT ''", "hide INTEGER DEFAULT 0", "op INTEGER DEFAULT 0"]) try { this.sql.exec("ALTER TABLE users ADD COLUMN " + c); } catch (e) {}  // already there
+    // invites.kind (v2.10): 'i' = come to my room (code), 'j' = let me into yours (no code; answered with an 'i')
+    try { this.sql.exec("ALTER TABLE invites ADD COLUMN kind TEXT DEFAULT 'i'"); } catch (e) {}
   }
   rel(me, id) {  // 'ok' friends, 'out' I asked, 'in' they asked, '' nothing
     const r = this.one("SELECT * FROM friends WHERE (a=? AND b=?) OR (a=? AND b=?)", me, id, id, me);
     return !r ? "" : r.state === "ok" ? "ok" : r.a === me ? "out" : "in";
   }
   onl(r) { return !r.hide && r.seen > Date.now() - ONLINE_MS; }
-  card(r, rel) { const c = Object.assign(this.pub(r), { rel }); delete c.tg; if (rel === "ok") { c.on = this.onl(r); c.st = c.on ? r.st || "" : ""; } return c; }
+  card(r, rel) { const c = Object.assign(this.pub(r), { rel }); delete c.tg; if (rel === "ok") { c.on = this.onl(r); c.st = c.on ? r.st || "" : ""; c.op = c.st === "room" && !!r.op; } return c; }
   one(q, ...b) { return this.sql.exec(q, ...b).toArray()[0] || null; }
   pub(r) { return { id: r.id, uname: r.uname, display: r.display, fav: r.fav || "", avatar: r.avatar && r.avatar.startsWith("data:") ? "i:" + r.av : (r.avatar || "p:0"), tg: !!r.tg }; }
   async session(uid) { const tok = rnd(32); this.sql.exec("INSERT INTO sessions VALUES(?,?,?)", await sha(tok), uid, Date.now()); return tok; }
@@ -295,16 +302,16 @@ export class Accounts {
     }
     // ---- friends
     if (p === "/acc/inbox") {  // every ~10 s while the app is open: records online status, returns invites and requests
-      const st = ["", "room", "game"].includes(body.st) ? body.st : "", hide = body.hide ? 1 : 0, now = Date.now();
-      if (now - me.seen > 30e3 || st !== (me.st || "") || hide !== me.hide) this.sql.exec("UPDATE users SET seen=?, st=?, hide=? WHERE id=?", now, st, hide, me.id);
-      const inv = this.sql.exec("SELECT i.id AS iid, i.code AS icode, i.created AS iat, u.* FROM invites i JOIN users u ON u.id=i.frm WHERE i.too=? ORDER BY i.created DESC LIMIT 10", me.id).toArray()
+      const st = ["", "room", "game"].includes(body.st) ? body.st : "", op = body.op && st === "room" ? 1 : 0, hide = body.hide ? 1 : 0, now = Date.now();
+      if (now - me.seen > 30e3 || st !== (me.st || "") || op !== me.op || hide !== me.hide) this.sql.exec("UPDATE users SET seen=?, st=?, op=?, hide=? WHERE id=?", now, st, op, hide, me.id);
+      const list = kind => this.sql.exec("SELECT i.id AS iid, i.code AS icode, i.created AS iat, u.* FROM invites i JOIN users u ON u.id=i.frm WHERE i.too=? AND i.kind=? ORDER BY i.created DESC LIMIT 10", me.id, kind).toArray()
         .map(r => ({ id: r.iid, code: r.icode, at: r.iat, from: this.card(r, "ok") }));
-      const rel = {}; let on = 0;
-      for (const f of this.sql.exec("SELECT f.a, f.b, f.state, u.seen, u.hide FROM friends f JOIN users u ON u.id = CASE WHEN f.a=? THEN f.b ELSE f.a END WHERE f.a=? OR f.b=?", me.id, me.id, me.id).toArray()) {
+      const rel = {}; let on = 0, sg = "";  // sg changes when a friend's status does: the app reloads the list
+      for (const f of this.sql.exec("SELECT f.a, f.b, f.state, u.seen, u.hide, u.st, u.op FROM friends f JOIN users u ON u.id = CASE WHEN f.a=? THEN f.b ELSE f.a END WHERE f.a=? OR f.b=?", me.id, me.id, me.id).toArray()) {
         const id = f.a === me.id ? f.b : f.a; rel[id] = f.state === "ok" ? "ok" : f.a === me.id ? "out" : "in";
-        if (f.state === "ok" && this.onl(f)) on++;
+        if (f.state === "ok" && this.onl(f)) { on++; sg += id + (f.st || "") + (f.op ? 1 : 0) + ","; }
       }
-      return out({ inv, rel, on, req: Object.values(rel).filter(x => x === "in").length });
+      return out({ inv: list("i"), jr: list("j"), rel, on, sg, req: Object.values(rel).filter(x => x === "in").length });
     }
     if (p === "/acc/friends") {
       const rows = this.sql.exec("SELECT f.a, f.state, u.* FROM friends f JOIN users u ON u.id = CASE WHEN f.a=? THEN f.b ELSE f.a END WHERE f.a=? OR f.b=?", me.id, me.id, me.id).toArray();
@@ -341,12 +348,21 @@ export class Accounts {
       const id = String(body.id || ""), code = String(body.code || "");
       if (!CODE.test(code)) return out({ err: "code" }, 400);
       const r = this.rel(me.id, id) === "ok" && this.one("SELECT * FROM users WHERE id=?", id); if (!r) return out({ err: "notfriend" }, 403);
-      if (this.one("SELECT id FROM invites WHERE frm=? AND too=? AND code=?", me.id, id, code)) return out({ ok: true, dup: true });  // one invite per friend per room
+      this.sql.exec("DELETE FROM invites WHERE kind='j' AND frm=? AND too=?", id, me.id);  // they asked to join: this is the answer
+      if (this.one("SELECT id FROM invites WHERE kind='i' AND frm=? AND too=? AND code=?", me.id, id, code)) return out({ ok: true, dup: true });  // one invite per friend per room
       if (this.one("SELECT COUNT(*) n FROM invites WHERE frm=? AND created>?", me.id, Date.now() - 60 * 60e3).n >= INVITES_PER_HOUR) return out({ err: "slow" }, 429);
       this.sql.exec("INSERT INTO invites(frm,too,code,created) VALUES(?,?,?,?)", me.id, id, code, Date.now());
       const tg = !!r.tg && !(r.seen > Date.now() - ONLINE_MS);  // app closed: Telegram reaches them (the real status, even when hidden)
-      if (tg) await this.tg(r.tg, `${me.display} (@${me.uname}) invited you to a Mafia Dealer room.\nOpen the app, go to Play Together → Online and join with code ${code.slice(0, 3)} ${code.slice(3)}.\nThe invite expires in 30 minutes.`);
+      if (tg) await this.tg(r.tg, `${me.display} (@${me.uname}) invited you to a Mafia Dealer room.\nOpen the app, tap Online and join with code ${code.slice(0, 3)} ${code.slice(3)}.\nThe invite expires in 30 minutes.`);
       return out({ ok: true, tg });
+    }
+    if (p === "/acc/joinreq") {  // ask a friend in an online lobby to let me in: they answer with a normal invite (in the app only, they are online)
+      const id = String(body.id || ""), r = this.rel(me.id, id) === "ok" && this.one("SELECT * FROM users WHERE id=?", id); if (!r) return out({ err: "notfriend" }, 403);
+      if (!this.onl(r) || r.st !== "room" || !r.op) return out({ err: "notopen" }, 409);
+      if (this.one("SELECT id FROM invites WHERE kind='j' AND frm=? AND too=?", me.id, id)) return out({ ok: true, dup: true });
+      if (this.one("SELECT COUNT(*) n FROM invites WHERE frm=? AND created>?", me.id, Date.now() - 60 * 60e3).n >= INVITES_PER_HOUR) return out({ err: "slow" }, 429);
+      this.sql.exec("INSERT INTO invites(frm,too,code,created,kind) VALUES(?,?,?,?,'j')", me.id, id, "", Date.now());
+      return out({ ok: true });
     }
     if (p === "/acc/invite/done") { this.sql.exec("DELETE FROM invites WHERE id=? AND too=?", Number(body.id), me.id); return out({ ok: true }); }
     return out({ err: "unknown" }, 404);

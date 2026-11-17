@@ -13,7 +13,7 @@ function stats(){const P: Record<string,PlayerStat>={};
 let BOARD: PlayerStat[]=[],PROF: string=null;
 const seatKey=(g,i)=>g.acc&&g.acc[i]?'a:'+g.acc[i]:nkey(g.names[i]);  // accounts first, typed names otherwise
 let PROFN='',profRet='stats';  // the screen Back returns to
-function openProfile(i){const p=BOARD[i];if(!p)return;if(p.key.indexOf('a:')===0){openAcct(p.key.slice(2),p.name);return;}PROF=p.key;PROFN=p.name;profRet=V;nav('profile');}
+function openProfile(i){const p=BOARD[i];if(!p)return;if(p.key.indexOf('a:')===0){openAcct(p.key.slice(2),p.name);return;}PROF=p.key;PROFN=p.name;if(V!=='profile')profRet=V;nav('profile');}
 function profileView(){const k=PROF||'',games=LOG().filter(g=>g.valid&&g.names.some((n,i)=>seatKey(g,i)===k)),acc=k.indexOf('a:')===0;
   if(!games.length)return head(esc(PROFN||''))+(acc?acctCard(k.slice(2)):'')+`<div class="empty">${t(acc?'fNoGames':'noStats')}</div>`;
   const R={mafia:[0,0],doctor:[0,0],detective:[0,0],citizen:[0,0]},by: Record<string,{n:string;c:number}>={};let w=0,sv=0,ct=0,kd=0,vo=0,form=[];

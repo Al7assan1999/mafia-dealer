@@ -11,7 +11,7 @@ async function findHost(tok: number,want?: string): Promise<any>{const my=parseI
     const res=await Promise.all(c.slice(i,i+64).map(ip=>probe(ip,1800).then(n=>ok(n)?{ip,name:n}:null)));const f=res.find(Boolean);if(f)return f;}
   return{err:'notfound'};}
 async function joinStart(manual?: string){if(needName())return;SND.unlock();S.mpName=S.mpName.trim();save();
-  clientStop(false);MP.role='client';MP.lastMode='wifi';MP.joinedAt=Date.now();MP.id=myId();MP.room=null;MP.host=null;MP.status='search';MP.pct=0;const tok=++MP.scanTok;
+  clientStop(false);chReset();MP.role='client';MP.lastMode='wifi';MP.joinedAt=Date.now();MP.id=myId();MP.room=null;MP.host=null;MP.status='search';MP.pct=0;const tok=++MP.scanTok;
   if(V!=='join')nav('join');else render();
   let r;
   if(manual){const ip=manual.trim();const n=await probe(ip,2500);r=n?{ip,name:n}:{err:'notfound'};}else r=await findHost(tok);
@@ -20,7 +20,7 @@ async function joinStart(manual?: string){if(needName())return;SND.unlock();S.mp
   MP.host=r;S.mpLastHost=r.ip;save();lsSet(JNK,{host:r});MP.status='joining';hello();
   MP.hb=0;MP.lastOk=Date.now();clearInterval(MP.timer);MP.timer=setInterval(clientTick,700);render();}
 function joinOnline(code){code=String(code||'').replace(/\D/g,'');if(code.length!==6){toast(t('enterCode'));return;}if(needName(true))return;SND.unlock();S.mpName=S.mpName.trim();save();
-  clientStop(false);MP.role='client';MP.lastMode='online';MP.joinedAt=Date.now();MP.id=myId();MP.room=null;MP.host={name:'',ip:''};MP.online={code};MP.status='joining';MP.last=null;MP.roomName=null;MP.hostOn=0;MP.everOk=false;
+  clientStop(false);chReset();MP.role='client';MP.lastMode='online';MP.joinedAt=Date.now();MP.id=myId();MP.room=null;MP.host={name:'',ip:''};MP.online={code};MP.status='joining';MP.last=null;MP.roomName=null;MP.hostOn=0;MP.everOk=false;
   if(V!=='join')nav('join');else render();
   clientWs();lsSet(JNK,{online:{code}});MP.hb=0;MP.lastOk=Date.now();clearInterval(MP.timer);MP.timer=setInterval(clientTick,700);}
 function clientWs(){const o=MP.online;if(!o||MP.role!=='client')return;MP.wsAt=Date.now();const ws=MP.ws=new WebSocket(relayUrl()+'/r/'+o.code+'?role=p&id='+MP.id+(S.acct?'&tok='+S.acct.tok:''));
@@ -28,6 +28,7 @@ function clientWs(){const o=MP.online;if(!o||MP.role!=='client')return;MP.wsAt=D
   ws.onmessage=e=>{MP.wsAt=Date.now();if(e.data==='pong')return;let m;try{m=JSON.parse(e.data);}catch(x){return;}
     if(m.k==='room'){MP.roomName=m.v;MP.host.name=m.v;}else if(m.k)MP.last=m.v;
     if(m.host!=null)MP.hostOn=m.host;
+    if(m.c)chRecv(m.c.ch);  // room chat, live from the host
     if(m.bc&&m.bc.narr&&NARR[m.bc.narr])try{NARR[m.bc.narr](...(m.bc.a||[]));}catch(x){}};
   ws.onclose=()=>{if(MP.ws===ws&&MP.role==='client'&&MP.online)setTimeout(()=>{if(MP.ws===ws)clientWs();},1500);};}
 async function cGet(){
@@ -48,13 +49,13 @@ async function clientTick(){if(MP.busy||MP.role!=='client')return;MP.busy=true;c
       if(st.err==='kicked'&&st.kicked>(MP.joinedAt||0)){MP.status='kicked';clientStop(false);lsSet(JNK,null);}
       else if(st.err&&!(MP.hellos||[]).includes(st.h)){MP.status='joining';if(Date.now()-MP.helloAt>2000)hello();}  // an old rejection still stored on the relay: ask again
       else if(st.err){MP.status=st.err==='name'?'taken':st.err==='started'?'started':st.err==='kicked'?'kicked':'full';clientStop(false);lsSet(JNK,null);}
-      else{const ping=MP.room&&st.seq>MP.room.seq;MP.room=st;MP.status='ok';MP.everOk=true;if(ping){buzzFx();toast(t('pingedYou'));}
+      else{const ping=MP.room&&st.seq>MP.room.seq;MP.room=st;MP.status='ok';MP.everOk=true;chRecv(st.ch,st.mc);if(ping){buzzFx();toast(t('pingedYou'));}
         if(st.g&&!st.g.ph&&MP.readyDeal===st.g.deal&&!st.g.meReady&&MP.hb%2===0)send({t:'ready',deal:st.g.deal});
         const g=st.g;if(g&&MP.sent&&MP.hb%2===0){if(g.ph==='night'&&MP.sent.k===nkeyN(g))send({t:'act',n:g.n,deal:g.deal,sel:MP.sent.sel});if(g.ph==='vote'&&MP.sent.k==='v'+g.v)send({t:'vote',v:g.v,sel:MP.sent.sel});}}}}
   catch(e){const gone=Date.now()-MP.lastOk;if(gone>4000)MP.status='lost';if(gone>8000&&!MP.online)rescan();}
-  MP.busy=false;if(MP.role==='client'&&++MP.hb%3===0)send({t:'hb'});
+  MP.busy=false;if(MP.status==='ok')chResend();if(MP.role==='client'&&++MP.hb%3===0)send({t:'hb'});
   if(V==='join'){const sig=joinSig();if(sig!==MP.sig)render();else{const e=$('lat');if(e&&!MP.online)e.textContent=t('lat',{n:MP.lat});}}}
-function clientStop(bye){clearInterval(MP.timer);MP.timer=null;MP.scanTok++;if(bye&&MP.role==='client'&&MP.host)send({t:'bye'});if(MP.ws){const w=MP.ws;MP.ws=null;setTimeout(()=>{try{w.close();}catch(e){}},300);}if(bye){MP.role=null;MP.online=null;lsSet(JNK,null);}}
+function clientStop(bye){if(bye)chReset();clearInterval(MP.timer);MP.timer=null;MP.scanTok++;if(bye&&MP.role==='client'&&MP.host)send({t:'bye'});if(MP.ws){const w=MP.ws;MP.ws=null;setTimeout(()=>{try{w.close();}catch(e){}},300);}if(bye){MP.role=null;MP.online=null;lsSet(JNK,null);}}
 async function rescan(){if(MP.rescan||Date.now()-(MP.rescanAt||0)<3000)return;MP.rescan=true;const tok=MP.scanTok,want=MP.host.name;
   const r=await findHost(tok,want);MP.rescan=false;MP.rescanAt=Date.now();
   if(tok===MP.scanTok&&MP.role==='client'&&r&&r.ip&&r.ip!==MP.host.ip){MP.host=r;S.mpLastHost=r.ip;save();lsSet(JNK,{host:r});hello();}}

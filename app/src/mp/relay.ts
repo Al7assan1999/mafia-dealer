@@ -7,6 +7,7 @@ function onlineNet(o: {code:string;key?:string}): OnlineNet{const N: OnlineNet={
   take(){return N.q.length?N.q.shift():null;},
   clear(){N.cache={};N.tx({t:'clear'});},
   bc(v){N.tx({t:'bc',v});},
+  to(id,v){if(!(N.ws&&N.ws.readyState===1))return false;N.tx({t:'to',id,v});return true;},  // live to one player, not stored (room chat)
   tx(m){try{if(N.ws&&N.ws.readyState===1)N.ws.send(JSON.stringify(m));}catch(e){}},
   close(){N.dead=true;const w=N.ws;setTimeout(()=>{try{w&&w.close();}catch(e){}},300);},
   connect(){if(N.dead)return;N.at=Date.now();const ws=N.ws=new WebSocket(relayUrl()+'/r/'+o.code+'?role=host&key='+o.key);

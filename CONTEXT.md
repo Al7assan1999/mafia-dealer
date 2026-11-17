@@ -9,7 +9,19 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## Current state: v2.9.2 (versionCode 27), published on the relay 2026-11-16
+## Current state: v2.10 (versionCode 28), built 2026-11-17, not published yet
+Alhassan's list of 2026-11-17 (he approved the plan; more requests are coming):
+- Fixed: profile > friends drawer > another profile > Back looped on the profile (`profRet` was set to 'profile'); `openAcct`/`openProfile` keep the first return screen.
+- Ask to join (the other way round from an invite), his choice "friend lets you in": in the drawer, a friend in an **online lobby** (users.op, sent by the inbox check; not a Wi-Fi room, not a game) has "Ask to join". The friend gets a banner "X wants to join your room" with Let in; Let in sends a normal invite and the asker's app joins by itself (`jrAsked`, inbox checked every 3 s for 2 min). Relay: `invites.kind` 'i' invite / 'j' join request, `/acc/joinreq` (friend, online lobby, one at a time, shares the 30/hour limit), an invite back deletes the request; inbox returns `jr` and `sg` (friends' status digest, so the list reloads when someone enters a room). No Telegram for join requests.
+- Room chat (`app/src/chat.ts`), his choices: 1:1 **and** an Everyone chat, in the lobby and during the game, out players reach only out players (their 1:1s to players still in are refused, their Everyone messages only out players see; checked by the host). Nothing is saved anywhere: host memory only (not in the resume snapshot), Wi-Fi rides in the player's state on the host phone, online goes as a live relay message `{t:'to'}` → `{c}` that the relay never stores (player chat is not queued when the host is away; the phone resends for 60 s). Players are addressed by chat handles (`cn`), never by their private ids. 200 characters, 8 per 10 s, last 50 per player. Old (<28) phones are left out of the list. Chat button under the friends tab with an unread count; + Add next to non-friends in the chat list.
+- + Add in a game's history (host only, his choice "Game history only") for seats that had an account.
+- The friends tab and chat button form one side column that drags up/down (`S.ftabY`); a tap right after a drag is ignored.
+- Top icons: profile on the left (right in Arabic), round and bigger, tap = menu Show profile / Sign out (signed out: straight to sign-in); language = the current language's flag emoji (UK / Saudi; desktop Chromium shows "GB"/"SA" letters, Android shows flags); theme = a palette icon.
+- Home: the second button is just "Wi-Fi / Hotspot" («واي فاي / نقطة اتصال»); share texts say "Wi-Fi / Hotspot > Join". The Telegram invite text says "tap Online" (was Play Together).
+- Tests: new `tests/multiplayer/test_chat_wifi.js` (21, mock server) and `test_social_app.js` (21, local relay); `relay/test_accounts.mjs` now 63.
+- To publish: deploy the relay together with the APK (`relay/publish.py`), since Ask to join and online chat need the new relay.
+
+## Previous: v2.9.2 (versionCode 27), published on the relay 2026-11-16
 - Home: "Offline game" (was New game), "Local Network (Wi-Fi/Hotspot)" (was Play Together > Same room) and "Online" are the three main buttons; the Play Together screen is gone, its name box moved to Local Network. Share texts and the sign-in note use the new names.
 - Friends tab moved to the top of the screen edge (under the corner buttons) so it no longer covers the first Home button.
 

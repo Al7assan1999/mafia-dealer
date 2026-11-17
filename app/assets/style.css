@@ -323,8 +323,9 @@ body.night .sky{opacity:1}[data-theme=noir] body.night .sky{opacity:.45}
 #inv .invbar>div{flex:1;min-width:0}#inv .invbar b{display:block;font-size:15.5px}#inv .invbar small{color:var(--mute);font-size:13px}
 #inv .invbar .btn{width:auto;min-height:40px;padding:8px 16px;font-size:14.5px;margin:0}#inv .invbar .x{color:var(--mute);font-size:18px;padding:6px 8px}
 /* friends drawer (v2.9.1): tab on the screen edge, drawer slides over the page; mirrored in Arabic */
-#fdock .ftab{position:fixed;top:calc(84px + env(safe-area-inset-top));right:0;z-index:18;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px 9px;color:var(--text);background:var(--bg);background-image:linear-gradient(var(--card2),var(--card2));border:1px solid var(--line2);border-right:0;border-radius:var(--rs) 0 0 var(--rs);box-shadow:0 6px 22px #0008}
-[dir=rtl] #fdock .ftab{right:auto;left:0;border-right:1px solid var(--line2);border-left:0;border-radius:0 var(--rs) var(--rs) 0}
+#fdock .fside{position:fixed;top:calc(84px + env(safe-area-inset-top));right:0;z-index:18;display:flex;flex-direction:column;align-items:flex-end;gap:8px}[dir=rtl] #fdock .fside{right:auto;left:0;align-items:flex-start}
+#fdock .ftab{position:relative;touch-action:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px 9px;color:var(--text);background:var(--bg);background-image:linear-gradient(var(--card2),var(--card2));border:1px solid var(--line2);border-right:0;border-radius:var(--rs) 0 0 var(--rs);box-shadow:0 6px 22px #0008}
+[dir=rtl] #fdock .ftab{border-right:1px solid var(--line2);border-left:0;border-radius:0 var(--rs) var(--rs) 0}
 #fdock .ftab>svg{width:20px;height:20px}#fdock .ftab .avt{box-shadow:0 0 0 2px var(--bg)}#fdock .ftab .avt+.avt{margin-top:-12px}
 #fdock .ftab b{font-size:12px;font-weight:800;color:var(--green);line-height:1}#fdock .ftab .rdot{position:absolute;top:5px;left:5px;width:9px;height:9px;border-radius:50%;background:var(--red)}[dir=rtl] #fdock .ftab .rdot{left:auto;right:5px}
 .fdim{position:fixed;inset:0;z-index:18;background:#000a}.fdim.anim{animation:fadein .2s both}
@@ -334,3 +335,18 @@ body.night .sky{opacity:1}[data-theme=noir] body.night .sky{opacity:.45}
 @keyframes fslide{from{transform:translateX(100%)}to{transform:none}}@keyframes fslideR{from{transform:translateX(-100%)}to{transform:none}}
 .fdh{display:flex;align-items:center;gap:8px;margin-bottom:6px}.fdh b{flex:1;font-size:20px}.fdh .ib{font-size:22px;font-weight:700}
 .fdrawer .flbl{margin:14px 0 2px}
+/* v2.10 top icons: round profile (start side on Home), language flag */
+.ib.pf{width:50px;height:50px;border-radius:50%;border-color:var(--line2)}.ib.pf svg{width:24px;height:24px}#app>.ib.pf{position:absolute;top:0;inset-inline-start:0;z-index:2}
+.corner .ib.pf{width:46px;height:46px;margin-top:-2px}.ib.flag{font-size:22px;line-height:1}.pfm .btn svg{width:20px;height:20px}
+/* v2.10 room chat: a panel over the room (#chat sits outside #app), and its button under the friends tab */
+#fdock .fchat{padding:11px 8px}#fdock .fchat>svg{width:21px;height:21px}#fdock .fchat .cnt{position:absolute;top:-6px;left:-6px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:var(--red);color:#fff;font-weight:800;font-size:11px;line-height:19px;font-style:normal;text-align:center}[dir=rtl] #fdock .fchat .cnt{left:auto;right:-6px}
+#chat .chw{position:fixed;inset:0;z-index:21;display:flex;flex-direction:column;padding:calc(12px + env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom));background:var(--bg);background-image:linear-gradient(var(--card2),var(--card2));animation:fadein .2s both}
+#chat .chw>*{width:100%;max-width:560px;margin-inline:auto}
+.chh{display:flex;align-items:center;gap:10px;margin-bottom:10px}.chh b{flex:1;font-size:20px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.chh .ib{font-size:20px;font-weight:700}
+.chb{flex:1;overflow-y:auto}.chb .prs .fn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.avt.chx{width:34px;height:34px;display:inline-grid;place-items:center;border-radius:50%;background:var(--card);color:var(--mute);font-weight:800;flex:none}.avt.chx svg{width:18px;height:18px}
+.chm{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:4px 2px}
+.cm{align-self:flex-start;max-width:82%;padding:8px 12px;border-radius:14px 14px 14px 4px;background:var(--card);border:1px solid var(--line);overflow-wrap:anywhere}
+.cm b{display:block;font-size:12px;color:var(--gold);margin-bottom:2px}.cm.me{align-self:flex-end;border-radius:14px 14px 4px 14px;background:var(--sel);border-color:transparent;color:#fff}.cm.pend{opacity:.55}
+[dir=rtl] .cm{border-radius:14px 14px 4px 14px}[dir=rtl] .cm.me{border-radius:14px 14px 14px 4px}
+.chf{margin:8px 0 0}

@@ -26,10 +26,11 @@ interface Settings {
   devKey?: string; group?: { code: string } | null; gcache?: LogEntry[] | null; gsent?: number[]; gsync?: number;
   hideOnline?: boolean;  // "Show me as online" switched off
   fpanel?: boolean;  // friends drawer left open
+  ftabY?: number;  // where the friends tab was dragged to (px from the top)
 }
 
 /** Another account as the relay shows it. rel: 'ok' friends, 'out' I asked, 'in' they asked, '' none, 'me'. on/st only for friends. */
-interface Friend { id: string; uname: string; display: string; avatar: string; fav: string; rel: string; on?: boolean; st?: string }
+interface Friend { id: string; uname: string; display: string; avatar: string; fav: string; rel: string; on?: boolean; st?: string; op?: boolean }  // op: in an online lobby (can ask to join)
 /** A room invite from a friend (relay /acc/inbox). */
 interface Invite { id: number; code: string; at: number; from: Friend }
 
@@ -58,10 +59,10 @@ interface LogEntry {
 }
 
 /** A player in the room list every phone gets (room.players). */
-interface RoomPlayer { name: string; on: boolean; host?: boolean; uid?: string | null; av?: string; old?: boolean }
+interface RoomPlayer { name: string; on: boolean; host?: boolean; uid?: string | null; av?: string; old?: boolean; c?: number; out?: boolean }  // c: chat handle, out: out of the game
 
 /** A player in the host's room. */
-interface MpPlayer { name: string; seen: number; on: boolean; v: number; uid: string | null; uav: string; buzz?: number }
+interface MpPlayer { name: string; seen: number; on: boolean; v: number; uid: string | null; uav: string; buzz?: number; cn?: number }
 
 /** Roles dealt in a room, before the game starts (MP.game). */
 interface MpDeal { deal: number; ids: string[]; names: string[]; roles: Role[]; ready: Record<string, boolean> }
@@ -69,7 +70,7 @@ interface MpDeal { deal: number; ids: string[]; names: string[]; roles: Role[]; 
 /** The host's link to the players: native Net (Wi-Fi) or onlineNet() (relay). */
 interface HostNet {
   start(port: number): void; put(k: string, v: string): void; take(): string | null; clear(): void; ip(): string;
-  bc?(v: any): void; close?(): void;
+  bc?(v: any): void; close?(): void; to?(id: string, v: any): boolean;
 }
 
 /** Multiplayer state (MP), for both the host and the players. */

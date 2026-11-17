@@ -1,11 +1,11 @@
 /* host */
 function hostStart(online){if(needName(online))return;SND.unlock();S.mpName=S.mpName.trim();save();
-  MP.role='host';MP.players={};MP.kicked={};MP.seq=0;MP.pubAt=0;MP.game=null;
+  chReset();MP.role='host';MP.players={};MP.kicked={};MP.seq=0;MP.pubAt=0;MP.game=null;
   MP.online=online?{code:String(100000+Math.floor(Math.random()*900000)),key:rnd(24)}:null;HN=MP.online?onlineNet(MP.online):window.Net;
   hostOpen();hostPublish();nav('host');}
 function hostOpen(){lsSet(JNK,null);HN.clear();HN.start(PORT);HN.put('room',S.mpName);MP.myIp=parseIp(HN.ip()).ip;keepOn(true);
   clearInterval(MP.timer);MP.timer=setInterval(hostTick,250);}
-function hostResume(){const s=lsGet(MPK);if(!s||needName(!!s.online))return;SND.unlock();
+function hostResume(){const s=lsGet(MPK);if(!s||needName(!!s.online))return;SND.unlock();chReset();
   MP.online=s.online||null;HN=MP.online?onlineNet(MP.online):window.Net;MP.role='host';MP.seq=s.seq||0;MP.pubAt=0;MP.game=s.game;MP.players=s.players||{};
   for(const q of Object.values(MP.players)){q.on=false;q.seen=0;}
   if(s.G){G=s.G;G.hostTurn=false;G.hostRes=false;G.sel=null;}
@@ -16,7 +16,7 @@ const resumeMpBtn=()=>{const s=lsGet(MPK);return s?`<button class="btn gold" onc
 function hostTick(){let m,ch=false;const now=Date.now();
   while((m=HN.take())!=null){let o;try{o=JSON.parse(decodeURIComponent(m));}catch(e){continue;}if(!o||!o.id)continue;
     const p=MP.players[o.id];
-    if(o.t==='hello'){const nm=String(o.uname||o.name||'').trim().slice(0,18);if(p){p.v=o.v||0;p.uid=o.uid||null;p.uav=o.uav||'';}
+    if(o.t==='hello'){chHostIn(o.id,o);const nm=String(o.uname||o.name||'').trim().slice(0,18);if(p){p.v=o.v||0;p.uid=o.uid||null;p.uav=o.uav||'';}
       const taken=!nm||nkey(nm)===nkey(S.mpName)||Object.entries(MP.players).some(([k,q])=>k!==o.id&&nkey(q.name)===nkey(nm));
       if(taken){HN.put('p_'+o.id,JSON.stringify({err:'name',h:o.h}));continue;}
       if(!p&&MP.game){HN.put('p_'+o.id,JSON.stringify({err:'started',h:o.h}));continue;}
@@ -25,6 +25,7 @@ function hostTick(){let m,ch=false;const now=Date.now();
       MP.players[o.id]={name:nm,seen:now,on:true,v:o.v||0,uid:o.uid||null,uav:o.uav||''};ch=true;}
     else if(p){p.seen=now;if(!p.on){p.on=true;ch=true;}
       if(o.t==='buzz'){p.buzz=(p.buzz||0)+1;const mx=S.host.buzzMax;if(!mx||p.buzz<=mx){buzzFx();toast(t(mx&&p.buzz===mx?'buzzLast':'buzzed',{n:p.name}));}ch=true;}
+      if(o.t==='chat')chHostIn(o.id,o);
       if(o.t==='ready'&&MP.game&&o.deal===MP.game.deal&&!MP.game.ready[o.id]){MP.game.ready[o.id]=true;ch=true;}
       if(G&&G.mp){const i=G.ids.indexOf(o.id);
         if(o.t==='act'&&i>=0&&G.phase==='mpNight'&&o.n===G.day&&o.deal===MP.game.deal&&G.alive[i]&&!G.done[i]){const no=nightOpts(i);
@@ -37,14 +38,14 @@ function hostTick(){let m,ch=false;const now=Date.now();
     else{const e=$('mpprog');if(e)e.innerHTML=mpProg();}}
   if(ch&&G&&G.mp&&G.phase==='mpNight')mpCheckNight();
   if(ch&&V==='host'){if(G){if(G.mp&&$('mpprog'))$('mpprog').innerHTML=mpProg();if(G.mp&&G.open&&$('hboard'))$('hboard').innerHTML=boardHtml(voteBoard());}else if(MP.game&&$('rdy'))$('rdy').innerHTML=readyHtml();else render();}}
-function hostPublish(){MP.pubAt=Date.now();
-  const room={host:S.mpName,hv:APP.code,rules:activeRules(),seq:MP.seq,players:([{name:S.mpName,on:true,host:true,uid:me()&&me().id,av:me()&&me().avatar}] as RoomPlayer[]).concat(Object.values(MP.players).map(q=>({name:q.name,on:q.on,uid:q.uid,av:q.uav})))};
+function hostPublish(){MP.pubAt=Date.now();chHandles();
+  const room={host:S.mpName,hv:APP.code,cv:1,rules:activeRules(),seq:MP.seq,players:([{name:S.mpName,on:true,host:true,uid:me()&&me().id,av:me()&&me().avatar,c:0,out:chOut(0)}] as RoomPlayer[]).concat(Object.values(MP.players).map(q=>({name:q.name,on:q.on,uid:q.uid,av:q.uav,c:(q.v||0)>=28?q.cn:undefined,out:chOut(q.cn)})))};
   const g=MP.game;
   for(const id in MP.players){const st: Record<string,any>=Object.assign({you:MP.players[id].name,mu:buzzMuted(MP.players[id])},room);
     if(g&&G&&G.mp){const i=G.ids.indexOf(id);if(i>=0)st.g=mpPriv(i);}
     else if(g){const i=g.ids.indexOf(id);if(i>=0){const r=g.roles[i];
       st.g={deal:g.deal,phase:'deal',role:r,mates:r==='mafia'?g.names.filter((n,j)=>j!==i&&g.roles[j]==='mafia'):[],meReady:!!g.ready[id],readyN:Object.keys(g.ready).length,total:g.ids.length};}}
-    HN.put('p_'+id,JSON.stringify(st));}
+    chPublish(id,st);HN.put('p_'+id,JSON.stringify(st));}
   mpSnap();}
 function hostIds(){return ['host'].concat(Object.keys(MP.players).filter(id=>MP.players[id].on));}
 function hostDeal(){const ids=hostIds(),names=ids.map(id=>id==='host'?S.mpName:MP.players[id].name);if(deckErr(ids.length,names))return;
@@ -64,7 +65,7 @@ function roleCard(name,role,mates,btn){return `<div class="big"><div class="lbl"
    <div class="rv"><div class="ric" style="width:56px;height:56px;background:${RC[role]}1f;color:${RC[role]}">${IC[role]}</div><div class="rn" style="color:${RC[role]}">${t(role)}</div><div class="rd">${t('d_'+role)}</div>${mates&&mates.length?`<div class="mates">${t('mates',{n:mates.map(esc).join(S.lang==='ar'?'، ':', ')})}</div>`:''}</div></div>
    <button class="btn ghost" id="memo" onclick="${btn}" disabled style="opacity:.4">${t('gotIt')}</button></div>`;}
 function hostPing(){MP.seq++;hostPublish();toast(t('pinged'));}
-function hostStop(){clearInterval(MP.timer);MP.timer=null;if(MP.role==='host'){lsSet(MPK,null);keepOn(false);if(HN){HN.clear();if(HN.close)HN.close();}}MP.role=null;MP.online=null;}
+function hostStop(){chReset();clearInterval(MP.timer);MP.timer=null;if(MP.role==='host'){lsSet(MPK,null);keepOn(false);if(HN){HN.clear();if(HN.close)HN.close();}}MP.role=null;MP.online=null;}
 function roomList(players){return players.map(q=>`<div class="prs"><span class="dot ${q.on?'on':''}"></span>${q.uid?avatarHtml(q.av,q.uid,28):''}<b>${esc(q.name)}</b>${q.host?`<small>${t('youHost')}</small>`:''}${q.old?`<small class="oldv">${t('oldApp')}</small>`:''}${plusBtn(q.uid)}</div>`).join('');}
 function hostView(){const g=MP.game;
   if(g){const i=g.ids.indexOf('host');

@@ -16,7 +16,7 @@ function historyView(){return head(t('historyT'))+`<input class="search" placeho
 function gameView(id){const g=LOG().find(x=>x.id===id);if(!g){V='history';return historyView();}
   return head(fdate(g.id))+`<div class="big"><div class="orb">${g.winner==='mafia'?IC.skull:IC.trophy}</div><div class="res" style="color:${g.winner==='mafia'?'var(--red2)':'var(--gold)'}">${t('win_'+g.winner)}</div>
    <p class="hint" style="margin-bottom:0">${g.names.length} ${t('pl')} · ${g.days} ${t('rounds')}${g.valid?'':` · ${t('invalidTag')}`}</p></div>
-  <div class="sec mt"><div class="sh"><h3>${t('roles')}</h3></div>${g.names.map((n,i)=>`<div class="endrow">${g.alive[i]?`<span>${esc(n)}</span>`:`<s>${esc(n)}</s>`}<b style="color:${RC[g.roles[i]]}">${t(g.roles[i])}</b></div>`).join('')}</div>
+  <div class="sec mt"><div class="sh"><h3>${t('roles')}</h3></div>${g.names.map((n,i)=>`<div class="endrow">${g.alive[i]?`<span>${esc(n)}</span>`:`<s>${esc(n)}</s>`}${plusBtn(g.acc&&g.acc[i])}<b style="color:${RC[g.roles[i]]}">${t(g.roles[i])}</b></div>`).join('')}</div>
   <div class="sec"><div class="sh"><h3>${t('history')}</h3></div><div class="log">${g.hist.map(esc).join('<br>')}</div></div>
   ${canEdit(g)?`<button class="btn ghost" onclick="toggleValid(${g.id})">${t(g.valid?'markInvalid':'markValid')}</button>
   <button class="danger" onclick="ask(t('delQ'),t(S.group?'delGD':'delD'),t('del'),()=>delGame(${g.id}))">${t('delGame')}</button>`:`<p class="mpinfo" style="text-align:center">${t('gNotMine')}</p>`}`;}

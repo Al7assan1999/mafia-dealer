@@ -74,6 +74,19 @@ r = await call("/acc/invite", { id: idB, code: code6 }, tok2); ok(r.j.ok && r.j.
 r = await call("/acc/invite", { id: idB, code: code6 }, tok2); ok(r.j.dup, "one invite per friend per room");
 r = await call("/acc/inbox", {}, tB); const iv = r.j.inv[0]; ok(r.j.inv.length === 1 && iv.code === code6 && iv.from.id === uid && iv.from.display === "Al Hassan", "the friend's inbox has the invite with who sent it");
 await call("/acc/invite/done", { id: iv.id }, tB); r = await call("/acc/inbox", {}, tB); ok(!r.j.inv.length, "a joined or dismissed invite is gone");
+// ask to join (v2.10)
+r = await call("/acc/joinreq", { id: idB }, tok2); ok(r.st === 409 && r.j.err === "notopen", "ask to join: refused unless the friend is in an online lobby");
+await call("/acc/inbox", { st: "room", op: 1 }, tB); r = await call("/acc/friends", null, tok2); ok(r.j.friends.find(f => f.id === idB).op === true, "a friend in an online lobby shows op");
+r = await call("/acc/inbox", { st: "game", op: 1 }, tB); r = await call("/acc/friends", null, tok2); ok(!r.j.friends.find(f => f.id === idB).op, "in a game: not open (op needs a lobby)");
+await call("/acc/inbox", { st: "room", op: 1 }, tB);
+r = await call("/acc/joinreq", { id: idB }, tok2); ok(r.j.ok && !r.j.dup, "ask to join a friend in an online lobby");
+r = await call("/acc/joinreq", { id: idB }, tok2); ok(r.j.dup, "one request at a time");
+r = await call("/acc/inbox", { st: "room", op: 1 }, tB); ok(r.j.jr.length === 1 && r.j.jr[0].from.id === uid && !r.j.inv.length, "the friend gets it as a join request, not an invite");
+r = await call("/acc/invite", { id: uid, code: code6 }, tB); r = await call("/acc/inbox", {}, tok2); ok(r.j.inv.length === 1 && r.j.inv[0].from.id === idB, "Let in = an invite back to the one who asked");
+r = await call("/acc/inbox", { st: "room", op: 1 }, tB); ok(!r.j.jr.length, "and the request is answered (gone)");
+for (const v of (await call("/acc/inbox", {}, tok2)).j.inv) await call("/acc/invite/done", { id: v.id }, tok2);
+r = await call("/acc/joinreq", { id: idC }, tB); ok(r.st === 403, "ask to join needs a friend");
+await call("/acc/inbox", { st: "", op: 0 }, tB);
 r = await call("/acc/tglink", {}, tC); await tg("/start " + r.j.code, 777003);
 r = await call("/acc/invite", { id: idC, code: code6 }, tok2); ok(r.j.ok && r.j.tg === true, "invite a friend whose app is closed: goes to their Telegram");
 r = await call("/acc/user/" + idB, null, tok2); ok(r.j.user.rel === "ok" && r.j.user.uname === unB && "on" in r.j.user, "friend profile card");
