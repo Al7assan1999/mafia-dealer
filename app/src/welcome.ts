@@ -8,8 +8,8 @@ const WTXT={
  ar:{cap1:'بلدة هادئة. الجميع يعرف الجميع.',cap2:'ثم في إحدى الليالي… سُمع صوت غريب.',bang:'طَخ!',cap3:'أحدهم مات.',
      doc:'الطبيب',docL:'قد يحدث هذا لأيٍّ منا. سأحميكم الليلة.',det:'المحقق',detL:'أقسم أنني سأجدهم.',
      maf:'المافيا',mafL:'أنتم… سأنال منكم جميعًا.',ha:['ها','ها','ها'],tag:'بمن تثق؟',go:'اضغط للبدء',skip:'تخطَّ',hint:'اضغط للمتابعة'}};
-const WSC: [string,number][]=[['s1',3600],['s2',4000],['s3',3400],['s4',3400],['s5',3000],['s6',3800],['end',2800]];  // scene, how long it stays (ms)
-const WL={on:false,idx:-1,timer:0 as any,typeT:0 as any,after:null as (()=>void)|null};
+const WSC: [string,number][]=[['s1',3600],['s2',4000],['s3',4400],['s4',3400],['s5',3000],['s6',3800],['end',2800]];  // scene, how long it stays (ms)
+const WL={on:false,first:false,idx:-1,timer:0 as any,typeT:0 as any,after:null as (()=>void)|null};  // first: never watched to the end here (no Skip, no Back)
 /* the drawings */
 const wPerson=(x: number,y: number,s: number,extra='',cls='f')=>`<g class="${cls}" transform="translate(${x} ${y}) scale(${s})" style="stroke:var(--wrim);stroke-width:${(1.4/s).toFixed(2)}"><circle cx="0" cy="-74" r="11"/>
   <path d="M-15 -58 Q0 -66 15 -58 L18 -22 L11 -22 L9 0 L2 0 L0 -20 L-2 0 L-9 0 L-11 -22 L-18 -22 Z"/>${extra}</g>`;
@@ -56,16 +56,18 @@ function wBuild(el: HTMLElement){const T=WTXT[S.lang==='ar'?'ar':'en'];
      <g style="fill:var(--wink)">${wPerson(180,646,2.1,wHat+wBadge('maf'),'')}</g>
      <g class="eyes" filter="url(#wgGlow)"><circle cx="171" cy="490" r="4"/><circle cx="189" cy="490" r="4"/></g><g class="eyes"><circle cx="171" cy="490" r="2.4"/><circle cx="189" cy="490" r="2.4"/></g></g></g>
   </svg></div>
+  <div class="wl-blood" aria-hidden="true">${wBlood()}</div>
   <div class="wl-flash"></div><div class="wl-cap" id="wlCap"></div><div class="wl-bang">${T.bang}</div>
   <div class="wl-say" id="wlSay"><div class="wl-who"></div><div class="wl-bub"></div></div>
   <div class="wl-ha" id="wlHa">${T.ha.map(h=>`<span>${h}</span>`).join('')}</div>
   <div class="wl-title"><div class="wl-mark">${IC.logo}</div><h1>Mafia Dealer</h1><p>${T.tag}</p><div class="wl-go">${T.go}</div></div>
   <div class="wl-hint">${T.hint}</div><div class="wl-prog">${WSC.slice(0,-1).map(()=>'<i><b></b></i>').join('')}</div>
-  <button class="wl-skip" type="button" onclick="event.stopPropagation();welcomeEnd()">${T.skip}</button></div>`;
+  ${WL.first?'':`<button class="wl-skip" type="button" onclick="event.stopPropagation();welcomeEnd()">${T.skip}</button>`}
+  <button class="wl-mute" type="button" aria-label="${t(S.wlMute?'wlSoundOn':'wlSoundOff')}" onclick="event.stopPropagation();wlMute()">${S.wlMute?IC.mute:IC.sound}</button></div>`;
   (el.firstElementChild as HTMLElement).onclick=()=>{if(WL.idx<WSC.length-1)wGo(WL.idx+1);else welcomeEnd();};}
 function wType(el: Element,txt: string){clearInterval(WL.typeT);el.textContent='';let i=0;WL.typeT=setInterval(()=>{el.textContent=txt.slice(0,++i);if(i>=txt.length)clearInterval(WL.typeT);},32);}
 function wGo(n: number){clearTimeout(WL.timer);WL.idx=n;const [k,ms]=WSC[n],T=WTXT[S.lang==='ar'?'ar':'en'],wl=document.querySelector('#welcome .wl');if(!wl)return;
-  wl.className='wl '+k;
+  wl.className='wl '+k;WSFX.scene(k);
   const cap=$('wlCap'),say=$('wlSay'),ha=$('wlHa'),capTxt={s1:T.cap1,s2:T.cap2,s3:T.cap3}[k];
   cap.classList.remove('on');setTimeout(()=>{if(capTxt&&WL.idx===n){cap.textContent=capTxt;cap.classList.add('on');}},k==='s1'?400:250);
   const role={s4:['doc',T.doc,T.docL],s5:['det',T.det,T.detL],s6:['maf',T.maf,T.mafL]}[k];
@@ -75,9 +77,27 @@ function wGo(n: number){clearTimeout(WL.timer);WL.idx=n;const [k,ms]=WSC[n],T=WT
   document.querySelectorAll('#welcome .wl-prog i').forEach((p: HTMLElement,i)=>{p.className=i<n?'done':i===n?'now':'';p.style.setProperty('--t',ms+'ms');});
   WL.timer=setTimeout(()=>{if(n<WSC.length-1)wGo(n+1);else welcomeEnd();},ms);}
 /** Plays the welcome; then Home (or what was waiting for it: What's new after an update). */
-function showWelcome(){const el=$('welcome');if(!el||WL.on)return;WL.on=true;WL.idx=-1;
+function showWelcome(){const el=$('welcome');if(!el||WL.on)return;WL.on=true;WL.idx=-1;WL.first=!S.wlSeen;
   try{history.pushState({v:1},'');}catch(e){}  // phone Back skips it
   wBuild(el);void el.offsetWidth;setTimeout(()=>{if(WL.on&&WL.idx<0)wGo(0);},30);}  // the first state is laid out, then scene 1 transitions in
-function welcomeEnd(){if(!WL.on)return;WL.on=false;clearTimeout(WL.timer);clearInterval(WL.typeT);
+function welcomeEnd(){if(!WL.on)return;WL.on=false;clearTimeout(WL.timer);clearInterval(WL.typeT);WSFX.stop();if(!S.wlSeen){S.wlSeen=true;save();}
   const el=$('welcome'),wl=el&&el.querySelector('.wl');if(wl)wl.classList.add('out');setTimeout(()=>{if(!WL.on&&el)el.innerHTML='';},500);
   const f=WL.after;WL.after=null;if(f)setTimeout(f,300);}
+function wlMute(){S.wlMute=!S.wlMute;save();WSFX.mute();const b=document.querySelector('#welcome .wl-mute');if(b){b.innerHTML=S.wlMute?IC.mute:IC.sound;b.setAttribute('aria-label',t(S.wlMute?'wlSoundOn':'wlSoundOff'));}}
+/* the killing (v2.15): at the hit (~1.6 s) blood splashes across the upper screen, then runs down in thick streams and drops fall off.
+   A filter makes it liquid (blur + alpha threshold: shapes melt together), wobbles the edges and adds a wet shine. Same every time (seeded). */
+function wBlood(){let seed=7;const r=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  let sp='<circle cx="180" cy="170" r="30"/><ellipse cx="160" cy="182" rx="26" ry="16"/><ellipse cx="204" cy="160" rx="22" ry="14"/>';
+  for(let i=0;i<34;i++){const a=r()*Math.PI*2,d=36+r()*150,x=180+Math.cos(a)*d,y=170+Math.sin(a)*d*.78,big=r();
+    sp+=big>.7?`<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${(8+r()*16).toFixed(1)}" ry="${(1.6+r()*2.4).toFixed(1)}" transform="rotate(${(a*180/Math.PI).toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`
+      :`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(1.5+r()*(d<90?9:5)).toFixed(1)}"/>`;}
+  const ST=[[122,190,8,230,.05,1.8],[150,196,12,508,.15,2.3],[180,200,10,330,0,1.9],[209,192,13,512,.1,2.4],[237,180,8,190,.25,1.6],[262,174,9,280,.2,1.9],[95,168,6,120,.35,1.2],[284,182,6,150,.3,1.4]];  // x, top, width, length, delay, duration
+  let st='';ST.forEach(([x,y,w,len,del,dur])=>{const v=`--del:${del}s;--dur:${dur}s;--len:${len}px;--fall:${700-y+20}px`;
+    st+=`<rect class="bl-s" x="${x-w/2}" y="${y}" width="${w}" height="${len}" rx="${w/2}" style="${v}"/><circle class="bl-t" cx="${x}" cy="${y}" r="${(w*.72).toFixed(1)}" style="${v}"/>`;
+    if(len<500)st+=`<circle class="bl-f" cx="${x}" cy="${y}" r="${(w*.42).toFixed(1)}" style="${v}"/>`;});
+  return `<svg viewBox="0 0 360 700" preserveAspectRatio="xMidYMax slice"><defs><filter id="wgBlood" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="3.4" result="b"/><feColorMatrix in="b" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -11" result="goo"/>
+    <feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="2" seed="5" result="n"/><feDisplacementMap in="goo" in2="n" scale="6" xChannelSelector="R" yChannelSelector="G" result="wob"/>
+    <feGaussianBlur in="wob" stdDeviation="2.2" result="wb"/><feSpecularLighting in="wb" surfaceScale="5" specularConstant=".85" specularExponent="24" style="lighting-color:var(--wbloodhi)" result="spec"><feDistantLight azimuth="235" elevation="50"/></feSpecularLighting>
+    <feComposite in="spec" in2="wob" operator="in" result="shine"/><feComposite in="shine" in2="wob" operator="arithmetic" k1="0" k2=".55" k3="1" k4="0"/></filter></defs>
+    <g filter="url(#wgBlood)" style="fill:var(--wblood1)"><g class="bl-splash">${sp}</g>${st}</g></svg>`;}

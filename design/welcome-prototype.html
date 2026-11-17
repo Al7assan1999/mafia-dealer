@@ -12,12 +12,12 @@
   --night1:#04030b;--night2:#141236;
   --morn1:#1d2638;--morn2:#6f8399;
   --red1:#1a0207;--red2:#6b0a1d;
-  --star:#fff;--chalk:#f4f2f8;
+  --star:#fff;--chalk:#f4f2f8;--blood1:#7c0812;--blood2:#4a0309;--bloodhi:#ff9a9a;
   --head:'Readex Pro',system-ui,sans-serif;--body:'Readex Pro',system-ui,sans-serif}
 [data-look=noir]{--bg:#0d0c0b;--ink:#080706;--ink2:#1d1a15;--rim:#ece4d42a;--text:#ece4d4;--mute:#a39a8b;--acc:#b3241f;--acc2:#d4b483;
   --doc:#7fb08b;--det:#86a6c9;--maf:#c0392b;--cit:#b08d4a;
   --dawn1:#1e1a16;--dawn2:#6e5a43;--dawn3:#c9b08a;--night1:#050505;--night2:#1a1815;--morn1:#1c1b19;--morn2:#6d6658;
-  --red1:#120404;--red2:#4a0d0b;--star:#ece4d4;--chalk:#ece4d4;
+  --red1:#120404;--red2:#4a0d0b;--star:#ece4d4;--chalk:#ece4d4;--blood1:#5e0a0a;--blood2:#2a0303;--bloodhi:#e0a090;
   --head:'Special Elite','El Messiri',serif;--body:'IBM Plex Sans Arabic',system-ui,sans-serif}
 [dir=rtl]{--head:'El Messiri',system-ui,serif;--body:'IBM Plex Sans Arabic',system-ui,sans-serif}
 html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:var(--body);overflow:hidden}
@@ -63,6 +63,18 @@ button:focus-visible{outline:2px solid var(--acc2);outline-offset:2px}
 @keyframes ring{0%{r:4;opacity:.9;stroke-width:5}100%{r:240;opacity:0;stroke-width:1}}
 .wl.s2 .shake{animation:shake .5s linear 1.7s both}
 @keyframes shake{0%,100%{transform:none}15%{transform:translate(-7px,4px)}30%{transform:translate(6px,-5px)}45%{transform:translate(-5px,-3px)}60%{transform:translate(4px,5px)}75%{transform:translate(-3px,2px)}}
+/* the killing (v2): at the hit (~1.6 s) blood splashes across the upper screen, then runs down in thick streams; drops break off and fall.
+   One SVG; a filter makes it a liquid (blur + alpha threshold = shapes melt together), wobbles the edges and adds a wet shine. */
+.blood{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .9s ease}.wl.s3 .blood{opacity:1;transition:opacity .1s ease 1.55s}
+.blood svg{position:absolute;inset:0;width:100%;height:100%}
+.bl-splash{transform-box:view-box;transform-origin:180px 170px;transform:scale(.12);opacity:0}
+.wl:is(.s3,.s4) .bl-splash{animation:blSplash .26s cubic-bezier(.15,.9,.3,1.15) 1.6s forwards}
+@keyframes blSplash{to{transform:none;opacity:1}}
+.bl-s{transform-box:fill-box;transform-origin:50% 0;transform:scaleY(0)}
+.wl:is(.s3,.s4) .bl-s{animation:blRun var(--dur) cubic-bezier(.5,0,.75,1) calc(1.75s + var(--del)) forwards}@keyframes blRun{to{transform:none}}
+.bl-t{transform:none}.wl:is(.s3,.s4) .bl-t{animation:blTip var(--dur) cubic-bezier(.5,0,.75,1) calc(1.75s + var(--del)) forwards}@keyframes blTip{to{transform:translateY(var(--len))}}
+.bl-f{opacity:0}.wl:is(.s3,.s4) .bl-f{animation:blFall .75s cubic-bezier(.55,0,1,.45) calc(1.85s + var(--del) + var(--dur)) 3}
+@keyframes blFall{0%{opacity:1;transform:translateY(var(--len))}100%{opacity:1;transform:translateY(var(--fall))}}
 .flash{position:absolute;inset:0;background:var(--text);opacity:0;pointer-events:none}.wl.s2 .flash{animation:flash .5s ease-out 1.7s both}@keyframes flash{0%{opacity:0}10%{opacity:.35}100%{opacity:0}}
 /* the body: chalk outline draws itself, a spotlight */
 .chalk path{fill:none;stroke:var(--chalk);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:420;stroke-dashoffset:420}
@@ -134,7 +146,25 @@ const TXT={
      doc:'الطبيب',docL:'قد يحدث هذا لأيٍّ منا. سأحميكم الليلة.',det:'المحقق',detL:'أقسم أنني سأجدهم.',
      maf:'المافيا',mafL:'أنتم… سأنال منكم جميعًا.',ha:['ها','ها','ها'],title:'موزّع المافيا',tag:'بمن تثق؟',go:'اضغط للبدء',skip:'تخطَّ',hint:'اضغط للمتابعة'}};
 // scene, how long it stays (ms)
-const SC=[['s1',3600],['s2',4000],['s3',3400],['s4',3400],['s5',3000],['s6',3800],['end',0]];
+/* the blood: a splash around (180,170), streams from the splash, drops falling off their ends (deterministic, so every play looks the same) */
+function bloodSvg(){let seed=7;const r=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  let sp='<circle cx="180" cy="170" r="30"/><ellipse cx="160" cy="182" rx="26" ry="16"/><ellipse cx="204" cy="160" rx="22" ry="14"/>';
+  for(let i=0;i<34;i++){const a=r()*Math.PI*2,d=36+r()*150,x=180+Math.cos(a)*d,y=170+Math.sin(a)*d*.78,big=r();
+    sp+=big>.7?`<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${(8+r()*16).toFixed(1)}" ry="${(1.6+r()*2.4).toFixed(1)}" transform="rotate(${(a*180/Math.PI).toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`
+      :`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(1.5+r()*(d<90?9:5)).toFixed(1)}"/>`;}
+  // streams: x, top, width, length, delay, duration (two reach the bottom)
+  const ST=[[122,190,8,230,.05,1.8],[150,196,12,508,.15,2.3],[180,200,10,330,0,1.9],[209,192,13,512,.1,2.4],[237,180,8,190,.25,1.6],[262,174,9,280,.2,1.9],[95,168,6,120,.35,1.2],[284,182,6,150,.3,1.4]];
+  let st='';ST.forEach(([x,y,w,len,del,dur],i)=>{const v=`--del:${del}s;--dur:${dur}s;--len:${len}px;--fall:${700-y+20}px`;
+    st+=`<rect class="bl-s" x="${x-w/2}" y="${y}" width="${w}" height="${len}" rx="${w/2}" style="${v}"/><circle class="bl-t" cx="${x}" cy="${y}" r="${(w*.72).toFixed(1)}" style="${v}"/>`;
+    if(len<500)st+=`<circle class="bl-f" cx="${x}" cy="${y}" r="${(w*.42).toFixed(1)}" style="${v}"/>`;});
+  return `<svg viewBox="0 0 360 700" preserveAspectRatio="xMidYMax slice"><defs><filter id="blGoo" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="3.4" result="b"/><feColorMatrix in="b" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -11" result="goo"/>
+    <feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="2" seed="5" result="n"/><feDisplacementMap in="goo" in2="n" scale="6" xChannelSelector="R" yChannelSelector="G" result="wob"/>
+    <feGaussianBlur in="wob" stdDeviation="2.2" result="wb"/><feSpecularLighting in="wb" surfaceScale="5" specularConstant=".85" specularExponent="24" style="lighting-color:var(--bloodhi)" result="spec"><feDistantLight azimuth="235" elevation="50"/></feSpecularLighting>
+    <feComposite in="spec" in2="wob" operator="in" result="shine"/><feComposite in="shine" in2="wob" operator="arithmetic" k1="0" k2=".55" k3="1" k4="0"/></filter>
+    <linearGradient id="blFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--blood1)"/><stop offset="1" style="stop-color:var(--blood2)"/></linearGradient></defs>
+    <g filter="url(#blGoo)" style="fill:var(--blood1)"><g class="bl-splash">${sp}</g>${st}</g></svg>`;}
+const SC=[['s1',3600],['s2',4000],['s3',4400],['s4',3400],['s5',3000],['s6',3800],['end',0]];
 const IC={
  doc:'<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/>',
  det:'<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l6 6"/>',
@@ -194,6 +224,7 @@ function build(){const T=TXT[lang],C=getComputedStyle(document.documentElement);
      <g style="fill:var(--ink)">${person(180,646,2.1,fedora+badge('maf',col('maf')),'')}</g>
      <g class="eyes" filter="url(#glow)"><circle cx="171" cy="490" r="4"/><circle cx="189" cy="490" r="4"/></g><g class="eyes"><circle cx="171" cy="490" r="2.4"/><circle cx="189" cy="490" r="2.4"/></g></g></g>
   </svg></div>
+  <div class="blood" aria-hidden="true">${bloodSvg()}</div>
   <div class="flash"></div>
   <div class="cap" id="cap"></div>
   <div class="bang">${T.bang}</div>

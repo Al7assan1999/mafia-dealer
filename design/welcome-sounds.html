@@ -1,0 +1,465 @@
+<title>Welcome Sounds</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;700&family=Special+Elite&family=El+Messiri:wght@700&family=IBM+Plex+Sans+Arabic:wght@400;700&display=swap">
+<style>
+/* The board: six moments as numbered rows (the order of the welcome's scenes), each with 2-3 versions to play and pick;
+   then the welcome itself, playing the picks. Same dark world as the app. */
+.sb{--sb-bg:#0b0a10;--sb-card:#16131f;--sb-line:#2a2536;--sb-text:#f4f2f8;--sb-mute:#a59fb3;--sb-acc:#ff2e63;--sb-gold:#ffb547}
+html.sbmode,html.sbmode body{height:auto;overflow:auto}
+.sb{max-width:640px;margin:0 auto;padding-block:calc(14px + env(safe-area-inset-top,0px)) 120px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));font-family:'Readex Pro',system-ui,sans-serif;color:var(--sb-text)}
+.sb h1{font-size:26px;margin:4px 0 4px;text-wrap:balance}.sb .lead{color:var(--sb-mute);margin:0 0 16px;line-height:1.5;font-size:14.5px;max-width:60ch}
+.sb .tabs{display:flex;gap:6px;margin:0 0 16px;background:#ffffff0a;border:1px solid var(--sb-line);border-radius:14px;padding:4px}
+.sb .tabs button{flex:1;padding:10px;border-radius:10px;font-weight:700;color:var(--sb-mute)}.sb .tabs button.on{background:var(--sb-acc);color:#fff}
+.mom{background:var(--sb-card);border:1px solid var(--sb-line);border-radius:18px;padding:14px;margin-bottom:12px}
+.mom h2{margin:0;font-size:17px;display:flex;gap:10px;align-items:baseline}.mom h2 i{font-style:normal;color:var(--sb-gold);font-size:13px;font-weight:700;letter-spacing:.06em}
+.mom .sc{color:var(--sb-mute);font-size:13px;margin:4px 0 10px}
+.ver{display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px;border:1px solid transparent}
+.ver.pick{border-color:var(--sb-acc);background:#ff2e6314}
+.ver .play{flex:none;width:42px;height:42px;border-radius:50%;background:#ffffff14;border:1px solid var(--sb-line);display:grid;place-items:center;font-size:15px}
+.ver .play.on{background:var(--sb-acc);border-color:var(--sb-acc)}
+.ver .d{flex:1;min-width:0;font-size:14px;line-height:1.35}.ver .d b{display:inline-block;width:1.4em;color:var(--sb-gold)}
+.ver label{flex:none;display:flex;align-items:center;gap:6px;font-size:13px;color:var(--sb-mute);cursor:pointer;padding:6px 4px}
+.ver input{accent-color:var(--sb-acc);width:18px;height:18px}
+.sb .bar{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));background:#0b0a10f2;border-top:1px solid var(--sb-line);backdrop-filter:blur(8px)}
+.sb .bar>div{max-width:640px;margin:0 auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sb .bar code{flex:1;min-width:0;font-size:15px;font-weight:700;letter-spacing:.04em;font-family:ui-monospace,monospace}
+.sb .bar button{padding:10px 14px;border-radius:12px;font-weight:700;font-size:14px;background:#ffffff14;border:1px solid var(--sb-line)}.sb .bar button.pri{background:var(--sb-acc);border-color:var(--sb-acc)}
+.sb .note{color:var(--sb-mute);font-size:12.5px;margin:6px 0 0}
+#wlview{position:fixed;inset:0;z-index:30;display:none;background:#000}#wlview.on{display:block}
+#wlview .back{position:absolute;z-index:40;top:calc(10px + env(safe-area-inset-top,0px));left:max(12px,env(safe-area-inset-left,0px));padding:7px 12px;border-radius:99px;background:#00000080;border:1px solid #ffffff30;font-size:13px;font-weight:700;color:#fff;font-family:'Readex Pro',system-ui,sans-serif}
+#wlview .start{position:absolute;inset:0;z-index:35;display:grid;place-content:center;gap:10px;justify-items:center;background:#0b0a10e8;color:#f4f2f8;font-family:'Readex Pro',system-ui,sans-serif;text-align:center;padding:24px}
+#wlview .start button{padding:16px 26px;border-radius:16px;background:linear-gradient(135deg,#ff2e63,#ff8a3d);font-weight:800;font-size:18px;color:#fff}
+#wlview .start p{margin:0;color:#a59fb3;font-size:14px}
+[hidden]{display:none!important}
+</style>
+<style>
+/* Shadow theatre: one portrait stage, silhouettes in ink against a sky that changes with each scene; captions and speech bubbles on top.
+   Deliberately dark (the app has two dark looks, Neon and Noir), so a single palette per look. */
+:root{color-scheme:dark;
+  --bg:#0b0a10;--ink:#06050b;--ink2:#1b1726;--rim:#ffffff30;--text:#f4f2f8;--mute:#a59fb3;--acc:#ff2e63;--acc2:#ff8a3d;
+  --doc:#3ce0a0;--det:#5aa2ff;--maf:#ff4d7d;--cit:#ffc65a;
+  --dawn1:#2a1745;--dawn2:#c2456a;--dawn3:#ffb06a;
+  --night1:#04030b;--night2:#141236;
+  --morn1:#1d2638;--morn2:#6f8399;
+  --red1:#1a0207;--red2:#6b0a1d;
+  --star:#fff;--chalk:#f4f2f8;--blood1:#7c0812;--blood2:#4a0309;--bloodhi:#ff9a9a;
+  --head:'Readex Pro',system-ui,sans-serif;--body:'Readex Pro',system-ui,sans-serif}
+[data-look=noir]{--bg:#0d0c0b;--ink:#080706;--ink2:#1d1a15;--rim:#ece4d42a;--text:#ece4d4;--mute:#a39a8b;--acc:#b3241f;--acc2:#d4b483;
+  --doc:#7fb08b;--det:#86a6c9;--maf:#c0392b;--cit:#b08d4a;
+  --dawn1:#1e1a16;--dawn2:#6e5a43;--dawn3:#c9b08a;--night1:#050505;--night2:#1a1815;--morn1:#1c1b19;--morn2:#6d6658;
+  --red1:#120404;--red2:#4a0d0b;--star:#ece4d4;--chalk:#ece4d4;--blood1:#5e0a0a;--blood2:#2a0303;--bloodhi:#e0a090;
+  --head:'Special Elite','El Messiri',serif;--body:'IBM Plex Sans Arabic',system-ui,sans-serif}
+[dir=rtl]{--head:'El Messiri',system-ui,serif;--body:'IBM Plex Sans Arabic',system-ui,sans-serif}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:var(--body);overflow:hidden}
+*{box-sizing:border-box}button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+button:focus-visible{outline:2px solid var(--acc2);outline-offset:2px}
+
+/* prototype-only controls (not part of the welcome itself) */
+.proto{position:fixed;z-index:30;top:calc(8px + env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;font-family:'Readex Pro',system-ui,sans-serif;direction:ltr}
+.proto button{padding:6px 11px;border-radius:99px;background:#ffffff14;border:1px solid #ffffff24;font-size:12.5px;font-weight:700;color:#f4f2f8}
+.proto button.on{background:#f4f2f8;color:#0b0a10}.proto .lbl{font-size:11px;color:#a59fb3;letter-spacing:.08em;text-transform:uppercase;margin-inline-end:2px}
+
+/* the stage */
+.app{position:fixed;inset:0;display:grid;place-items:center;background:var(--ink)}
+.wl{position:relative;width:min(100%,480px);height:100%;overflow:hidden;background:var(--night1);isolation:isolate;user-select:none;-webkit-user-select:none}
+.wl svg.scene{position:absolute;inset:0;width:100%;height:100%;display:block}
+.layer{transition:opacity 1.4s ease}
+.sky-dawn,.sky-night,.sky-morn,.sky-red,.stars,.sun,.moon,.crowd,.chalk,.spot,.walkers,.hero,.vign{opacity:0}
+.wl.s1 .sky-dawn,.wl.s1 .sun,.wl.s1 .walkers{opacity:1}
+.wl.s2 .sky-night,.wl.s2 .stars,.wl.s2 .moon{opacity:1}
+.wl.s3 .sky-morn,.wl.s3 .crowd,.wl.s3 .chalk,.wl.s3 .spot{opacity:1}
+.wl.s4 .sky-morn,.wl.s5 .sky-night,.wl.s5 .stars{opacity:1}
+.wl.s4 .crowd,.wl.s5 .crowd{opacity:.35}
+.wl.s4 .vign,.wl.s5 .vign,.wl.s6 .vign{opacity:1}
+.wl.s6 .sky-red{opacity:1}.wl.end .sky-night{opacity:1}
+.wl.s4 .hero.doc,.wl.s5 .hero.det,.wl.s6 .hero.maf{opacity:1}
+/* the sun rises, the moon climbs */
+.sun{transform:translateY(120px);transition:opacity 1.2s,transform 3.2s cubic-bezier(.2,.7,.2,1)}.wl.s1 .sun{transform:none}
+.moon{transform:translateY(90px);transition:opacity 1.2s,transform 3s ease-out}.wl.s2 .moon{transform:none}
+/* windows: light up at dawn, go dark one by one at night */
+.win{fill:#ffd27a;opacity:0;transition:opacity .5s ease var(--d,0s)}[data-look=noir] .win{fill:#e8cf9a}
+.wl.s1 .win{opacity:.95}.wl.s3 .win{opacity:.25}
+/* citizens walk */
+.walkers{transition:opacity 1s}.walkers .w1{animation:walk 9s linear both}.walkers .w2{animation:walk2 9s linear both}
+.walkers .bob{animation:bob .55s ease-in-out infinite alternate}
+@keyframes walk{from{transform:translateX(-60px)}to{transform:translateX(150px)}}
+@keyframes walk2{from{transform:translateX(420px)}to{transform:translateX(220px)}}
+@keyframes bob{to{transform:translateY(-3px)}}
+.wave{transform-origin:6px -50px;animation:wave .5s ease-in-out infinite alternate}@keyframes wave{from{transform:rotate(-20deg)}to{transform:rotate(25deg)}}
+/* the sound: rings and a shake */
+.ring{fill:none;stroke:var(--text);stroke-width:2;opacity:0}
+.wl.s2 .ring{animation:ring 1.6s cubic-bezier(.1,.7,.2,1) both}.wl.s2 .ring.r2{animation-delay:1.85s}.wl.s2 .ring.r3{animation-delay:2s}.wl.s2 .ring.r1{animation-delay:1.7s}
+@keyframes ring{0%{r:4;opacity:.9;stroke-width:5}100%{r:240;opacity:0;stroke-width:1}}
+.wl.s2 .shake{animation:shake .5s linear 1.7s both}
+@keyframes shake{0%,100%{transform:none}15%{transform:translate(-7px,4px)}30%{transform:translate(6px,-5px)}45%{transform:translate(-5px,-3px)}60%{transform:translate(4px,5px)}75%{transform:translate(-3px,2px)}}
+/* the killing (v2): at the hit (~1.6 s) blood splashes across the upper screen, then runs down in thick streams; drops break off and fall.
+   One SVG; a filter makes it a liquid (blur + alpha threshold = shapes melt together), wobbles the edges and adds a wet shine. */
+.blood{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .9s ease}.wl.s3 .blood{opacity:1;transition:opacity .1s ease 1.55s}
+.blood svg{position:absolute;inset:0;width:100%;height:100%}
+.bl-splash{transform-box:view-box;transform-origin:180px 170px;transform:scale(.12);opacity:0}
+.wl:is(.s3,.s4) .bl-splash{animation:blSplash .26s cubic-bezier(.15,.9,.3,1.15) 1.6s forwards}
+@keyframes blSplash{to{transform:none;opacity:1}}
+.bl-s{transform-box:fill-box;transform-origin:50% 0;transform:scaleY(0)}
+.wl:is(.s3,.s4) .bl-s{animation:blRun var(--dur) cubic-bezier(.5,0,.75,1) calc(1.75s + var(--del)) forwards}@keyframes blRun{to{transform:none}}
+.bl-t{transform:none}.wl:is(.s3,.s4) .bl-t{animation:blTip var(--dur) cubic-bezier(.5,0,.75,1) calc(1.75s + var(--del)) forwards}@keyframes blTip{to{transform:translateY(var(--len))}}
+.bl-f{opacity:0}.wl:is(.s3,.s4) .bl-f{animation:blFall .75s cubic-bezier(.55,0,1,.45) calc(1.85s + var(--del) + var(--dur)) 3}
+@keyframes blFall{0%{opacity:1;transform:translateY(var(--len))}100%{opacity:1;transform:translateY(var(--fall))}}
+.flash{position:absolute;inset:0;background:var(--text);opacity:0;pointer-events:none}.wl.s2 .flash{animation:flash .5s ease-out 1.7s both}@keyframes flash{0%{opacity:0}10%{opacity:.35}100%{opacity:0}}
+/* the body: chalk outline draws itself, a spotlight */
+.chalk path{fill:none;stroke:var(--chalk);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:420;stroke-dashoffset:420}
+.wl.s3 .chalk path{animation:draw 2s ease .6s forwards}@keyframes draw{to{stroke-dashoffset:0}}
+.crowd .f{transition:transform 1.4s cubic-bezier(.2,.7,.2,1)}.wl:not(.s3):not(.s4):not(.s5) .crowd .f{transform:translateY(40px)}
+/* role close-ups */
+.hero{transition:opacity .8s ease}.hero .rise{transform:translateY(60px);transition:transform 1s cubic-bezier(.2,.8,.2,1)}
+.wl.s4 .hero.doc .rise,.wl.s5 .hero.det .rise,.wl.s6 .hero.maf .rise{transform:none}
+.pulse{fill:none;stroke-width:3;opacity:0}.wl.s4 .pulse{animation:pulse 1.6s ease-out .4s infinite}@keyframes pulse{0%{r:30;opacity:.8}100%{r:120;opacity:0}}
+.lens{opacity:0}.wl.s5 .lens{opacity:1;animation:sweep 2.6s ease-in-out .3s both}@keyframes sweep{0%{transform:translateX(-120px)}50%{transform:translateX(120px)}100%{transform:translateX(0)}}
+.eyes circle{fill:var(--maf);opacity:0}.wl.s6 .eyes circle{animation:eyes .4s ease 1s forwards}@keyframes eyes{to{opacity:1}}
+.wl.s6 .hero.maf .rise{animation:loom 3s ease-in 1.2s forwards}@keyframes loom{to{transform:scale(1.08) translateY(-6px)}}
+
+/* captions, speech, the shout, the title */
+.cap{position:absolute;left:max(20px,env(safe-area-inset-left,0px));right:max(20px,env(safe-area-inset-right,0px));top:calc(18% + env(safe-area-inset-top,0px));
+  text-align:center;font-family:var(--head);font-size:clamp(22px,6.4vw,30px);line-height:1.25;text-wrap:balance;text-shadow:0 2px 18px #000c;
+  opacity:0;transform:translateY(10px);transition:opacity .8s ease,transform .8s ease}
+.cap.on{opacity:1;transform:none}
+.bang{position:absolute;left:0;right:0;top:40%;text-align:center;font-family:var(--head);font-weight:700;font-size:clamp(54px,18vw,92px);letter-spacing:.04em;color:var(--text);opacity:0;pointer-events:none}
+.wl.s2 .bang{animation:bang 1.4s cubic-bezier(.2,1.6,.4,1) 1.7s both}
+@keyframes bang{0%{opacity:0;transform:scale(.3) rotate(-8deg)}25%{opacity:1;transform:scale(1.15) rotate(-6deg)}40%{transform:scale(1) rotate(-4deg)}80%{opacity:1}100%{opacity:0;transform:scale(1.05) rotate(-4deg)}}
+.say{position:absolute;left:max(18px,env(safe-area-inset-left,0px));right:max(18px,env(safe-area-inset-right,0px));top:calc(14% + env(safe-area-inset-top,0px));opacity:0;transform:translateY(12px);transition:opacity .6s ease,transform .6s ease}
+.say.on{opacity:1;transform:none}
+.say .who{font-family:var(--head);font-size:13px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;margin:0 0 8px 6px;color:var(--c)}
+[dir=rtl] .say .who{letter-spacing:0;font-size:17px;margin:0 6px 8px 0}
+.say .bub{position:relative;background:#0b0a10e6;border:1.5px solid var(--c);border-radius:20px;padding:16px 18px;font-size:clamp(19px,5.4vw,24px);line-height:1.4;min-height:3.2em;box-shadow:0 0 34px -10px var(--c)}
+[data-look=noir] .say .bub{border-radius:4px;background:#0d0c0be6}
+.say .bub::after{content:'';position:absolute;bottom:-11px;left:50%;width:20px;height:20px;background:inherit;border-right:1.5px solid var(--c);border-bottom:1.5px solid var(--c);transform:translateX(-50%) rotate(45deg)}
+.ha{position:absolute;left:0;right:0;top:calc(52% + env(safe-area-inset-top,0px));text-align:center;font-family:var(--head);font-weight:700;color:var(--maf);font-size:clamp(40px,13vw,64px);direction:ltr}
+.ha span{display:inline-block;opacity:0;margin:0 .12em}
+.ha.on span{animation:ha .5s cubic-bezier(.2,1.8,.4,1) both,quake .12s linear .5s infinite}
+.ha.on span:nth-child(2){animation-delay:.45s,.95s}.ha.on span:nth-child(3){animation-delay:.9s,1.4s}
+@keyframes ha{from{opacity:0;transform:scale(.2)}to{opacity:1;transform:scale(1)}}
+@keyframes quake{0%{translate:0 0}25%{translate:-2px 1px}50%{translate:2px -1px}75%{translate:-1px -2px}}
+.title{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:14px;text-align:center;opacity:0;pointer-events:none;transition:opacity 1s ease}
+.wl.end .title{opacity:1;pointer-events:auto}
+.mark{width:96px;height:96px;border-radius:28px;display:grid;place-items:center;background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 18px 50px -12px var(--acc);transform:scale(.6);transition:transform .9s cubic-bezier(.2,1.6,.4,1)}
+[data-look=noir] .mark{background:none;border:2px solid var(--acc);border-radius:6px;box-shadow:none;transform:scale(.6) rotate(-6deg)}
+.wl.end .mark{transform:scale(1)}[data-look=noir] .wl.end .mark{transform:rotate(-6deg)}
+.mark svg{width:52px;height:52px}[data-look=noir] .mark svg{stroke:var(--acc)}
+.title h1{margin:0;font-family:var(--head);font-size:clamp(34px,10vw,46px);line-height:1.1}
+.title p{margin:0;color:var(--mute);font-size:17px}
+.title .go{margin-top:18px;font-size:14px;color:var(--mute);letter-spacing:.12em;text-transform:uppercase;animation:blink 1.6s ease-in-out infinite}
+[dir=rtl] .title .go{letter-spacing:0;font-size:16px}@keyframes blink{50%{opacity:.35}}
+/* skip + progress */
+.skip{position:absolute;z-index:5;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));padding:9px 16px;border-radius:99px;background:#00000066;border:1px solid #ffffff30;font-size:14px;font-weight:700;color:var(--text);backdrop-filter:blur(6px)}
+[dir=rtl] .skip{right:auto;left:max(16px,env(safe-area-inset-left,0px))}
+.prog{position:absolute;z-index:5;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));display:flex;gap:4px}
+.prog i{flex:1;height:3px;border-radius:2px;background:#ffffff26;overflow:hidden}.prog i b{display:block;height:100%;width:0;background:var(--text)}
+.prog i.done b{width:100%}.prog i.now b{animation:fill var(--t) linear forwards}@keyframes fill{to{width:100%}}
+.hint{position:absolute;z-index:5;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0px));text-align:center;font-size:12px;color:#ffffffaa;opacity:0;transition:opacity .6s}.wl.s1 .hint{opacity:1}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.3s!important}}
+</style>
+<main class="sb">
+ <h1>Welcome sounds</h1>
+ <p class="lead">Your picks are set. New: in scene 3 blood runs down the screen with the hit. Play each version, pick one per moment, then hear your picks in the welcome. Everything is made in code except the evil laugh, which is our recorded clip. Turn your phone’s sound on.</p>
+ <div class="tabs" role="tablist"><button class="on" id="tBoard" type="button">Sound board</button><button id="tWl" type="button">Welcome with sound</button></div>
+ <div id="board"></div>
+ <div class="bar"><div><code id="picks"></code><button id="copy" type="button">Copy my picks</button><button class="pri" id="hear" type="button">Hear them in the welcome</button></div><p class="note" id="copied" hidden></p></div>
+</main>
+<div id="wlview"><div class="app"><div class="wl" id="wl" role="img" aria-label="Welcome animation"></div></div>
+ <button class="back" id="back" type="button">‹ Board</button>
+ <div class="start" id="start"><button id="go" type="button">▶ Play with sound</button><p>Your picks play in each scene. Tap to move on, Skip to the end.</p></div></div>
+<script>
+const LAUGH_B64="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";
+/* Welcome sounds (prototype): every sound is made with Web Audio, except the evil laugh (our recorded clip).
+ * makeKit(ctx, master) -> {bus(dest), S: {good:{A,B,C}, night:{A,B,C}, crack, kill:{A,B,C}, doc:{A,B,C}, det:{A,B,C}, maf:{A,B,C}}, loadLaugh(b64)}
+ * Each sound is a function (t) that schedules itself at time t on the current bus. Works with AudioContext and OfflineAudioContext. */
+function makeKit(C,master){
+ let BUS=master,NB=null,LAUGH=null;
+ const imp=(sec,decay)=>{const n=Math.floor(C.sampleRate*sec),b=C.createBuffer(2,n,C.sampleRate);for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,decay);}return b;};
+ const R=C.createConvolver();R.buffer=imp(3,2.6);const rg=C.createGain();rg.gain.value=.45;R.connect(rg);rg.connect(master);
+ const noise=()=>{if(!NB){NB=C.createBuffer(1,C.sampleRate*2,C.sampleRate);const d=NB.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;}const s=C.createBufferSource();s.buffer=NB;s.loop=true;s.loopStart=Math.random();return s;};
+ const out=(node,wet)=>{node.connect(BUS);if(wet){const g=C.createGain();g.gain.value=wet;node.connect(g);g.connect(R);}};
+ const env=(g,t,a,peak,hold,rel)=>{g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(peak,t+a);g.gain.setValueAtTime(peak,t+a+hold);g.gain.exponentialRampToValueAtTime(.0001,t+a+hold+rel);};
+ const osc=(type,f,t,stop)=>{const o=C.createOscillator();o.type=type;o.frequency.setValueAtTime(f,t);o.start(t);o.stop(stop);return o;};
+ const tone=(type,f,t,a,peak,rel,wet,filt,hold=0)=>{const o=osc(type,f,t,t+a+hold+rel+.1),g=C.createGain();
+   if(filt){const lp=C.createBiquadFilter();lp.type='lowpass';lp.frequency.value=filt;o.connect(lp);lp.connect(g);}else o.connect(g);env(g,t,a,peak,hold,rel);out(g,wet);return o;};
+ const burst=(t,type,freq,q,peak,rel,wet)=>{const s=noise(),f=C.createBiquadFilter(),g=C.createGain();f.type=type;f.frequency.value=freq;f.Q.value=q;s.connect(f);f.connect(g);env(g,t,.002,peak,0,rel);out(g,wet);s.start(t);s.stop(t+rel+.05);};
+ const bed=(t,dur,type,freq,q,vol,wet,att=.6)=>{const s=noise(),f=C.createBiquadFilter(),g=C.createGain();f.type=type;f.frequency.value=freq;f.Q.value=q;s.connect(f);f.connect(g);env(g,t,att,vol,Math.max(dur-att-.8,.05),.8);out(g,wet);s.start(t);s.stop(t+dur+.1);return f;};
+ const bell=(t,f,vol)=>[[1,1,4],[2,.6,3],[2.4,.5,2.5],[3,.35,2],[4.2,.25,1.5],[5.4,.15,1]].forEach(([r,a,d])=>tone('sine',f*r,t,.005,vol*a,d,.9));
+ const pad=(t,dur,fs,vol)=>fs.forEach(f=>{const o=osc('triangle',f,t,t+dur+.2),g=C.createGain();o.connect(g);env(g,t,1,vol,Math.max(dur-2.2,.1),1.2);out(g,.6);});
+ const whoosh=(t,dur,f0,f1,vol)=>{const s=noise(),f=C.createBiquadFilter(),g=C.createGain();f.type='bandpass';f.Q.value=2.5;f.frequency.setValueAtTime(f0,t);f.frequency.exponentialRampToValueAtTime(f1,t+dur);
+   s.connect(f);f.connect(g);env(g,t,dur*.4,vol,0,dur*.6);out(g,.6);s.start(t);s.stop(t+dur+.1);};
+ const chirp=(t,f,len,vol)=>{const o=osc('sine',f,t,t+len+.05),g=C.createGain();o.frequency.exponentialRampToValueAtTime(f*1.55,t+len*.55);o.frequency.exponentialRampToValueAtTime(f*1.05,t+len);o.connect(g);env(g,t,.006,vol,0,len);out(g,.35);};
+ const birds=(t,dur,v=1)=>{let x=t;while(x<t+dur){const n=2+Math.floor(Math.random()*4),f=2600+Math.random()*2200,sp=.07+Math.random()*.05;
+   for(let k=0;k<n;k++)chirp(x+k*sp,f*(1+Math.random()*.08),.06+Math.random()*.04,(.06+Math.random()*.06)*v);x+=.3+Math.random()*.45;}};
+ const vib=(o,t,stop,rate,depth)=>{const l=osc('sine',rate,t,stop),lg=C.createGain();lg.gain.value=depth;l.connect(lg);lg.connect(o.frequency);};
+ const drone=(t,dur,f,vol)=>{const lp=C.createBiquadFilter(),g=C.createGain();lp.type='lowpass';lp.Q.value=6;lp.frequency.setValueAtTime(120,t);lp.frequency.exponentialRampToValueAtTime(600,t+dur*.45);lp.frequency.exponentialRampToValueAtTime(150,t+dur);
+   [['sawtooth',f],['sawtooth',f*1.008],['sine',f/2],['sawtooth',f*1.498]].forEach(([ty,fr])=>osc(ty,fr,t,t+dur+.3).connect(lp));lp.connect(g);env(g,t,1,vol,Math.max(dur-2.4,.1),1.4);out(g,.5);};
+ const beat=(t,vol)=>{[[0,60,1],[.17,50,.7]].forEach(([d,f,k])=>{const o=osc('sine',f,t+d,t+d+.4),g=C.createGain();o.frequency.exponentialRampToValueAtTime(f*.7,t+d+.14);o.connect(g);env(g,t+d,.008,vol*k,0,.22);out(g,.15);});burst(t,'lowpass',160,.5,vol*.25,.09,.1);};
+
+ /* 1 the happy town */
+ const mbox=(t,f,v=.09)=>{tone('sine',f,t,.003,v,1.3,.5);tone('sine',f*2,t,.003,v*.3,.6,.5);tone('sine',f*3.01,t,.003,v*.12,.3,.4);};
+ const pluck=(t,f,v=.13)=>{const o1=osc('sawtooth',f,t,t+1.6),o2=osc('triangle',f*1.002,t,t+1.6),lp=C.createBiquadFilter(),g=C.createGain();lp.type='lowpass';lp.Q.value=2;
+   lp.frequency.setValueAtTime(3200,t);lp.frequency.exponentialRampToValueAtTime(260,t+.5);o1.connect(lp);o2.connect(lp);lp.connect(g);env(g,t,.004,v,0,1.4);out(g,.35);};
+ const good={
+  A:t=>{birds(t,3.4);pad(t,3.6,[261.63,329.63,392,493.88],.028);tone('sine',1046.5,t+.4,.8,.016,2,.9);},
+  B:t=>{[1046.5,1318.5,1568,1760,1568,1318.5,1046.5,1174.66,1318.5].forEach((f,i)=>mbox(t+i*.3,f));birds(t+.6,2.6,.6);},
+  C:t=>{[130.81,196,261.63,329.63,392,329.63,261.63,196,261.63].forEach((f,i)=>pluck(t+i*.26,f));bed(t,3.6,'bandpass',500,.6,.025,.3,1.2);}};
+ /* 2 night falls (then the crack) */
+ const crickets=(t,dur,v=.05)=>{for(let x=t;x<t+dur;x+=.42+Math.random()*.12){const o=osc('sine',4300+Math.random()*300,x,x+.2),g=C.createGain();o.connect(g);g.gain.setValueAtTime(.0001,x);
+   for(let k=0;k<3;k++){g.gain.setValueAtTime(v,x+k*.05);g.gain.setValueAtTime(.0001,x+k*.05+.025);}out(g,.2);}};
+ const hoo=(t,len,v)=>{const o=osc('sine',380,t,t+len+.1),g=C.createGain();o.frequency.exponentialRampToValueAtTime(330,t+len);vib(o,t,t+len+.1,5,6);
+   const lp=C.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;o.connect(lp);lp.connect(g);env(g,t,.08,v,len*.3,len*.6);out(g,.7);};
+ const owl=t=>{hoo(t,.4,.1);hoo(t+.6,.18,.08);hoo(t+.85,.42,.1);};
+ const howl=t=>{const o=osc('sine',520,t,t+2.4),g=C.createGain(),lp=C.createBiquadFilter();o.frequency.exponentialRampToValueAtTime(760,t+.6);o.frequency.exponentialRampToValueAtTime(430,t+2.2);
+   vib(o,t,t+2.4,5,9);lp.type='lowpass';lp.frequency.value=1100;o.connect(lp);lp.connect(g);env(g,t,.5,.05,.8,1);out(g,.9);};
+ const wind=(t,dur)=>{const f=bed(t,dur,'bandpass',650,4,.09,.4,1);const l=osc('sine',.3,t,t+dur),lg=C.createGain();lg.gain.value=350;l.connect(lg);lg.connect(f.frequency);};
+ const night={
+  A:t=>{crickets(t,3.8);owl(t+.4);bell(t+.2,110,.22);},
+  B:t=>{whoosh(t,2.2,2400,180,.3);drone(t,4,55,.18);bell(t+.3,110,.28);},
+  C:t=>{wind(t,3.8);bell(t+.3,98,.22);bell(t+2.4,98,.18);howl(t+.9);}};
+ const crack=t=>{burst(t,'highpass',1800,.7,.9,.09,.6);const o=osc('sine',140,t,t+.4),g=C.createGain();o.frequency.exponentialRampToValueAtTime(38,t+.25);o.connect(g);env(g,t,.002,.9,0,.3);out(g,.4);
+   burst(t,'lowpass',320,.5,.5,.5,.5);burst(t+.24,'highpass',1500,.7,.22,.08,.9);};
+ /* 3 the killing */
+ const shing=t=>{const s=noise(),f=C.createBiquadFilter(),g=C.createGain();f.type='highpass';f.frequency.setValueAtTime(1500,t);f.frequency.exponentialRampToValueAtTime(7000,t+.3);
+   s.connect(f);f.connect(g);env(g,t,.12,.35,.05,.3);out(g,.4);s.start(t);s.stop(t+.6);[2380,3571,5123,6211].forEach((fr,i)=>tone('sine',fr,t+.22,.003,.09/(i+1)*1.5,1.4-i*.2,.6));};
+ const stab=t=>{const o=osc('sine',95,t,t+.5),g=C.createGain();o.frequency.exponentialRampToValueAtTime(38,t+.18);o.connect(g);env(g,t,.002,.9,0,.35);out(g,.25);
+   burst(t,'lowpass',700,.8,.6,.12,.2);burst(t+.01,'bandpass',450,3,.35,.2,.2);};
+ const sting=t=>{const o=osc('sine',70,t,t+2),g=C.createGain();o.frequency.exponentialRampToValueAtTime(28,t+1.2);o.connect(g);env(g,t,.01,.6,0,1.6);out(g,.4);
+   [110,130.8,155.6,207.6].forEach(f=>tone('sawtooth',f,t,.02,.045,2.4,.7,900));};
+ /* instruments for scenes 3-5 (v2 of the board: the mood is shock, warmth, resolve) */
+ const strings=(t,dur,fs,vol,cut=1400,att=.7)=>fs.forEach(f=>[0,-6,6].forEach(c=>{const o=osc('sawtooth',f*Math.pow(2,c/1200),t,t+dur+1.4),lp=C.createBiquadFilter(),g=C.createGain();
+   vib(o,t,t+dur+1.4,5,f*.004);lp.type='lowpass';lp.frequency.value=cut;o.connect(lp);lp.connect(g);env(g,t,att,vol,Math.max(dur-att,.05),1.2);out(g,.6);}));
+ const piano=(t,f,v=.12,len=1.8)=>{tone('triangle',f,t,.004,v,len,.45);tone('sine',f*2,t,.004,v*.35,len*.6,.45);tone('sine',f*3,t,.003,v*.12,len*.3,.4);burst(t,'bandpass',f*4,2,v*.15,.02,.1);};
+ const boom=(t,v=.9)=>{const o=osc('sine',55,t,t+2.2),g=C.createGain();o.frequency.exponentialRampToValueAtTime(30,t+1.6);o.connect(g);env(g,t,.005,v,0,2);out(g,.5);burst(t,'lowpass',180,.6,v*.5,1.4,.6);};
+ const brass=(t,f,len,v=.07)=>{const o=osc('sawtooth',f,t,t+len+.4),lp=C.createBiquadFilter(),g=C.createGain();vib(o,t+.15,t+len+.4,5.5,f*.006);lp.type='lowpass';lp.Q.value=1.5;
+   lp.frequency.setValueAtTime(300,t);lp.frequency.exponentialRampToValueAtTime(1800,t+.12);lp.frequency.exponentialRampToValueAtTime(900,t+len);o.connect(lp);lp.connect(g);env(g,t,.05,v,Math.max(len-.15,.02),.3);out(g,.5);};
+ const gasp=t=>{[[900,3,.14],[1300,4,.1],[2400,5,.05]].forEach(([fr,q,v])=>{const s=noise(),f=C.createBiquadFilter(),g=C.createGain();f.type='bandpass';f.frequency.setValueAtTime(fr*.8,t);f.frequency.linearRampToValueAtTime(fr*1.15,t+.25);f.Q.value=q;
+   s.connect(f);f.connect(g);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.08);g.gain.exponentialRampToValueAtTime(v*.5,t+.3);g.gain.exponentialRampToValueAtTime(.0001,t+1.2);out(g,.6);s.start(t);s.stop(t+1.3);});};
+ const tremolo=(t,dur,f,v)=>{const o=osc('sawtooth',f,t,t+dur+.3),lp=C.createBiquadFilter(),g=C.createGain(),am=osc('sine',11,t,t+dur+.3),ag=C.createGain();ag.gain.value=v*.5;am.connect(ag);
+   lp.type='lowpass';lp.frequency.value=2500;o.connect(lp);lp.connect(g);ag.connect(g.gain);env(g,t,dur*.7,v,dur*.2,.4);out(g,.6);};
+ const celesta=(t,f,v=.09)=>{tone('sine',f,t,.002,v,1.2,.6);tone('sine',f*4,t,.002,v*.25,.4,.6);tone('sine',f*2,t,.002,v*.2,.7,.6);};
+ const dbass=(t,f)=>{tone('triangle',f,t,.005,.22,.45,.15,600);tone('sine',f,t,.005,.18,.5,.1);burst(t,'lowpass',300,1,.06,.03,.05);};
+ const brush=t=>burst(t,'highpass',6000,.6,.05,.09,.15);
+ /* 3 the killing: a knife, then shock and dread */
+ /* the bell and the lament after the hit (3C) */
+ const lament=t=>{bell(t,73.42,.3);bell(t+1.75,73.42,.22);[[110,0],[130.81,.55],[164.81,1.1],[146.83,1.65],[130.81,2.3]].forEach(([f,d])=>piano(t+.45+d,f,.14,2.2));};
+ /* the sword: a swing that sweeps past the ear with the blade's thin whistle, a steel ring (a bar's uneven overtones), a scrape out of the sheath, the cut */
+ const sweep=(t,len,q,f0,fpk,f1,v,wet)=>{const s=noise(),bp=C.createBiquadFilter(),g=C.createGain();bp.type='bandpass';bp.Q.value=q;
+   bp.frequency.setValueAtTime(f0,t);bp.frequency.exponentialRampToValueAtTime(fpk,t+len*.45);bp.frequency.exponentialRampToValueAtTime(f1,t+len);
+   s.connect(bp);bp.connect(g);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+len*.45);g.gain.exponentialRampToValueAtTime(.0001,t+len);out(g,wet);s.start(t);s.stop(t+len+.05);};
+ const swish=(t,len,f0,fpk,f1,v)=>{sweep(t,len,2.5,f0,fpk,f1,v,.25);sweep(t,len,16,fpk*.55,fpk*1.15,fpk*.6,v*.9,.3);};
+ const ring=(t,f0,v,dur=1.6)=>[[1,1],[2.76,.6],[5.4,.35],[8.93,.2]].forEach(([r,a],i)=>[0,3.5].forEach(dt=>tone('sine',f0*r+dt,t,.002,v*a*.5,dur*(1-i*.18),.6)));
+ const scrape=(t,dur,v)=>{for(let x=t;x<t+dur;x+=.006+Math.random()*.006)burst(x,'highpass',2500+((x-t)/dur)*4500,.8,v*(.4+Math.random()*.6),.012,.2);};
+ const cut=(t,v=1)=>{burst(t,'highpass',3000,.7,v*.6,.025,.3);burst(t,'bandpass',1800,1.2,v*.45,.12,.2);sweep(t,.2,2,2600,2200,650,v*.35,.2);
+   const o=osc('sine',90,t,t+.5),g=C.createGain();o.frequency.exponentialRampToValueAtTime(40,t+.2);o.connect(g);env(g,t,.002,v*.7,0,.3);out(g,.25);};
+ /* the blade, louder and metallic: a scrape through steel resonances that slide up as the blade leaves the sheath,
+    then a bright SHING (a dozen high uneven overtones, each in a slightly detuned pair so it shimmers), then the hit */
+ const STEEL=[2210,3120,4390,5660,7130,8790,10420];
+ const scrapeM=(t,dur,v)=>{const s=noise(),am=C.createGain(),sum=C.createGain();sum.gain.value=v*2.4;s.connect(am);
+   am.gain.setValueAtTime(0,t);for(let x=t;x<t+dur;x+=.004)am.gain.setValueAtTime((.25+Math.random()*.75)*(.5+.5*(x-t)/dur),x);am.gain.setValueAtTime(0,t+dur);
+   STEEL.forEach((f,i)=>{const bp=C.createBiquadFilter();bp.type='bandpass';bp.Q.value=24;bp.frequency.setValueAtTime(f*.93,t);bp.frequency.linearRampToValueAtTime(f*1.04,t+dur);am.connect(bp);bp.connect(sum);});
+   const hp=C.createBiquadFilter();hp.type='highpass';hp.frequency.value=1800;sum.connect(hp);out(hp,.35);s.start(t);s.stop(t+dur+.05);};
+ const shingM=(t,v,dur=1.8)=>{const P=[2633,3517,4142,5288,6011,6950,7804,8611,9478,10305,11240,12190];
+   P.forEach((f,i)=>[0,f*.0021].forEach(dt=>tone('sine',f+dt,t,.0015,v*(i<4?.16:.1)/(1+i*.12),dur*(1-i*.05),.55)));
+   burst(t,'highpass',5000,.7,v*.55,.35,.5);burst(t,'bandpass',3200,3,v*.35,.18,.4);};
+ const hit=(t,v=1)=>{swish(t,.2,600,3200,900,.65*v);const x=t+.16;
+   const o=osc('sine',120,x,x+.6),g=C.createGain();o.frequency.exponentialRampToValueAtTime(38,x+.25);o.connect(g);env(g,x,.001,v,0,.42);out(g,.3);
+   burst(x,'highpass',2500,.7,.7*v,.03,.3);burst(x,'lowpass',500,.8,.7*v,.25,.3);sweep(x,.26,2,3200,2400,700,.5*v,.2);
+   [3410,5020,6870].forEach((f,i)=>tone('sine',f,x+.01,.001,.06*v/(i+1),.5,.4));};
+ const fall=t=>{burst(t,'lowpass',240,.7,.7,.35,.35);const o=osc('sine',62,t,t+.5),g=C.createGain();o.frequency.exponentialRampToValueAtTime(34,t+.2);o.connect(g);env(g,t,.003,.7,0,.35);out(g,.3);
+   burst(t+.22,'lowpass',300,.7,.45,.3,.35);};
+ /* 3 the killing: no music, only the blade */
+ const kill={
+  K1:t=>{scrapeM(t,.55,.6);shingM(t+.53,1);hit(t+1.45);},
+  K2:t=>{scrapeM(t,.25,.7);shingM(t+.24,1.1,2.4);hit(t+1.15,1.1);},
+  K3:t=>{scrapeM(t,.45,.6);shingM(t+.43,1);hit(t+1.2);fall(t+1.85);}};
+ /* 4 the Doctor: warm and reassuring */
+ const doc={
+  A:t=>{beat(t,.35);beat(t+.95,.3);strings(t+.2,1.2,[261.63,329.63,392],.03,1600,.6);strings(t+1.4,1.1,[261.63,349.23,440],.03,1600,.4);strings(t+2.5,1.2,[261.63,329.63,392,523.25],.03,1700,.4);},
+  B:t=>{[[659.25,0],[587.33,.45],[523.25,.9],[587.33,1.35],[659.25,1.8],[783.99,2.3]].forEach(([f,d])=>piano(t+d,f,.11,1.8));pad(t,3.4,[130.81,196,261.63],.03);},
+  C:t=>{[523.25,659.25,783.99,1046.5].forEach((f,i)=>{const o=osc('sine',f,t+i*.35,t+3.6),g=C.createGain();o.connect(g);env(g,t+i*.35,1,.045,1,1.2);out(g,.8);});
+   for(let i=0;i<10;i++){const p=[1567.98,1760,2093,2349.32,2637.02][i%5];celesta(t+.4+i*.27+Math.random()*.08,p,.035);}pad(t,3.4,[130.81,196],.03);}};
+ /* 5 the Detective: determined, a mystery to solve */
+ const det={
+  A:t=>{[110,130.81,146.83,155.56,164.81,196,164.81,146.83].forEach((f,i)=>{dbass(t+i*.36,f);brush(t+i*.36+.18);});
+   [[329.63,0,.3],[392,.36,.3],[440,.72,.3],[466.16,1.08,.5],[440,1.62,.9]].forEach(([f,d,l])=>brass(t+1+d,f,l,.06));},
+  B:t=>{const notes=[55,55,55,55,58.27,58.27,58.27,58.27,61.74,61.74,61.74,61.74,65.41,65.41];notes.forEach((f,i)=>tone('sawtooth',f,t+i*.18,.005,.12,.14,.15,500));
+   tremolo(t,2.5,440,.03);tremolo(t+.8,1.7,523.25,.025);boom(t+2.55,.7);[110,130.81,164.81,220].forEach(f=>brass(t+2.55,f,.9,.06));},
+  C:t=>{strings(t,3.2,[110,164.81],.03,900,.8);[[880,0],[1046.5,.35],[987.77,.7],[830.61,1.05],[880,1.5],[659.25,2]].forEach(([f,d])=>celesta(t+.3+d,f,.1));
+   for(let i=0;i<6;i++)burst(t+i*.5,'bandpass',i%2?2600:3200,6,.12,.02,.1);}};
+ /* 6 the Mafia: our laugh at +1.6 s (when HA HA HA appears) */
+ const laugh=(t,rate=1,echo=false)=>{if(!LAUGH)return;const s=C.createBufferSource(),g=C.createGain();s.buffer=LAUGH;s.playbackRate.value=rate;g.gain.value=1;s.connect(g);
+   if(echo){const d=C.createDelay(1),fb=C.createGain(),lp=C.createBiquadFilter();d.delayTime.value=.28;fb.gain.value=.38;lp.type='lowpass';lp.frequency.value=2200;g.connect(d);d.connect(lp);lp.connect(fb);fb.connect(d);lp.connect(BUS);}
+   out(g,.35);s.start(t);};
+ const swell=(t,dur)=>{const s=noise(),f=C.createBiquadFilter(),g=C.createGain();f.type='highpass';f.frequency.value=3000;s.connect(f);f.connect(g);
+   g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.22,t+dur);g.gain.exponentialRampToValueAtTime(.0001,t+dur+.06);out(g,.3);s.start(t);s.stop(t+dur+.1);};
+ const thunder=(t,vol)=>{const s=noise(),lp=C.createBiquadFilter(),g=C.createGain();lp.type='lowpass';lp.frequency.setValueAtTime(900,t);lp.frequency.exponentialRampToValueAtTime(120,t+3);
+   s.connect(lp);lp.connect(g);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.06);for(let k=1;k<14;k++)g.gain.setValueAtTime(vol*(.3+Math.random()*.7)*Math.pow(1-k/14,1.5)+.001,t+k*.22);
+   g.gain.exponentialRampToValueAtTime(.0001,t+3.8);out(g,.5);s.start(t);s.stop(t+4);burst(t,'highpass',2500,.5,.3,.25,.5);};
+ const organ=(t,dur)=>[130.81,155.56,196,261.63].forEach(f=>['square','sawtooth'].forEach(ty=>tone(ty,f,t,.6,.022,1.5,.6,1200,dur)));
+ const maf={
+  A:t=>{drone(t,4.6,49,.16);swell(t,1.55);laugh(t+1.6);},
+  B:t=>{thunder(t+.1,.55);organ(t+.3,3.2);laugh(t+1.6);},
+  C:t=>{for(let x=t;x<t+4.2;x+=.42)beat(x,.55);laugh(t+1.6,.85,true);}};
+ return{bus(b){BUS=b;},laugh:()=>!!LAUGH,
+  loadLaugh(b64){const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return C.decodeAudioData(u.buffer).then(b=>{LAUGH=b;return b.duration;});},
+  S:{good,night,crack,kill,doc,det,maf}};
+}
+
+
+const TXT={
+ en:{cap1:'A quiet town. Everyone knows everyone.',cap2:'Then one night… something sounded wrong.',bang:'CRACK!',cap3:'Someone is dead.',
+     doc:'The Doctor',docL:'It could happen to anyone. I’ll keep you safe tonight.',det:'The Detective',detL:'I swear I’ll find them.',
+     maf:'The Mafia',mafL:'You… I’ll get you all.',ha:['HA','HA','HA'],title:'Mafia Dealer',tag:'Who can you trust?',go:'Tap to start',skip:'Skip',hint:'Tap to move on'},
+ ar:{cap1:'بلدة هادئة. الجميع يعرف الجميع.',cap2:'ثم في إحدى الليالي… سُمع صوت غريب.',bang:'طَخ!',cap3:'أحدهم مات.',
+     doc:'الطبيب',docL:'قد يحدث هذا لأيٍّ منا. سأحميكم الليلة.',det:'المحقق',detL:'أقسم أنني سأجدهم.',
+     maf:'المافيا',mafL:'أنتم… سأنال منكم جميعًا.',ha:['ها','ها','ها'],title:'موزّع المافيا',tag:'بمن تثق؟',go:'اضغط للبدء',skip:'تخطَّ',hint:'اضغط للمتابعة'}};
+// scene, how long it stays (ms)
+/* the blood: a splash around (180,170), streams from the splash, drops falling off their ends (deterministic, so every play looks the same) */
+function bloodSvg(){let seed=7;const r=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  let sp='<circle cx="180" cy="170" r="30"/><ellipse cx="160" cy="182" rx="26" ry="16"/><ellipse cx="204" cy="160" rx="22" ry="14"/>';
+  for(let i=0;i<34;i++){const a=r()*Math.PI*2,d=36+r()*150,x=180+Math.cos(a)*d,y=170+Math.sin(a)*d*.78,big=r();
+    sp+=big>.7?`<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${(8+r()*16).toFixed(1)}" ry="${(1.6+r()*2.4).toFixed(1)}" transform="rotate(${(a*180/Math.PI).toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`
+      :`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(1.5+r()*(d<90?9:5)).toFixed(1)}"/>`;}
+  // streams: x, top, width, length, delay, duration (two reach the bottom)
+  const ST=[[122,190,8,230,.05,1.8],[150,196,12,508,.15,2.3],[180,200,10,330,0,1.9],[209,192,13,512,.1,2.4],[237,180,8,190,.25,1.6],[262,174,9,280,.2,1.9],[95,168,6,120,.35,1.2],[284,182,6,150,.3,1.4]];
+  let st='';ST.forEach(([x,y,w,len,del,dur],i)=>{const v=`--del:${del}s;--dur:${dur}s;--len:${len}px;--fall:${700-y+20}px`;
+    st+=`<rect class="bl-s" x="${x-w/2}" y="${y}" width="${w}" height="${len}" rx="${w/2}" style="${v}"/><circle class="bl-t" cx="${x}" cy="${y}" r="${(w*.72).toFixed(1)}" style="${v}"/>`;
+    if(len<500)st+=`<circle class="bl-f" cx="${x}" cy="${y}" r="${(w*.42).toFixed(1)}" style="${v}"/>`;});
+  return `<svg viewBox="0 0 360 700" preserveAspectRatio="xMidYMax slice"><defs><filter id="blGoo" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="3.4" result="b"/><feColorMatrix in="b" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -11" result="goo"/>
+    <feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="2" seed="5" result="n"/><feDisplacementMap in="goo" in2="n" scale="6" xChannelSelector="R" yChannelSelector="G" result="wob"/>
+    <feGaussianBlur in="wob" stdDeviation="2.2" result="wb"/><feSpecularLighting in="wb" surfaceScale="5" specularConstant=".85" specularExponent="24" style="lighting-color:var(--bloodhi)" result="spec"><feDistantLight azimuth="235" elevation="50"/></feSpecularLighting>
+    <feComposite in="spec" in2="wob" operator="in" result="shine"/><feComposite in="shine" in2="wob" operator="arithmetic" k1="0" k2=".55" k3="1" k4="0"/></filter>
+    <linearGradient id="blFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--blood1)"/><stop offset="1" style="stop-color:var(--blood2)"/></linearGradient></defs>
+    <g filter="url(#blGoo)" style="fill:var(--blood1)"><g class="bl-splash">${sp}</g>${st}</g></svg>`;}
+const SC=[['s1',3600],['s2',4000],['s3',4400],['s4',3400],['s5',3000],['s6',3800],['end',0]];
+const IC={
+ doc:'<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/>',
+ det:'<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l6 6"/>',
+ maf:'<path d="M2 12h20"/><path d="M5 12l1.6-6.5h10.8L19 12"/><path d="M7 16.5c1.5 1.5 3 2 5 2s3.5-.5 5-2"/>',
+ logo:'<path d="M3 11h18"/><path d="M5 11l1.5-6h11L19 11"/><path d="M7 15a3 3 0 1 0 6 0M11 15a3 3 0 1 0 6 0"/><path d="M10 15h4"/>'};
+let lang='en',look='neon',timer=0,idx=-1,typeT=0;
+const $=s=>document.querySelector(s);
+// one silhouette: head, shoulders, legs (origin at the feet)
+const person=(x,y,s,extra='',cls='f')=>`<g class="${cls}" transform="translate(${x} ${y}) scale(${s})" style="stroke:var(--rim);stroke-width:${(1.4/s).toFixed(2)}"><circle cx="0" cy="-74" r="11"/>
+  <path d="M-15 -58 Q0 -66 15 -58 L18 -22 L11 -22 L9 0 L2 0 L0 -20 L-2 0 L-9 0 L-11 -22 L-18 -22 Z"/>${extra}</g>`;
+const fedora='<path d="M-20 -80 h40 v3 h-40 z"/><path d="M-11 -80 l2 -14 h18 l2 14 z"/>';
+const badge=(k,c)=>`<circle cx="0" cy="-44" r="10" fill="${c}"/><svg x="-7" y="-51" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#06050b" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
+function houses(){let h='',x=-10,i=0;const rnd=n=>((Math.sin(n*12.9898)*43758.5453)%1+1)%1;
+  while(x<370){const w=44+rnd(i)*34,ht=70+rnd(i+7)*70,y=560-ht;
+    h+=`<rect x="${x}" y="${y}" width="${w}" height="${ht}"/><path d="M${x-4} ${y} L${x+w/2} ${y-26-rnd(i+3)*16} L${x+w+4} ${y} Z"/>`;
+    for(let r=0;r<2;r++)for(let c=0;c<2;c++)if(rnd(i*4+r*2+c)>.3)h+=`<rect class="win" style="--d:${(rnd(i+r+c)*1.6).toFixed(2)}s" x="${x+8+c*(w/2-4)}" y="${y+14+r*28}" width="${w/2-14}" height="14" rx="2"/>`;
+    x+=w+2;i++;}return h;}
+function stars(){let s='';for(let i=0;i<46;i++){const x=(Math.sin(i*91.7)*0.5+0.5)*360,y=(Math.sin(i*37.3)*0.5+0.5)*330;s+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${i%5?0.9:1.6}"/>`;}return s;}
+function build(){const T=TXT[lang],C=getComputedStyle(document.documentElement);
+  const col=k=>C.getPropertyValue('--'+k).trim();
+  const crowd=[[70,600,.9],[118,612,1],[242,612,1],[290,600,.9],[42,622,.8],[318,622,.8],[180,640,1.05]].map(([x,y,s],i)=>person(x,y,s)).join('');
+  $('#wl').innerHTML=`<div class="shake" style="position:absolute;inset:0">
+  <svg class="scene" viewBox="0 0 360 700" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+   <defs>
+    <linearGradient id="gDawn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--dawn1)"/><stop offset=".55" style="stop-color:var(--dawn2)"/><stop offset="1" style="stop-color:var(--dawn3)"/></linearGradient>
+    <linearGradient id="gNight" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--night1)"/><stop offset="1" style="stop-color:var(--night2)"/></linearGradient>
+    <linearGradient id="gMorn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--morn1)"/><stop offset="1" style="stop-color:var(--morn2)"/></linearGradient>
+    <linearGradient id="gRed" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--red1)"/><stop offset="1" style="stop-color:var(--red2)"/></linearGradient>
+    <radialGradient id="gSpot" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff" stop-opacity=".42"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="gVign" cx=".5" cy=".62" r=".75"><stop offset=".35" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".85"/></radialGradient>
+    <radialGradient id="gLens" cx=".5" cy=".5" r=".5"><stop offset="0" style="stop-color:var(--det)" stop-opacity=".55"/><stop offset="1" style="stop-color:var(--det)" stop-opacity="0"/></radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
+   </defs>
+   <rect width="360" height="700" style="fill:var(--night1)"/>
+   <rect class="layer sky-dawn" width="360" height="700" fill="url(#gDawn)"/>
+   <rect class="layer sky-night" width="360" height="700" fill="url(#gNight)"/>
+   <rect class="layer sky-morn" width="360" height="700" fill="url(#gMorn)"/>
+   <rect class="layer sky-red" width="360" height="700" fill="url(#gRed)"/>
+   <g class="layer stars" style="fill:var(--star)">${stars()}</g>
+   <circle class="sun" cx="180" cy="420" r="58" fill="#ffd08a" opacity=".9"/>
+   <g class="moon"><circle cx="268" cy="150" r="30" fill="#f4eedd"/><circle cx="280" cy="142" r="27" style="fill:var(--night1)" opacity=".55"/></g>
+   <g style="fill:var(--ink2)" opacity=".6"><path d="M0 520 h30 v-60 h22 v40 h18 v-80 h26 v90 h30 v-50 h24 v70 h28 v-110 h20 v100 h34 v-40 h28 v60 h26 v-70 h30 v90 h24 V640 H0 Z"/></g>
+   <g style="fill:var(--ink2)">${houses()}<rect y="558" width="360" height="142"/></g>
+   <circle class="ring r1" cx="250" cy="470" r="4"/><circle class="ring r2" cx="250" cy="470" r="4"/><circle class="ring r3" cx="250" cy="470" r="4"/>
+   <g class="layer walkers" style="fill:var(--ink)">
+     <g class="w1"><g class="bob">${person(0,610,.95,'<path class="wave" d="M8 -54 l14 -18" style="stroke:var(--ink)" stroke-width="6" stroke-linecap="round"/>','')}</g></g>
+     <g class="w2"><g class="bob">${person(0,616,.85,'','')}</g></g></g>
+   <ellipse class="layer spot" cx="180" cy="610" rx="120" ry="34" fill="url(#gSpot)"/>
+   <g class="layer chalk"><path d="M128 612 q-6 -10 6 -14 l28 -2 q6 -14 18 -10 q12 4 6 16 l34 4 q10 4 0 10 l-26 2 l10 14 q2 8 -8 6 l-18 -12 l-12 14 q-8 4 -8 -6 l6 -14 l-30 4 q-10 -2 -6 -8 z"/></g>
+   <g class="layer crowd" style="fill:var(--ink)">${crowd}</g>
+   <rect class="layer vign" width="360" height="700" fill="url(#gVign)"/>
+   <g class="hero doc"><circle class="pulse" cx="180" cy="540" r="30" style="stroke:var(--doc)"/>
+     <g class="rise"><g filter="url(#glow)" style="fill:var(--doc)" opacity=".75">${person(180,646,2.05,'','')}</g><g style="fill:var(--ink)">${person(180,646,2,badge('doc',col('doc')),'')}</g></g></g>
+   <g class="hero det"><circle class="lens" cx="180" cy="600" r="70" fill="url(#gLens)"/>
+     <g class="rise"><g filter="url(#glow)" style="fill:var(--det)" opacity=".7">${person(180,646,2.05,fedora,'')}</g><g style="fill:var(--ink)">${person(180,646,2,fedora+badge('det',col('det'))+'<g transform="translate(16 -40)"><circle cx="10" cy="-10" r="9" fill="none" style="stroke:var(--ink)" stroke-width="4"/><path d="M4 -4 L-6 8" style="stroke:var(--ink)" stroke-width="5" stroke-linecap="round"/></g>','')}</g></g></g>
+   <g class="hero maf"><g class="rise" style="transform-origin:180px 646px"><g filter="url(#glow)" style="fill:var(--maf)" opacity=".8">${person(180,646,2.12,fedora,'')}</g>
+     <g style="fill:var(--ink)">${person(180,646,2.1,fedora+badge('maf',col('maf')),'')}</g>
+     <g class="eyes" filter="url(#glow)"><circle cx="171" cy="490" r="4"/><circle cx="189" cy="490" r="4"/></g><g class="eyes"><circle cx="171" cy="490" r="2.4"/><circle cx="189" cy="490" r="2.4"/></g></g></g>
+  </svg></div>
+  <div class="blood" aria-hidden="true">${bloodSvg()}</div>
+  <div class="flash"></div>
+  <div class="cap" id="cap"></div>
+  <div class="bang">${T.bang}</div>
+  <div class="say" id="say"><div class="who"></div><div class="bub"></div></div>
+  <div class="ha" id="ha">${T.ha.map(h=>`<span>${h}</span>`).join('')}</div>
+  <div class="title"><div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC.logo}</svg></div>
+    <h1>${T.title}</h1><p>${T.tag}</p><div class="go">${T.go}</div></div>
+  <div class="hint">${T.hint}</div>
+  <div class="prog">${SC.slice(0,-1).map(()=>'<i><b></b></i>').join('')}</div>
+  <button class="skip" id="skip" type="button">${T.skip}</button>`;
+  $('#skip').onclick=e=>{e.stopPropagation();go(SC.length-1);};}
+function type(el,txt){clearInterval(typeT);el.textContent='';let i=0;typeT=setInterval(()=>{el.textContent=txt.slice(0,++i);if(i>=txt.length)clearInterval(typeT);},32);}
+function go(n){clearTimeout(timer);idx=n;const [k,ms]=SC[n],T=TXT[lang],wl=$('#wl');onScene(k);
+  wl.className='wl '+k;
+  const cap=$('#cap'),say=$('#say'),ha=$('#ha');
+  const capTxt={s1:T.cap1,s2:T.cap2,s3:T.cap3}[k];
+  cap.classList.remove('on');setTimeout(()=>{if(capTxt){cap.textContent=capTxt;cap.classList.add('on');}},k==='s1'?400:250);
+  const role={s4:['doc',T.doc,T.docL],s5:['det',T.det,T.detL],s6:['maf',T.maf,T.mafL]}[k];
+  say.classList.remove('on');clearInterval(typeT);
+  if(role){setTimeout(()=>{say.style.setProperty('--c',`var(--${role[0]})`);say.querySelector('.who').textContent=role[1];say.classList.add('on');type(say.querySelector('.bub'),role[2]);},500);}
+  ha.classList.toggle('on',false);if(k==='s6')setTimeout(()=>ha.classList.add('on'),1700);
+  document.querySelectorAll('.prog i').forEach((p,i)=>{p.className=i<n?'done':i===n?'now':'';p.style.setProperty('--t',ms+'ms');});
+  $('#skip').hidden=k==='end';
+  if(ms)timer=setTimeout(()=>go(n+1),ms);}
+function play(){document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';document.documentElement.dataset.look=look;build();requestAnimationFrame(()=>requestAnimationFrame(()=>go(0)));}
+$('#wl').addEventListener('click',()=>{if(idx<SC.length-1)go(idx+1);else play();});
+
+/* ---- the board ---- */
+const MOM=[
+ ['good','The happy town','Scene 1 · dawn, the town wakes up',{A:'Birdsong and a warm chord',B:'A music-box tune with birds',C:'A soft plucked melody and a breeze'}],
+ ['night','Night falls, then CRACK!','Scene 2 · night, then the sound that is off (each ends with the crack)',{A:'Crickets, an owl and a low bell',B:'A whoosh and a deep drone (like the game’s night today)',C:'Wind, a distant church bell and a far howl'}],
+ ['kill','The killing','Scene 3 · morning, someone is dead. No music: only the blade drawn from its sheath, then the hit',{K1:'The blade drawn slowly (a long scrape), a loud SHING, a pause, then the hit',K2:'A quick draw with a big ringing SHING, then a heavy hit while it still rings',K3:'The blade drawn, SHING, the hit, then the body falls'}],
+ ['doc','The Doctor','Scene 4 · “It could happen to anyone…”',{A:'Soft strings moving to a warm, safe chord over a calm heartbeat',B:'A gentle piano melody over a warm pad',C:'A healing glow: soft rising tones and sparkles'}],
+ ['det','The Detective','Scene 5 · “I swear I’ll find them.”',{A:'Noir walk: a walking double bass, brushes and a muted trumpet',B:'Rising suspense that lands on one decisive hit (“I’ll find them”)',C:'A mystery theme: a celesta tune in a minor key over low strings'}],
+ ['maf','The Mafia','Scene 6 · “I’ll get you all… HA HA HA” (our recorded laugh in every version)',{A:'Laugh with a deep horror drone and a rising swell',B:'Laugh with thunder and a minor organ chord',C:'Laugh slowed down with an echo and a racing heartbeat'}]];
+// rough loudness match between versions (measured offline)
+const LEVEL={goodA:2.1,goodB:1.8,goodC:.9,nightA:1,nightB:.6,nightC:.8,killK1:.85,killK2:.85,killK3:.85,docA:1.3,docB:1.7,docC:1.5,detA:.95,detB:.85,detC:1.4,mafA:.8,mafB:.9,mafC:.8};
+let AC=null,MS=null,K=null,LP=null,cur=null,curBtn=null,curT=0;
+let picks=(()=>{try{const p=JSON.parse(localStorage.getItem('wsPicks5')||'null');if(p&&typeof p==='object')return p;}catch(e){}return {good:'A',night:'A',kill:'K1',doc:'C',det:'C',maf:'A'};})();
+const savePicks=()=>{try{localStorage.setItem('wsPicks5',JSON.stringify(picks));}catch(e){}};
+function ensure(){if(!AC){const A=window.AudioContext||window.webkitAudioContext;AC=new A();MS=AC.createGain();MS.gain.value=.9;const comp=AC.createDynamicsCompressor();MS.connect(comp);comp.connect(AC.destination);
+  K=makeKit(AC,MS);LP=K.loadLaugh(LAUGH_B64).catch(()=>0);}if(AC.state==='suspended')AC.resume();}
+function fade(b,sec){if(!b)return;const t=AC.currentTime;b.gain.cancelScheduledValues(t);b.gain.setValueAtTime(b.gain.value,t);b.gain.linearRampToValueAtTime(0,t+sec);setTimeout(()=>{try{b.disconnect();}catch(e){}},sec*1000+150);}
+async function sound(k,v,fadeOld=.15){ensure();if(k==='maf')await LP;fade(cur,fadeOld);const b=AC.createGain();b.gain.value=LEVEL[k+v]||1;b.connect(MS);K.bus(b);cur=b;
+  const t=AC.currentTime+.05;K.S[k][v](t);if(k==='night')K.S.crack(t+1.7);return b;}
+function stopBtn(){if(curBtn){curBtn.classList.remove('on');curBtn.textContent='▶';curBtn.setAttribute('aria-label',curBtn.dataset.lbl);}curBtn=null;clearTimeout(curT);}
+async function playBtn(btn){const on=curBtn===btn;stopBtn();if(on){fade(cur,.2);cur=null;return;}
+  curBtn=btn;btn.classList.add('on');btn.textContent='■';btn.setAttribute('aria-label','Stop');await sound(btn.dataset.k,btn.dataset.v);curT=setTimeout(stopBtn,btn.dataset.k==='maf'?5600:4600);}
+function drawBoard(){$('#board').innerHTML=MOM.map(([k,title,sc,vs],i)=>`<section class="mom" aria-label="${title}"><h2><i>${i+1}</i>${title}</h2><p class="sc">${sc}</p>
+  ${Object.entries(vs).map(([v,d])=>`<div class="ver${picks[k]===v?' pick':''}"><button class="play" type="button" data-k="${k}" data-v="${v}" data-lbl="Play ${title} version ${v}" aria-label="Play ${title} version ${v}">▶</button>
+   <div class="d"><b>${v}</b>${d}</div><label><input type="radio" name="p-${k}" value="${v}" ${picks[k]===v?'checked':''}> Pick</label></div>`).join('')}</section>`).join('');
+  document.querySelectorAll('#board .play').forEach(b=>b.onclick=()=>playBtn(b));
+  document.querySelectorAll('#board input').forEach(r=>r.onchange=()=>{picks[r.name.slice(2)]=r.value;savePicks();drawBoard();});
+  $('#picks').textContent='Picks: '+MOM.map(([k],i)=>(i+1)+picks[k]).join(' ');}
+$('#copy').onclick=()=>{const txt='Welcome sounds: '+MOM.map(([k],i)=>(i+1)+picks[k]).join(' '),n=$('#copied');
+  const done=m=>{n.textContent=m;n.hidden=false;};
+  try{navigator.clipboard.writeText(txt).then(()=>done('Copied. Paste it in our chat.'),()=>done('Copy this into our chat: '+txt));}catch(e){done('Copy this into our chat: '+txt);}};
+/* ---- the welcome with the picks ---- */
+const SOUND_OF={s1:'good',s2:'night',s3:'kill',s4:'doc',s5:'det',s6:'maf'};
+let inWl=false;
+function onScene(k){if(!AC)return;stopBtn();const m=SOUND_OF[k];if(m)sound(m,picks[m],1);else{fade(cur,3);cur=null;}}
+function openWl(){document.documentElement.classList.remove('sbmode');$('#wlview').classList.add('on');$('#start').hidden=false;$('#tWl').classList.add('on');$('#tBoard').classList.remove('on');}
+function closeWl(){inWl=false;clearTimeout(timer);if(AC){fade(cur,.3);cur=null;}$('#wlview').classList.remove('on');document.documentElement.classList.add('sbmode');document.documentElement.dir='ltr';$('#tWl').classList.remove('on');$('#tBoard').classList.add('on');}
+$('#tWl').onclick=openWl;$('#hear').onclick=openWl;$('#tBoard').onclick=closeWl;$('#back').onclick=closeWl;
+$('#go').onclick=()=>{ensure();inWl=true;$('#start').hidden=true;play();};
+document.documentElement.classList.add('sbmode');drawBoard();
+</script>

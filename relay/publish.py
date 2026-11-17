@@ -16,8 +16,8 @@ rel = json.load(open(rel_path, encoding="utf-8")) if os.path.exists(rel_path) el
 rel = [r for r in rel if r["code"] != int(code)]
 rel.insert(0, {"code": int(code), "name": name, "date": datetime.date.today().isoformat(), "notes": bullets})
 json.dump(rel, open(rel_path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-# "notes" stays one line for apps before v2.14; "bullets" and "history" are for the What's new screen
-json.dump({"code": int(code), "name": name, "url": f"{BASE}/MafiaDealer.apk", "notes": " \u00b7 ".join(bullets), "bullets": bullets, "history": rel[:8]},
+# "notes" (the one line apps before v2.14 show in their update banner) stays empty: no summary on update checks; "bullets" and "history" are for the What's new screen
+json.dump({"code": int(code), "name": name, "url": f"{BASE}/MafiaDealer.apk", "notes": "", "bullets": bullets, "history": rel[:8]},
           open(os.path.join(HERE, "public/version.json"), "w", encoding="utf-8"), ensure_ascii=False)
 # cf.key lives next to the signing key, outside the repo: $MAFIA_KEYS, two folders up (old layout) or Desktop\Mafia
 keys = next(d for d in [os.environ.get("MAFIA_KEYS", ""), os.path.join(ROOT, "../.."), os.path.expanduser("~/Desktop/Mafia")]

@@ -605,4 +605,6 @@ const AR: Partial<Record<keyof typeof EN, string>> = {
   wlAtStart: 'اعرض الترحيب عند البدء',
   wlAtStartD: 'قصة البلدة القصيرة قبل الشاشة الرئيسية',
   wlReplay: 'شاهد الترحيب',
+  wlSoundOff: 'أوقف الصوت',
+  wlSoundOn: 'شغّل الصوت',
 };

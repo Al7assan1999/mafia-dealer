@@ -31,6 +31,7 @@ function quitGame(){hush();$('modal').innerHTML='';if(G&&G.mp){stopTimer();G=nul
 for(const m of Object.keys(NARR)){const f=NARR[m];NARR[m]=(...a)=>{f(...a);if(MP.role==='host'&&MP.online&&HN&&HN.bc)HN.bc({narr:m,a});};}
 /* the welcome (v2.14): every start, unless switched off in Settings, or the app opens into something (a room it rejoins, an invite link);
    automated test browsers skip it */
+if(S.wlSeen==null&&S.lastVer>=33)S.wlSeen=true;  // watched in v2.14: Skip from now on
 const LINK0=(()=>{try{return (window.Net&&Net.link&&Net.link())||'';}catch(e){return '';}})();
 if(S.welcome!==false&&!navigator.webdriver&&!LINK0&&!lsGet(JNK))showWelcome();
 if(S.lastVer&&S.lastVer<APP.code)S.rnShow=APP.code;if(S.lastVer!==APP.code){S.lastVer=APP.code;save();}  // just updated: What's new once (v2.14)
@@ -38,5 +39,5 @@ setTimeout(()=>deepLink(LINK0),700);setTimeout(()=>checkUpdate(true).then(L=>{if
   const show=()=>{if(L&&L.history&&L.history.some(r=>r.code===APP.code)&&!G&&!MP.role&&!$('modal').innerHTML)whatsNew();else toast(t('updatedTo',{v:APP.name}));};
   if(WL.on)WL.after=show;else show();}),1500);  // after the welcomesetTimeout(acctRefresh,1800);setTimeout(gSync,2000);setTimeout(()=>{inboxTick();friendsLoad(true);},2500);  // every app start: version.json is a free static file
 setInterval(inboxTick,10000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)inboxTick();});  // friends: invites, requests, online status
-window.addEventListener('popstate',()=>{if(WL.on){welcomeEnd();return;}if(chView){chClose();return;}if(S.fpanel&&dockShown()){dockOpen(false);return;}if(G){if(G.phase==='end'){finish();return;}showQuit();}else if(inRoom()){try{history.pushState({v:1},'');}catch(e){}askLeaveRoom();}else if(V!=='home')popNav();});
+window.addEventListener('popstate',()=>{if(WL.on){if(WL.first){try{history.pushState({v:1},'');}catch(e){}return;}welcomeEnd();return;}if(chView){chClose();return;}if(S.fpanel&&dockShown()){dockOpen(false);return;}if(G){if(G.phase==='end'){finish();return;}showQuit();}else if(inRoom()){try{history.pushState({v:1},'');}catch(e){}askLeaveRoom();}else if(V!=='home')popNav();});
 render();

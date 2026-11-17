@@ -605,4 +605,6 @@ const EN = {
   wlAtStart: 'Show the welcome at start',
   wlAtStartD: 'The short story of the town before Home',
   wlReplay: 'Watch the welcome',
+  wlSoundOff: 'Turn the sound off',
+  wlSoundOn: 'Turn the sound on',
 };

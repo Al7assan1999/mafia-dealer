@@ -393,10 +393,10 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}.fdrawer,.bell
 .rel .rn{font-size:14px;color:var(--mute)}
 .verrow{display:flex;justify-content:center;align-items:center;gap:2px;margin-top:20px}.verrow .ver{margin:0}.ver.vnew{color:var(--gold)}
 /* ---------- v2.14 the welcome (#welcome, outside #app): shadow theatre, every class and keyframe prefixed so nothing clashes ---------- */
-#welcome{--wink:#06050b;--wink2:#1b1726;--wrim:#ffffff30;--wtext:#f4f2f8;--wmute:#a59fb3;--wacc:#ff2e63;--wacc2:#ff8a3d;
+#welcome{--wblood1:#7c0812;--wbloodhi:#ff9a9a;--wink:#06050b;--wink2:#1b1726;--wrim:#ffffff30;--wtext:#f4f2f8;--wmute:#a59fb3;--wacc:#ff2e63;--wacc2:#ff8a3d;
   --wdoc:#3ce0a0;--wdet:#5aa2ff;--wmaf:#ff4d7d;--wdawn1:#2a1745;--wdawn2:#c2456a;--wdawn3:#ffb06a;--wnight1:#04030b;--wnight2:#141236;
   --wmorn1:#1d2638;--wmorn2:#6f8399;--wred1:#1a0207;--wred2:#6b0a1d;--wstar:#fff;--wchalk:#f4f2f8;--whead:Readex,system-ui,sans-serif;--wbody:Readex,system-ui,sans-serif}
-[data-theme=noir] #welcome{--wink:#080706;--wink2:#1d1a15;--wrim:#ece4d42a;--wtext:#ece4d4;--wmute:#a39a8b;--wacc:#b3241f;--wacc2:#d4b483;
+[data-theme=noir] #welcome{--wblood1:#5e0a0a;--wbloodhi:#e0a090;--wink:#080706;--wink2:#1d1a15;--wrim:#ece4d42a;--wtext:#ece4d4;--wmute:#a39a8b;--wacc:#b3241f;--wacc2:#d4b483;
   --wdoc:#7fb08b;--wdet:#86a6c9;--wmaf:#c0392b;--wdawn1:#1e1a16;--wdawn2:#6e5a43;--wdawn3:#c9b08a;--wnight1:#050505;--wnight2:#1a1815;
   --wmorn1:#1c1b19;--wmorn2:#6d6658;--wred1:#120404;--wred2:#4a0d0b;--wstar:#ece4d4;--wchalk:#ece4d4;--whead:Elite,Messiri,serif;--wbody:Plex,system-ui,sans-serif}
 [dir=rtl] #welcome{--whead:Messiri,system-ui,serif;--wbody:Plex,system-ui,sans-serif}
@@ -463,3 +463,15 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}.fdrawer,.bell
 #welcome .wl-prog i.done b{width:100%}#welcome .wl-prog i.now b{animation:wlFill var(--t) linear forwards}@keyframes wlFill{to{width:100%}}
 #welcome .wl-hint{position:absolute;z-index:5;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom));text-align:center;font-size:12px;color:#ffffffaa;opacity:0;transition:opacity .6s}#welcome .s1 .wl-hint{opacity:1}
 @media (prefers-reduced-motion:reduce){#welcome *,#welcome *::before,#welcome *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.3s!important}}
+/* v2.15 the welcome: blood in the killing scene, the mute button */
+#welcome .wl-blood{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .9s ease}#welcome .s3 .wl-blood{opacity:1;transition:opacity .1s ease 1.55s}
+#welcome .wl-blood svg{position:absolute;inset:0;width:100%;height:100%}
+#welcome .bl-splash{transform-box:view-box;transform-origin:180px 170px;transform:scale(.12);opacity:0}
+#welcome :is(.s3,.s4) .bl-splash{animation:wlSplash .26s cubic-bezier(.15,.9,.3,1.15) 1.6s forwards}@keyframes wlSplash{to{transform:none;opacity:1}}
+#welcome .bl-s{transform-box:fill-box;transform-origin:50% 0;transform:scaleY(0)}
+#welcome :is(.s3,.s4) .bl-s{animation:wlRun var(--dur) cubic-bezier(.5,0,.75,1) calc(1.75s + var(--del)) forwards}@keyframes wlRun{to{transform:none}}
+#welcome :is(.s3,.s4) .bl-t{animation:wlTip var(--dur) cubic-bezier(.5,0,.75,1) calc(1.75s + var(--del)) forwards}@keyframes wlTip{to{transform:translateY(var(--len))}}
+#welcome .bl-f{opacity:0}#welcome :is(.s3,.s4) .bl-f{animation:wlFall .75s cubic-bezier(.55,0,1,.45) calc(1.85s + var(--del) + var(--dur)) 3}
+@keyframes wlFall{0%{opacity:1;transform:translateY(var(--len))}100%{opacity:1;transform:translateY(var(--fall))}}
+#welcome .wl-mute{position:absolute;z-index:5;top:calc(14px + env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));width:40px;height:40px;border-radius:50%;background:#00000066;border:1px solid #ffffff30;display:grid;place-items:center;color:var(--wtext)}
+#welcome .wl-mute svg{width:20px;height:20px}[dir=rtl] #welcome .wl-mute{right:auto;left:max(14px,env(safe-area-inset-left))}
