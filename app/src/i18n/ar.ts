@@ -602,4 +602,9 @@ const AR: Partial<Record<keyof typeof EN, string>> = {
   ns_expired: 'انتهت',
   ns_gone: 'لم يعد متاحًا',
   nKept: 'تبقى الإشعارات 24 ساعة على هذا الهاتف.',
+  fLetYou: 'سمح لك بدخول الغرفة {c}',
+  fLetYouIn: '{n} سمح لك بالدخول',
+  fLetInSent: 'يمكن لـ {n} الانضمام الآن',
+  fInYourRoom: 'في غرفتك',
+  updatedTo: 'تم التحديث إلى v{v}',
 };

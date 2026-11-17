@@ -199,9 +199,11 @@ net = Class(NET, OBJ, [("L", STR, ACC_PUBLIC | ACC_STATIC), ("S", CHM, ACC_PUBLI
         ('try', 't0', 't1', 'fail')], js=True),
     Method(NET, "install", "V", [], ACC_PUBLIC, 5, [  # p0=v4: open Android's "Update this app?" screen for cache/update.apk
         ('label', 't0'),
-        ('new-instance', 0, INTENT), ('const-string', 1, "android.intent.action.VIEW"), ('invoke-direct', m(INTENT, "<init>", "V", STR), 0, 1),
+        ('new-instance', 0, INTENT), ('const-string', 1, "android.intent.action.INSTALL_PACKAGE"), ('invoke-direct', m(INTENT, "<init>", "V", STR), 0, 1),
         ('const-string', 1, APK_URI), ('invoke-static', m(URI, "parse", URI, STR), 1), ('move-result-object', 1),
         ('const-string', 2, APK_MIME), ('invoke-virtual', m(INTENT, "setDataAndType", INTENT, URI, STR), 0, 1, 2),
+        # v2.13: RETURN_RESULT = the installer reports back instead of showing its last "Done / Open" page (the app restarts by itself)
+        ('const-string', 2, "android.intent.extra.RETURN_RESULT"), ('const/4', 3, 1), ('invoke-virtual', m(INTENT, "putExtra", INTENT, STR, "Z"), 0, 2, 3),
         ('const', 1, 0x10000001), ('invoke-virtual', m(INTENT, "addFlags", INTENT, "I"), 0, 1),  # NEW_TASK | GRANT_READ_URI_PERMISSION
         ('iget-object', 1, 4, F_C), ('invoke-virtual', m(CTX, "startActivity", "V", INTENT), 1, 0),
         ('label', 't1'),

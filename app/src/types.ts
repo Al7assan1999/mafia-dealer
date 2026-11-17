@@ -28,17 +28,18 @@ interface Settings {
   fpanel?: boolean;  // friends drawer left open
   ftabY?: number;
   bellSeen?: number;
-  nlog?: NLog[];  // the bell's history, 24 h  // when the bell was last opened (newer notes count as new)  // where the friends tab was dragged to (px from the top)
+  nlog?: NLog[];
+  lastVer?: number;  // the version that last ran here ("Updated to" once after an update)  // the bell's history, 24 h  // when the bell was last opened (newer notes count as new)  // where the friends tab was dragged to (px from the top)
 }
 
 /** Another account as the relay shows it. rel: 'ok' friends, 'out' I asked, 'in' they asked, '' none, 'me'. on/st only for friends. */
 interface Friend { id: string; uname: string; display: string; avatar: string; fav: string; rel: string; on?: boolean; st?: string; op?: boolean }  // op: in an online lobby (can ask to join)
 /** A room invite from a friend (relay /acc/inbox). */
-interface Invite { id: number; code: string; at: number; from: Friend }
+interface Invite { id: number; code: string; at: number; from: Friend; ans?: number }  // ans: "let you in" (v2.13)
 /** A note from the relay (v2.11): kind 'acc' = from accepted my friend request. */
 interface Note { id: number; kind: string; at: number; from: Friend }
 /** The bell's history on this phone (v2.12): k inv | jr | req | acc; st '' waiting, else joined | letin | accepted | declined | dismissed | expired | gone. */
-interface NLog { key: string; k: string; id: any; from: Friend; at: number; code?: string; st: string; done?: number }
+interface NLog { key: string; k: string; id: any; from: Friend; at: number; code?: string; st: string; done?: number; ans?: number }
 
 /** What happened in a game, for the recap and the stats. Indexes are seats. */
 interface GameEv { first: number | null; saves: number[]; caught: string[]; kills?: number[]; outs?: number[] }

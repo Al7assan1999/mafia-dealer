@@ -82,7 +82,7 @@ await call("/acc/inbox", { st: "room", op: 1 }, tB);
 r = await call("/acc/joinreq", { id: idB }, tok2); ok(r.j.ok && !r.j.dup, "ask to join a friend in an online lobby");
 r = await call("/acc/joinreq", { id: idB }, tok2); ok(r.j.dup, "one request at a time");
 r = await call("/acc/inbox", { st: "room", op: 1 }, tB); ok(r.j.jr.length === 1 && r.j.jr[0].from.id === uid && !r.j.inv.length, "the friend gets it as a join request, not an invite");
-r = await call("/acc/invite", { id: uid, code: code6 }, tB); r = await call("/acc/inbox", {}, tok2); ok(r.j.inv.length === 1 && r.j.inv[0].from.id === idB, "Let in = an invite back to the one who asked");
+r = await call("/acc/invite", { id: uid, code: code6 }, tB); r = await call("/acc/inbox", {}, tok2); ok(r.j.inv.length === 1 && r.j.inv[0].from.id === idB, "Let in = an invite back to the one who asked"); ok(r.j.inv[0].ans === 1, "v2.13: marked as let you in (ans)");
 r = await call("/acc/inbox", { st: "room", op: 1 }, tB); ok(!r.j.jr.length, "and the request is answered (gone)");
 for (const v of (await call("/acc/inbox", {}, tok2)).j.inv) await call("/acc/invite/done", { id: v.id }, tok2);
 r = await call("/acc/joinreq", { id: idC }, tB); ok(r.st === 403, "ask to join needs a friend");
@@ -90,7 +90,7 @@ await call("/acc/inbox", { st: "", op: 0 }, tB);
 // v2.11: notes ("X accepted your request"), invite / ask again after 5 s, the invite link page and the app link file
 r = await call("/acc/inbox", {}, tok2); ok(r.j.nt.some(n => n.kind === "acc" && n.from.id === idB && n.from.display), "the one who asked gets a note when the request is accepted");
 const nid = r.j.nt.find(n => n.from.id === idB).id; await call("/acc/note/done", { id: nid }, tok2); r = await call("/acc/inbox", {}, tok2); ok(!r.j.nt.some(n => n.id === nid), "a cleared note is gone");
-r = await call("/acc/invite", { id: idB, code: "777111" }, tok2); const i1 = (await call("/acc/inbox", {}, tB)).j.inv.find(v => v.code === "777111");
+r = await call("/acc/invite", { id: idB, code: "777111" }, tok2); ok(!r.j.ans, "a plain invite is not let you in"); const i1 = (await call("/acc/inbox", {}, tB)).j.inv.find(v => v.code === "777111");
 r = await call("/acc/invite", { id: idB, code: "777111" }, tok2); ok(r.j.dup, "invite again within 5 s: ignored");
 await new Promise(res => setTimeout(res, 5200));
 r = await call("/acc/invite", { id: idB, code: "777111" }, tok2); ok(r.j.ok && !r.j.dup, "invite again after 5 s: sent");

@@ -55,7 +55,7 @@ function chClose(){chView=false;chConv=null;chDraw();dockDraw();}
 const chLine=(m: ChatMsg,h: number,names: boolean,pend?: boolean)=>{const mine=m.f===h;
   return `<div class="cm${mine?' me':''}${pend?' pend':''}">${names&&!mine?`<b>${esc(m.n)}${m.d?' · '+t('chatDeadTag'):''}</b>`:''}<span dir="auto">${esc(m.x)}</span></div>`;};
 const chAv=(q: RoomPlayer)=>q.uid?avatarHtml(q.av,q.uid,34):`<span class="avt chx">${esc((q.name||'?').charAt(0).toUpperCase())}</span>`;
-function chDraw(){const el=$('chat');if(!el)return;if(!chView){el.innerHTML='';chList='';return;}
+function chDraw(){scrollLock();const el=$('chat');if(!el)return;if(!chView){el.innerHTML='';chList='';return;}
   const h=chMine(),ms=chMsgs(),out=chAmOut(),c=chConv,ppl=chPeople();
   if(c==null){const last=(k: number)=>{const m=ms.filter(x=>chKey(x,h)===k).pop();return m?esc(m.x):'';};
     const row=(k: number,av: string,name: string,tag: string,plus: string)=>{const n=chUnread(k);

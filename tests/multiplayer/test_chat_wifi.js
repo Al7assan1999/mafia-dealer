@@ -34,7 +34,7 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  await d.evaluate(()=>chOpenList());await d.click('#chat .prs:has-text("Everyone") .fl');
  const atEnd=()=>d.evaluate(()=>{const b=document.querySelector('#chm');return b.scrollHeight>b.clientHeight+50&&b.scrollHeight-b.scrollTop-b.clientHeight<5;});
  ok(await atEnd(),'a long chat scrolls and opens at the newest message');
- await d.evaluate(()=>{document.querySelector('#chm').scrollTop=0;});ok(await d.evaluate(()=>document.querySelector('#chm').scrollTop===0),'older messages: scrolled to the top');
+ await d.waitForTimeout(400);await d.evaluate(()=>{document.querySelector('#chm').scrollTop=0;});ok(await d.evaluate(()=>document.querySelector('#chm').scrollTop===0),'older messages: scrolled to the top');
  await d.evaluate(()=>chClose());await d.click('#fdock .fchat');await d.click('#chat .prs:has-text("Everyone") .fl');ok(await atEnd(),'closed and opened again: at the newest message');
  await d.click('#chin');await d.fill('#chin','one');await d.click('#chat .chf .pill');ok(await d.evaluate(()=>document.activeElement&&document.activeElement.id==='chin'),'Send keeps the typing box focused (keyboard stays up)');
  await d.press('#chin','x');await d.press('#chin','Enter');ok(await d.evaluate(()=>document.activeElement.id==='chin'),'Enter keeps it focused too');await wait(d,()=>!chPend.length);ok(await atEnd(),'my new message scrolls into view');

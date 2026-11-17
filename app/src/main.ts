@@ -36,6 +36,7 @@ function showIntro(i){i=i||0;const [ic,tt,dd]=INTRO[i];
   const el=document.querySelector('#modal .intro');if(el)el.innerHTML=body;else $('modal').innerHTML=`<div class="intro">${body}</div>`;}
 function introDone(){S.intro=1;save();$('modal').innerHTML='';}
 if(!S.intro&&!navigator.webdriver)setTimeout(showIntro,400);  // automated test browsers skip it
+if(S.lastVer&&S.lastVer<APP.code)setTimeout(()=>toast(t('updatedTo',{v:APP.name})),900);if(S.lastVer!==APP.code){S.lastVer=APP.code;save();}  // v2.13: the update worked
 setTimeout(deepLink,700);setTimeout(()=>checkUpdate(true),1500);setTimeout(acctRefresh,1800);setTimeout(gSync,2000);setTimeout(()=>{inboxTick();friendsLoad(true);},2500);  // every app start: version.json is a free static file
 setInterval(inboxTick,10000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)inboxTick();});  // friends: invites, requests, online status
 window.addEventListener('popstate',()=>{if(chView){chClose();return;}if(S.fpanel&&dockShown()){dockOpen(false);return;}if(G){if(G.phase==='end'){finish();return;}showQuit();}else if(inRoom()){try{history.pushState({v:1},'');}catch(e){}askLeaveRoom();}else if(V!=='home')popNav();});

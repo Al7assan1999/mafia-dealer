@@ -389,3 +389,6 @@ body.rmin{padding-top:60px}body.rmin #fdock .fside{top:calc(130px + env(safe-are
 body.rmin #inv .invbar{top:calc(128px + env(safe-area-inset-top))}  /* under the header row (and the room bar): Back, profile and bell stay tappable */
 #rbar .rbar span,#rbar .rbar b{color:#fff}#rbar .rbar .dot{display:block;width:10px;height:10px;flex:none;border-radius:50%}
 #rbar .rbar span{text-align:start}
+/* v2.13 */
+html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}.fdrawer,.bellsh,.chb,.chm{overscroll-behavior:contain}
+.stp.inroom{background:var(--bg2);color:var(--mute)!important;margin:0;white-space:nowrap}

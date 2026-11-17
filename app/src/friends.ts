@@ -23,7 +23,7 @@ const stTxt=(f: Friend)=>f.on?t(f.st==='game'?'fInGame':f.st==='room'?'fInRoom':
 function inboxTick(): Promise<void>{if(!S.acct||document.hidden)return Promise.resolve();
   return aReq('/acc/inbox',{st:myStatus(),op:myOpen()?1:0,hide:!!S.hideOnline}).then(j=>{FREL=j.rel||{};FON=j.on||0;FREQ=j.req||0;
     INV=(j.inv||[]).filter(v=>!INVOFF.includes(v.id));JR=(j.jr||[]).filter(v=>!JROFF.includes(v.id));NOTES=j.nt||[];nInbox(j.inv||[],j.jr||[]);
-    const back=INV.find(v=>jrAsked[v.from.id]>Date.now()-30*60e3);if(back){delete jrAsked[back.from.id];invJoin(back.id);}  // the friend I asked let me in
+    const back=INV.find(v=>v.ans);if(back){delete jrAsked[back.from.id];toast(t('fLetYouIn',{n:back.from.display}));invJoin(back.id);}  // the friend I asked let me in
     invBar();
     const sig=JSON.stringify([FREL,FON,FREQ,j.sg||'']);if(sig===inboxSig)return;inboxSig=sig;
     if(dockShown()||V==='friends')friendsLoad(true);else dockDraw();  // someone came online, a request arrived...
@@ -37,13 +37,15 @@ function invBar(){bellDraw();const el=$('inv');if(!el)return;
   if(r){el.innerHTML=`<div class="invbar">${avatarHtml(r.from.avatar,r.from.id,40)}<div><b>${esc(r.from.display)}</b><small>${t('fWantsJoin')}</small></div>
     <button class="btn primary" onclick="jrLet(${r.id})">${t('fLetIn')}</button><button class="x" aria-label="${t('cancel')}" onclick="jrDone(${r.id})">✕</button></div>`;return;}
   const v=INV[0];
-  el.innerHTML=v?`<div class="invbar">${avatarHtml(v.from.avatar,v.from.id,40)}<div><b>${esc(v.from.display)}</b><small>${t('fInvites',{c:fmtCode(v.code)})}</small></div>
+  el.innerHTML=v?`<div class="invbar">${avatarHtml(v.from.avatar,v.from.id,40)}<div><b>${esc(v.from.display)}</b><small>${t(v.ans?'fLetYou':'fInvites',{c:fmtCode(v.code)})}</small></div>
     <button class="btn primary" onclick="invJoin(${v.id})">${t('fJoin')}</button><button class="x" aria-label="${t('cancel')}" onclick="invDone(${v.id})">✕</button></div>`:'';}
 function invDone(id: number,st='dismissed'){nSet('inv',id,st);INVOFF.push(id);INV=INV.filter(v=>v.id!==id);aReq('/acc/invite/done',{id}).catch(()=>{});invBar();}
 /* asking to join a friend's online lobby: they answer with a normal invite */
 function jrDone(id: number,st='dismissed'){nSet('jr',id,st);JROFF.push(id);JR=JR.filter(v=>v.id!==id);aReq('/acc/invite/done',{id}).catch(()=>{});invBar();}
-function jrLet(id: number){const r=JR.find(x=>x.id===id);jrDone(id,'letin');if(!r)return;
-  if(!myOpen()){toast(t('fLetGone'));return;}inviteGo(r.from.id);}
+/** Let in = an invite back; the relay marks it 'let you in' and removes the request itself (deleting it here first would race that). */
+function jrLet(id: number){const r=JR.find(x=>x.id===id);if(!r)return;
+  if(!myOpen()){jrDone(id);toast(t('fLetGone'));return;}
+  nSet('jr',id,'letin');JROFF.push(id);JR=JR.filter(v=>v.id!==id);invBar();inviteGo(r.from.id,r.from.display);}
 function joinAsk(id: string){const f=FR&&FR.friends.find(x=>x.id===id);jrAsked[id]=Date.now();fRedraw();setTimeout(fRedraw,AGAIN+50);
   aReq('/acc/joinreq',{id}).then(()=>{toast(t('fAskSent',{n:f?f.display:''}));
     clearInterval(jrTimer);const end=Date.now()+120e3;jrTimer=setInterval(()=>{if(Date.now()>end||!Object.keys(jrAsked).length)clearInterval(jrTimer);else inboxTick();},3000);})  // answer quickly
@@ -86,8 +88,11 @@ const fRow=(f: Friend,btns: string,noLink?: boolean)=>`<div class="prs fr">
 const plusBtn=(uid: string)=>uid&&me()&&uid!==me().id&&!FREL[uid]?`<button class="mini" onclick="friendReq({id:'${uid}'})" aria-label="${t('fAddFriend')}">+ ${t('fAddBtn')}</button>`:'';
 /** In an online lobby: Invite; a friend in one: Ask to join. After a tap: Invited/Asked for 5 s, then Invite/Ask again. */
 const roomCode=()=>myOpen()?MP.online.code:'';
+/** Accounts in my room right now (host: the players; player: everyone the host lists). */
+const roomUids=()=>MP.role==='host'?Object.values(MP.players).filter(q=>q.on).map(q=>q.uid):((MP.room&&MP.room.players)||[]).map((q: RoomPlayer)=>q.uid);
 function fAct(f: Friend){if(f.rel!=='ok')return '';const code=roomCode(),now=Date.now();
   const b=(at: number,fn: string,k: string[])=>{const wait=now-at<AGAIN;return `<button class="mini${wait?'':' pri'}" ${wait?'disabled':''} onclick="${fn}">${t(wait?k[1]:at?k[2]:k[0])}</button>`;};
+  if(code&&roomUids().includes(f.id))return `<span class="stp inroom">${t('fInYourRoom')}</span>`;
   if(code)return b(invSent[f.id+code]||0,`inviteGo('${f.id}')`,['fInviteBtn','fInvited','fInviteAgain']);
   if(f.op)return b(jrAsked[f.id]||0,`joinAsk('${f.id}')`,['fAskJoin','fAsked','fAskAgain']);
   return '';}
@@ -138,7 +143,7 @@ const tabTap=(f: string)=>`if(Date.now()-dockDrag>400)${f}`;
 function sideHtml(tab: boolean,cb: boolean){const F=FR,on=tab&&F?F.friends.filter(f=>f.on).slice(0,3):[],y=S.ftabY!=null?`top:${Math.min(S.ftabY,innerHeight-170)}px`:'';
   return `<div class="fside" style="${y}">${tab?`<button class="ftab" onclick="${tabTap('dockOpen(true)')}" ontouchstart="dockSwipe(event,1)" aria-label="${t('friendsT')}">${IC.friend}${on.map(f=>avatarHtml(f.avatar,f.id,26)).join('')}<b>${FON}</b>${FREQ?'<i class="rdot"></i>':''}</button>`:''}
     ${cb?`<button class="ftab fchat" onclick="${tabTap('chOpenList()')}" ontouchstart="dockSwipe(event,2)" aria-label="${t('chatT')}">${IC.chat}${chUnread()?`<i class="cnt">${chUnread()}</i>`:''}</button>`:''}</div>`;}
-function dockDraw(){const el=$('fdock');if(!el)return;
+function dockDraw(){scrollLock();const el=$('fdock');if(!el)return;
   const tab=dockShown(),cb=chatShown();if(!cb&&chView)chClose();else if(chView)chDraw();  // out of the game now: the chat rules change
   if(!tab&&!cb){el.innerHTML='';return;}
   if(!tab||!S.fpanel){el.innerHTML=sideHtml(tab,cb);return;}
@@ -161,23 +166,24 @@ function dockSwipe(e: TouchEvent,kind: number){const p=e.touches[0],x0=p.clientX
     const dx=ev.changedTouches[0].clientX-x0,inward=rtl?dx>40:dx<-40,outward=rtl?dx<-50:dx>50;
     if(kind===1&&inward)dockOpen(true);else if(kind===0&&outward)dockOpen(false);};
   document.addEventListener('touchmove',move,{passive:false});document.addEventListener('touchend',end);}
-function inviteGo(id: string){const code=MP.online&&MP.online.code;if(!code)return;invSent[id+code]=Date.now();fRedraw();setTimeout(fRedraw,AGAIN+50);
-  aReq('/acc/invite',{id,code}).then(j=>toast(t(j.tg?'fInvTg':'fInvSent'))).catch(e=>{delete invSent[id+code];fRedraw();aErr(e);});}
+function inviteGo(id: string,name?: string){const code=MP.online&&MP.online.code;if(!code)return;invSent[id+code]=Date.now();fRedraw();setTimeout(fRedraw,AGAIN+50);
+  const f=FR&&FR.friends.find(x=>x.id===id);name=name||(f?f.display:'');
+  aReq('/acc/invite',{id,code}).then(j=>toast(j.ans?t('fLetInSent',{n:name}):t(j.tg?'fInvTg':'fInvSent'))).catch(e=>{delete invSent[id+code];fRedraw();aErr(e);});}
 
 /* the notification bell (Home, next to the profile): invites, join requests, friend requests, 'X accepted your request' */
 const bellN=()=>INV.length+JR.length+FREQ+(S.nlog||[]).filter(n=>n.k==='acc'&&n.at>(S.bellSeen||0)).length;
 const bellBtn=()=>me()?`<button class="ib bell" id="bellb" onclick="bellOpen()" aria-label="${t('notifT')}" title="${t('notifT')}">${IC.bell}${bellN()?`<i class="cnt">${bellN()}</i>`:''}</button>`:'';
 function bellBtnDraw(){const b=$('bellb');if(b)b.outerHTML=bellBtn();}
 function bellOpen(){S.bellSeen=Date.now();save();friendsLoad(true);
-  $('modal').innerHTML=`<div class="modal" onclick="if(event.target===this)bellClose()"><div class="sheet bellsh" id="bellsh">${bellHtml()}</div></div>`;bellBtnDraw();}
-function bellClose(){if($('bellsh'))$('modal').innerHTML='';bellBtnDraw();}
+  $('modal').innerHTML=`<div class="modal" onclick="if(event.target===this)bellClose()"><div class="sheet bellsh" id="bellsh">${bellHtml()}</div></div>`;bellBtnDraw();scrollLock();}
+function bellClose(){if($('bellsh'))$('modal').innerHTML='';bellBtnDraw();scrollLock();}
 function bellDraw(){const el=$('bellsh');if(el)el.innerHTML=bellHtml();bellBtnDraw();}
 const ago=(ts: number)=>{const s=(Date.now()-ts)/1000,[v,u]=s<3600?[Math.max(1,Math.round(s/60)),'minute']:s<86400?[Math.round(s/3600),'hour']:[Math.round(s/86400),'day'];
   try{return new (Intl as any).RelativeTimeFormat(S.lang,{style:'short',numeric:'auto'}).format(-v,u);}catch(e){return '';}};
 function bellHtml(){const x=(fn: string)=>`<button class="mini nx" aria-label="${t('cancel')}" onclick="${fn}">✕</button>`;
   const L=(S.nlog||[]).slice().sort((p,q)=>(p.st?1:0)-(q.st?1:0)||q.at-p.at);  // waiting for an answer first, then the newest
   const row=(n: NLog)=>{const f=n.from,ro=!!n.st||n.k==='acc';
-    const txt=n.k==='inv'?t('fInvites',{c:fmtCode(n.code||'')}):n.k==='jr'?t('fWantsJoin'):n.k==='req'?t('nReq'):t('nAcc');
+    const txt=n.k==='inv'?t(n.ans?'fLetYou':'fInvites',{c:fmtCode(n.code||'')}):n.k==='jr'?t('fWantsJoin'):n.k==='req'?t('nReq'):t('nAcc');
     const btns=n.st?`<span class="nst ${n.st}">${t('ns_'+n.st)}</span>`
       :n.k==='inv'?`<button class="mini pri" onclick="bellClose();invJoin(${n.id})">${t('fJoin')}</button>`+x(`invDone(${n.id})`)
       :n.k==='jr'?`<button class="mini pri" onclick="bellClose();jrLet(${n.id})">${t('fLetIn')}</button>`+x(`jrDone(${n.id})`)
@@ -193,7 +199,7 @@ function nInbox(inv: Invite[],jr: Invite[]){const now=Date.now();
   nSave(L=>{let ch=false;
     const add=(k: string,v: Invite)=>{const key=k+':'+v.id;if(L.some(n=>n.key===key))return;
       for(let i=L.length-1;i>=0;i--)if(L[i].k===k&&!L[i].st&&L[i].from.id===v.from.id&&(L[i].code||'')===(v.code||''))L.splice(i,1);  // sent again: the new one replaces it
-      L.push({key,k,id:v.id,from:v.from,at:v.at||now,code:v.code||'',st:''});ch=true;};
+      L.push({key,k,id:v.id,from:v.from,at:v.at||now,code:v.code||'',st:'',ans:v.ans?1:0});ch=true;};
     for(const v of inv)add('inv',v);for(const v of jr)add('jr',v);
     for(const v of NOTES){if(!L.some(n=>n.key==='acc:'+v.id)){L.push({key:'acc:'+v.id,k:'acc',id:v.id,from:v.from,at:v.at||now,st:''});ch=true;}
       aReq('/acc/note/done',{id:v.id}).catch(()=>{});}  // kept here from now on
@@ -210,3 +216,5 @@ function nReqs(inc: Friend[]){const now=Date.now();
 function nSet(k: string,id: any,st: string){nSave(L=>{const n=L.find(x=>x.key===k+':'+id&&!x.st);if(!n)return false;n.st=st;n.done=Date.now();return true;});}
 /** Clear: the answered items and the notes go; ones still waiting for an answer stay. */
 function nClear(){nSave(L=>{const keep=L.filter(n=>!n.st&&n.k!=='acc');L.length=0;L.push(...keep);return true;});}
+/** While the friends drawer, the bell or the chat is open, only that panel scrolls (not the screen behind it). */
+function scrollLock(){document.documentElement.classList.toggle('lock',!!(S.fpanel&&dockShown()||chView||$('bellsh')));}

@@ -58,5 +58,5 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  // 6. + Add in game history (the host keeps it)
  await bp.evaluate(([a,c])=>{hostStop();S.log.unshift({id:Date.now(),names:['Dareer','Alhassan','Sami','X'],roles:['mafia','doctor','citizen','citizen'],alive:[true,true,false,true],winner:'citizens',days:2,hist:[],valid:true,ev:{first:null,saves:[],caught:[]},acc:[S.acct.u.id,a,c,null]});save();nav('game:'+S.log[0].id);},[idA,idC]);
  ok(await bp.isVisible('.endrow:has-text("Sami") button.mini:has-text("+ Add")')&&!(await bp.isVisible('.endrow:has-text("Alhassan") button.mini'))&&!(await bp.isVisible('.endrow:has-text("X") button.mini')),'history: + Add next to an account that is not a friend yet');
- await bp.click('.endrow:has-text("Sami") button.mini');await tick(c);ok(await c.evaluate(()=>FREQ===1),'the request reaches Sami');
+ await bp.click('.endrow:has-text("Sami") button.mini');await bp.waitForFunction(id=>FREL[id]==='out',idC,{timeout:10000});await tick(c);ok(await c.evaluate(()=>FREQ===1),'the request reaches Sami');
  console.log('errs',errs);if(errs.length)process.exitCode=1;await b.close();})();

@@ -9,7 +9,15 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## Current state: v2.12 (versionCode 31), published on the relay 2026-11-17 (relay version aa11b100; relay code unchanged since v2.11)
+## Current state: v2.13 (versionCode 32), built 2026-11-17, not published yet (needs the relay too)
+Alhassan's list (plan approved):
+- "X let you in" is its own message: the relay marks the invite that answers an Ask to join (`invites.ans`); the asker sees "Dareer let you in" (banner / bell / Telegram text) and joins by itself, even after restarting the app (no longer depends on `jrAsked`). The host sees "Sami can join now". Fixed on the way: Let in also deleted the request at the same moment as sending the invite, so the relay sometimes no longer saw the request and sent a plain invite (the asker then did not join); Let in now leaves the request for the relay to remove.
+- A friend already in my room shows "In your room" instead of Invite (host and players, `roomUids`).
+- While the friends drawer, the bell or the chat is open the screen behind does not scroll (`html.lock`, `scrollLock()`).
+- Updating: the in-app install now uses ACTION_INSTALL_PACKAGE with EXTRA_RETURN_RESULT, so Android's installer should skip its last "App installed: Done / Open" page (the app restarts by itself). This only takes effect from the update AFTER v2.13 (the installed app version starts the install), and some brands' own installers (Xiaomi) may still show it. After an update the app shows "Updated to vX" once (`S.lastVer`). Not seen on a real phone yet.
+- Tests: new `test_v213_app.js` (13, local relay); `relay/test_accounts.mjs` now 75; `test_social_app.js` and `test_chat_wifi.js` waits hardened.
+
+## Previous: v2.12 (versionCode 31), published on the relay 2026-11-17 (relay version aa11b100)
 Alhassan's list (plan approved; his choices: minimize "Lobby only", return "Bar at the top", bell history "On this phone"):
 - Minimize a room (lobby only, host and players): a Minimize button in the lobby header (`roomMin`) goes Home while the room keeps running. On every menu screen a bar at the top (`#rbar`, `rbarDraw`) says "Your room · N players" / "In X's room" and goes back (`roomBack`); the chat button stays. Minimized players are pulled back when roles are dealt (with buzzFx) or when the room ends for them (kicked, closed...). Starting an Offline game, hosting or joining another room while minimized asks "Leave this room?" first (`leaveFirst`). `roomMinned()` counts only a live room (host, or a player whose status is ok/lost/joining/search). During a game nothing changes.
 - The invite / Ask-to-join banner comes from the top, just under the header row (and under the room bar), so Back, profile and bell stay tappable.

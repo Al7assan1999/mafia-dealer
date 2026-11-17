@@ -602,4 +602,9 @@ const EN = {
   ns_expired: 'Expired',
   ns_gone: 'No longer available',
   nKept: 'Notifications are kept for 24 hours on this phone.',
+  fLetYou: 'let you into room {c}',
+  fLetYouIn: '{n} let you in',
+  fLetInSent: '{n} can join now',
+  fInYourRoom: 'In your room',
+  updatedTo: 'Updated to v{v}',
 };

@@ -207,6 +207,7 @@ export class Accounts {
     for (const c of ["seen INTEGER DEFAULT 0", "st TEXT DEFAULT ''", "hide INTEGER DEFAULT 0", "op INTEGER DEFAULT 0"]) try { this.sql.exec("ALTER TABLE users ADD COLUMN " + c); } catch (e) {}  // already there
     // invites.kind (v2.10): 'i' = come to my room (code), 'j' = let me into yours (no code; answered with an 'i')
     try { this.sql.exec("ALTER TABLE invites ADD COLUMN kind TEXT DEFAULT 'i'"); } catch (e) {}
+    try { this.sql.exec("ALTER TABLE invites ADD COLUMN ans INTEGER DEFAULT 0"); } catch (e) {}  // v2.13: 1 = "let you in" (the answer to their Ask to join)
     // notes (v2.11): things to tell someone later, kept 7 days: kind 'acc' = frm accepted uid's friend request
     this.sql.exec("CREATE TABLE IF NOT EXISTS notes(id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT, kind TEXT, frm TEXT, created INTEGER)");
   }
@@ -329,8 +330,8 @@ export class Accounts {
     if (p === "/acc/inbox") {  // every ~10 s while the app is open: records online status, returns invites and requests
       const st = ["", "room", "game"].includes(body.st) ? body.st : "", op = body.op && st === "room" ? 1 : 0, hide = body.hide ? 1 : 0, now = Date.now();
       if (now - me.seen > 30e3 || st !== (me.st || "") || op !== me.op || hide !== me.hide) this.sql.exec("UPDATE users SET seen=?, st=?, op=?, hide=? WHERE id=?", now, st, op, hide, me.id);
-      const list = kind => this.sql.exec("SELECT i.id AS iid, i.code AS icode, i.created AS iat, u.* FROM invites i JOIN users u ON u.id=i.frm WHERE i.too=? AND i.kind=? ORDER BY i.created DESC LIMIT 10", me.id, kind).toArray()
-        .map(r => ({ id: r.iid, code: r.icode, at: r.iat, from: this.card(r, "ok") }));
+      const list = kind => this.sql.exec("SELECT i.id AS iid, i.code AS icode, i.created AS iat, i.ans AS ians, u.* FROM invites i JOIN users u ON u.id=i.frm WHERE i.too=? AND i.kind=? ORDER BY i.created DESC LIMIT 10", me.id, kind).toArray()
+        .map(r => Object.assign({ id: r.iid, code: r.icode, at: r.iat, from: this.card(r, "ok") }, r.ians ? { ans: 1 } : {}));
       const rel = {}; let on = 0, sg = "";  // sg changes when a friend's status does: the app reloads the list
       for (const f of this.sql.exec("SELECT f.a, f.b, f.state, u.seen, u.hide, u.st, u.op FROM friends f JOIN users u ON u.id = CASE WHEN f.a=? THEN f.b ELSE f.a END WHERE f.a=? OR f.b=?", me.id, me.id, me.id).toArray()) {
         const id = f.a === me.id ? f.b : f.a; rel[id] = f.state === "ok" ? "ok" : f.a === me.id ? "out" : "in";
@@ -375,15 +376,17 @@ export class Accounts {
       const id = String(body.id || ""), code = String(body.code || "");
       if (!CODE.test(code)) return out({ err: "code" }, 400);
       const r = this.rel(me.id, id) === "ok" && this.one("SELECT * FROM users WHERE id=?", id); if (!r) return out({ err: "notfriend" }, 403);
-      this.sql.exec("DELETE FROM invites WHERE kind='j' AND frm=? AND too=?", id, me.id);  // they asked to join: this is the answer
+      const ans = this.one("SELECT id FROM invites WHERE kind='j' AND frm=? AND too=?", id, me.id) ? 1 : 0;  // they asked to join: this is "let you in"
+      this.sql.exec("DELETE FROM invites WHERE kind='j' AND frm=? AND too=?", id, me.id);
       const old = this.one("SELECT id, created FROM invites WHERE kind='i' AND frm=? AND too=? AND code=?", me.id, id, code);  // one invite per friend per room
-      if (old && Date.now() - old.created < AGAIN_MS) return out({ ok: true, dup: true });
+      if (old && !ans && Date.now() - old.created < AGAIN_MS) return out({ ok: true, dup: true });
       if (this.one("SELECT COUNT(*) n FROM invites WHERE frm=? AND created>?", me.id, Date.now() - 60 * 60e3).n >= INVITES_PER_HOUR) return out({ err: "slow" }, 429);
       if (old) this.sql.exec("DELETE FROM invites WHERE id=?", old.id);  // invited again: a new invite (new banner)
-      this.sql.exec("INSERT INTO invites(frm,too,code,created) VALUES(?,?,?,?)", me.id, id, code, Date.now());
+      this.sql.exec("INSERT INTO invites(frm,too,code,created,ans) VALUES(?,?,?,?,?)", me.id, id, code, Date.now(), ans);
       const tg = !!r.tg && !(r.seen > Date.now() - ONLINE_MS);  // app closed: Telegram reaches them (the real status, even when hidden)
-      if (tg) await this.tg(r.tg, `${me.display} (@${me.uname}) invited you to a Mafia Dealer room.\nTap to join: ${u.origin}/j/${code}\nThe invite expires in 30 minutes.`);
-      return out({ ok: true, tg });
+      if (tg) await this.tg(r.tg, ans ? `${me.display} (@${me.uname}) let you into their Mafia Dealer room.\nTap to join: ${u.origin}/j/${code}\nThis expires in 30 minutes.`
+        : `${me.display} (@${me.uname}) invited you to a Mafia Dealer room.\nTap to join: ${u.origin}/j/${code}\nThe invite expires in 30 minutes.`);
+      return out({ ok: true, tg, ans: !!ans });
     }
     if (p === "/acc/joinreq") {  // ask a friend in an online lobby to let me in: they answer with a normal invite (in the app only, they are online)
       const id = String(body.id || ""), r = this.rel(me.id, id) === "ok" && this.one("SELECT * FROM users WHERE id=?", id); if (!r) return out({ err: "notfriend" }, 403);
