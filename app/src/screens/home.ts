@@ -8,7 +8,7 @@ function homeView(){const best=stats().best;
   <button class="mode ghost" id="mode-online" onclick="nav('online')"><i class="mi">${IC.globe}</i><span><b>${t('modeOnline')}</b><small>${t('modeOnlineSub')}</small></span></button>
   <div class="row3"><button onclick="nav('history')">${t('historyT')}<small>${LOG().length}${S.group?' · '+t('gTag'):''}</small></button><button onclick="nav('stats')">${t('statsT')}</button><button onclick="nav('guide')">${t('guideT')}</button></div>
   ${best?`<div class="crown">${IC.trophy}<span>${t('bestNow',{n:esc(best.name)})} · ${Math.round(best.r*100)}%</span></div>`:''}
-  <button class="ver" onclick="checkNow()">v${APP.name} · ${t('checkUpd')}</button>`;}
+  <div class="verrow"><button class="ver" onclick="checkNow()">v${APP.name} · ${t('checkUpd')}</button><button class="ver vnew" onclick="whatsNew()">${t('rnT')}</button></div>`;}
 /** Profile (round, start side on Home) with a small menu; then the language flag, theme, settings. */
 const pfBtn=()=>`<button class="ib acc pf" onclick="pfMenu()" aria-label="${t('acctT')}" title="${t('acctT')}">${me()?avatarHtml(me().avatar,me().id,40):IC.user}</button>`;
 const prefBtns=(home?: boolean)=>(home?`<div class="pfrow">${pfBtn()}${bellBtn()}</div>`:'')+`<div class="corner">${home?'':pfBtn()}<button class="ib flag" onclick="toggleLang()" aria-label="${t('lang')}" title="${t('lang')}">${S.lang==='ar'?'\u{1F1F8}\u{1F1E6}':'\u{1F1EC}\u{1F1E7}'}</button><button class="ib" onclick="toggleTheme()" aria-label="${t('theme')}" title="${t('theme')}">${IC.theme}</button><button class="ib" onclick="nav('settings')" aria-label="${t('settingsT')}" title="${t('settingsT')}">${IC.gear}</button></div>`;

@@ -38,6 +38,7 @@
     "src/group.ts",
     "src/friends.ts",
     "src/chat.ts",
+    "src/welcome.ts",
     "src/mp/relay.ts",
     "src/mp/host.ts",
     "src/mp/hostGame.ts",

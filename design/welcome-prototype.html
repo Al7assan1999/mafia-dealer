@@ -1,0 +1,230 @@
+<title>Welcome Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;700&family=Special+Elite&family=El+Messiri:wght@700&family=IBM+Plex+Sans+Arabic:wght@400;700&display=swap">
+<style>
+/* Shadow theatre: one portrait stage, silhouettes in ink against a sky that changes with each scene; captions and speech bubbles on top.
+   Deliberately dark (the app has two dark looks, Neon and Noir), so a single palette per look. */
+:root{color-scheme:dark;
+  --bg:#0b0a10;--ink:#06050b;--ink2:#1b1726;--rim:#ffffff30;--text:#f4f2f8;--mute:#a59fb3;--acc:#ff2e63;--acc2:#ff8a3d;
+  --doc:#3ce0a0;--det:#5aa2ff;--maf:#ff4d7d;--cit:#ffc65a;
+  --dawn1:#2a1745;--dawn2:#c2456a;--dawn3:#ffb06a;
+  --night1:#04030b;--night2:#141236;
+  --morn1:#1d2638;--morn2:#6f8399;
+  --red1:#1a0207;--red2:#6b0a1d;
+  --star:#fff;--chalk:#f4f2f8;
+  --head:'Readex Pro',system-ui,sans-serif;--body:'Readex Pro',system-ui,sans-serif}
+[data-look=noir]{--bg:#0d0c0b;--ink:#080706;--ink2:#1d1a15;--rim:#ece4d42a;--text:#ece4d4;--mute:#a39a8b;--acc:#b3241f;--acc2:#d4b483;
+  --doc:#7fb08b;--det:#86a6c9;--maf:#c0392b;--cit:#b08d4a;
+  --dawn1:#1e1a16;--dawn2:#6e5a43;--dawn3:#c9b08a;--night1:#050505;--night2:#1a1815;--morn1:#1c1b19;--morn2:#6d6658;
+  --red1:#120404;--red2:#4a0d0b;--star:#ece4d4;--chalk:#ece4d4;
+  --head:'Special Elite','El Messiri',serif;--body:'IBM Plex Sans Arabic',system-ui,sans-serif}
+[dir=rtl]{--head:'El Messiri',system-ui,serif;--body:'IBM Plex Sans Arabic',system-ui,sans-serif}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:var(--body);overflow:hidden}
+*{box-sizing:border-box}button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+button:focus-visible{outline:2px solid var(--acc2);outline-offset:2px}
+
+/* prototype-only controls (not part of the welcome itself) */
+.proto{position:fixed;z-index:30;top:calc(8px + env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;font-family:'Readex Pro',system-ui,sans-serif;direction:ltr}
+.proto button{padding:6px 11px;border-radius:99px;background:#ffffff14;border:1px solid #ffffff24;font-size:12.5px;font-weight:700;color:#f4f2f8}
+.proto button.on{background:#f4f2f8;color:#0b0a10}.proto .lbl{font-size:11px;color:#a59fb3;letter-spacing:.08em;text-transform:uppercase;margin-inline-end:2px}
+
+/* the stage */
+.app{position:fixed;inset:0;display:grid;place-items:center;background:var(--ink)}
+.wl{position:relative;width:min(100%,480px);height:100%;overflow:hidden;background:var(--night1);isolation:isolate;user-select:none;-webkit-user-select:none}
+.wl svg.scene{position:absolute;inset:0;width:100%;height:100%;display:block}
+.layer{transition:opacity 1.4s ease}
+.sky-dawn,.sky-night,.sky-morn,.sky-red,.stars,.sun,.moon,.crowd,.chalk,.spot,.walkers,.hero,.vign{opacity:0}
+.wl.s1 .sky-dawn,.wl.s1 .sun,.wl.s1 .walkers{opacity:1}
+.wl.s2 .sky-night,.wl.s2 .stars,.wl.s2 .moon{opacity:1}
+.wl.s3 .sky-morn,.wl.s3 .crowd,.wl.s3 .chalk,.wl.s3 .spot{opacity:1}
+.wl.s4 .sky-morn,.wl.s5 .sky-night,.wl.s5 .stars{opacity:1}
+.wl.s4 .crowd,.wl.s5 .crowd{opacity:.35}
+.wl.s4 .vign,.wl.s5 .vign,.wl.s6 .vign{opacity:1}
+.wl.s6 .sky-red{opacity:1}.wl.end .sky-night{opacity:1}
+.wl.s4 .hero.doc,.wl.s5 .hero.det,.wl.s6 .hero.maf{opacity:1}
+/* the sun rises, the moon climbs */
+.sun{transform:translateY(120px);transition:opacity 1.2s,transform 3.2s cubic-bezier(.2,.7,.2,1)}.wl.s1 .sun{transform:none}
+.moon{transform:translateY(90px);transition:opacity 1.2s,transform 3s ease-out}.wl.s2 .moon{transform:none}
+/* windows: light up at dawn, go dark one by one at night */
+.win{fill:#ffd27a;opacity:0;transition:opacity .5s ease var(--d,0s)}[data-look=noir] .win{fill:#e8cf9a}
+.wl.s1 .win{opacity:.95}.wl.s3 .win{opacity:.25}
+/* citizens walk */
+.walkers{transition:opacity 1s}.walkers .w1{animation:walk 9s linear both}.walkers .w2{animation:walk2 9s linear both}
+.walkers .bob{animation:bob .55s ease-in-out infinite alternate}
+@keyframes walk{from{transform:translateX(-60px)}to{transform:translateX(150px)}}
+@keyframes walk2{from{transform:translateX(420px)}to{transform:translateX(220px)}}
+@keyframes bob{to{transform:translateY(-3px)}}
+.wave{transform-origin:6px -50px;animation:wave .5s ease-in-out infinite alternate}@keyframes wave{from{transform:rotate(-20deg)}to{transform:rotate(25deg)}}
+/* the sound: rings and a shake */
+.ring{fill:none;stroke:var(--text);stroke-width:2;opacity:0}
+.wl.s2 .ring{animation:ring 1.6s cubic-bezier(.1,.7,.2,1) both}.wl.s2 .ring.r2{animation-delay:1.85s}.wl.s2 .ring.r3{animation-delay:2s}.wl.s2 .ring.r1{animation-delay:1.7s}
+@keyframes ring{0%{r:4;opacity:.9;stroke-width:5}100%{r:240;opacity:0;stroke-width:1}}
+.wl.s2 .shake{animation:shake .5s linear 1.7s both}
+@keyframes shake{0%,100%{transform:none}15%{transform:translate(-7px,4px)}30%{transform:translate(6px,-5px)}45%{transform:translate(-5px,-3px)}60%{transform:translate(4px,5px)}75%{transform:translate(-3px,2px)}}
+.flash{position:absolute;inset:0;background:var(--text);opacity:0;pointer-events:none}.wl.s2 .flash{animation:flash .5s ease-out 1.7s both}@keyframes flash{0%{opacity:0}10%{opacity:.35}100%{opacity:0}}
+/* the body: chalk outline draws itself, a spotlight */
+.chalk path{fill:none;stroke:var(--chalk);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:420;stroke-dashoffset:420}
+.wl.s3 .chalk path{animation:draw 2s ease .6s forwards}@keyframes draw{to{stroke-dashoffset:0}}
+.crowd .f{transition:transform 1.4s cubic-bezier(.2,.7,.2,1)}.wl:not(.s3):not(.s4):not(.s5) .crowd .f{transform:translateY(40px)}
+/* role close-ups */
+.hero{transition:opacity .8s ease}.hero .rise{transform:translateY(60px);transition:transform 1s cubic-bezier(.2,.8,.2,1)}
+.wl.s4 .hero.doc .rise,.wl.s5 .hero.det .rise,.wl.s6 .hero.maf .rise{transform:none}
+.pulse{fill:none;stroke-width:3;opacity:0}.wl.s4 .pulse{animation:pulse 1.6s ease-out .4s infinite}@keyframes pulse{0%{r:30;opacity:.8}100%{r:120;opacity:0}}
+.lens{opacity:0}.wl.s5 .lens{opacity:1;animation:sweep 2.6s ease-in-out .3s both}@keyframes sweep{0%{transform:translateX(-120px)}50%{transform:translateX(120px)}100%{transform:translateX(0)}}
+.eyes circle{fill:var(--maf);opacity:0}.wl.s6 .eyes circle{animation:eyes .4s ease 1s forwards}@keyframes eyes{to{opacity:1}}
+.wl.s6 .hero.maf .rise{animation:loom 3s ease-in 1.2s forwards}@keyframes loom{to{transform:scale(1.08) translateY(-6px)}}
+
+/* captions, speech, the shout, the title */
+.cap{position:absolute;left:max(20px,env(safe-area-inset-left,0px));right:max(20px,env(safe-area-inset-right,0px));top:calc(18% + env(safe-area-inset-top,0px));
+  text-align:center;font-family:var(--head);font-size:clamp(22px,6.4vw,30px);line-height:1.25;text-wrap:balance;text-shadow:0 2px 18px #000c;
+  opacity:0;transform:translateY(10px);transition:opacity .8s ease,transform .8s ease}
+.cap.on{opacity:1;transform:none}
+.bang{position:absolute;left:0;right:0;top:40%;text-align:center;font-family:var(--head);font-weight:700;font-size:clamp(54px,18vw,92px);letter-spacing:.04em;color:var(--text);opacity:0;pointer-events:none}
+.wl.s2 .bang{animation:bang 1.4s cubic-bezier(.2,1.6,.4,1) 1.7s both}
+@keyframes bang{0%{opacity:0;transform:scale(.3) rotate(-8deg)}25%{opacity:1;transform:scale(1.15) rotate(-6deg)}40%{transform:scale(1) rotate(-4deg)}80%{opacity:1}100%{opacity:0;transform:scale(1.05) rotate(-4deg)}}
+.say{position:absolute;left:max(18px,env(safe-area-inset-left,0px));right:max(18px,env(safe-area-inset-right,0px));top:calc(14% + env(safe-area-inset-top,0px));opacity:0;transform:translateY(12px);transition:opacity .6s ease,transform .6s ease}
+.say.on{opacity:1;transform:none}
+.say .who{font-family:var(--head);font-size:13px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;margin:0 0 8px 6px;color:var(--c)}
+[dir=rtl] .say .who{letter-spacing:0;font-size:17px;margin:0 6px 8px 0}
+.say .bub{position:relative;background:#0b0a10e6;border:1.5px solid var(--c);border-radius:20px;padding:16px 18px;font-size:clamp(19px,5.4vw,24px);line-height:1.4;min-height:3.2em;box-shadow:0 0 34px -10px var(--c)}
+[data-look=noir] .say .bub{border-radius:4px;background:#0d0c0be6}
+.say .bub::after{content:'';position:absolute;bottom:-11px;left:50%;width:20px;height:20px;background:inherit;border-right:1.5px solid var(--c);border-bottom:1.5px solid var(--c);transform:translateX(-50%) rotate(45deg)}
+.ha{position:absolute;left:0;right:0;top:calc(52% + env(safe-area-inset-top,0px));text-align:center;font-family:var(--head);font-weight:700;color:var(--maf);font-size:clamp(40px,13vw,64px);direction:ltr}
+.ha span{display:inline-block;opacity:0;margin:0 .12em}
+.ha.on span{animation:ha .5s cubic-bezier(.2,1.8,.4,1) both,quake .12s linear .5s infinite}
+.ha.on span:nth-child(2){animation-delay:.45s,.95s}.ha.on span:nth-child(3){animation-delay:.9s,1.4s}
+@keyframes ha{from{opacity:0;transform:scale(.2)}to{opacity:1;transform:scale(1)}}
+@keyframes quake{0%{translate:0 0}25%{translate:-2px 1px}50%{translate:2px -1px}75%{translate:-1px -2px}}
+.title{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:14px;text-align:center;opacity:0;pointer-events:none;transition:opacity 1s ease}
+.wl.end .title{opacity:1;pointer-events:auto}
+.mark{width:96px;height:96px;border-radius:28px;display:grid;place-items:center;background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 18px 50px -12px var(--acc);transform:scale(.6);transition:transform .9s cubic-bezier(.2,1.6,.4,1)}
+[data-look=noir] .mark{background:none;border:2px solid var(--acc);border-radius:6px;box-shadow:none;transform:scale(.6) rotate(-6deg)}
+.wl.end .mark{transform:scale(1)}[data-look=noir] .wl.end .mark{transform:rotate(-6deg)}
+.mark svg{width:52px;height:52px}[data-look=noir] .mark svg{stroke:var(--acc)}
+.title h1{margin:0;font-family:var(--head);font-size:clamp(34px,10vw,46px);line-height:1.1}
+.title p{margin:0;color:var(--mute);font-size:17px}
+.title .go{margin-top:18px;font-size:14px;color:var(--mute);letter-spacing:.12em;text-transform:uppercase;animation:blink 1.6s ease-in-out infinite}
+[dir=rtl] .title .go{letter-spacing:0;font-size:16px}@keyframes blink{50%{opacity:.35}}
+/* skip + progress */
+.skip{position:absolute;z-index:5;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));padding:9px 16px;border-radius:99px;background:#00000066;border:1px solid #ffffff30;font-size:14px;font-weight:700;color:var(--text);backdrop-filter:blur(6px)}
+[dir=rtl] .skip{right:auto;left:max(16px,env(safe-area-inset-left,0px))}
+.prog{position:absolute;z-index:5;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));display:flex;gap:4px}
+.prog i{flex:1;height:3px;border-radius:2px;background:#ffffff26;overflow:hidden}.prog i b{display:block;height:100%;width:0;background:var(--text)}
+.prog i.done b{width:100%}.prog i.now b{animation:fill var(--t) linear forwards}@keyframes fill{to{width:100%}}
+.hint{position:absolute;z-index:5;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0px));text-align:center;font-size:12px;color:#ffffffaa;opacity:0;transition:opacity .6s}.wl.s1 .hint{opacity:1}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.3s!important}}
+</style>
+
+<div class="proto" aria-label="Prototype controls">
+  <span class="lbl">Prototype</span>
+  <button id="replay" type="button">Replay</button>
+  <button id="look-neon" type="button" class="on">Neon</button><button id="look-noir" type="button">Noir</button>
+  <button id="lang-en" type="button" class="on">English</button><button id="lang-ar" type="button">العربية</button>
+</div>
+<div class="app"><div class="wl" id="wl" role="img" aria-label="Welcome animation"></div></div>
+
+<script>
+const TXT={
+ en:{cap1:'A quiet town. Everyone knows everyone.',cap2:'Then one night… something sounded wrong.',bang:'CRACK!',cap3:'Someone is dead.',
+     doc:'The Doctor',docL:'It could happen to anyone. I’ll keep you safe tonight.',det:'The Detective',detL:'I swear I’ll find them.',
+     maf:'The Mafia',mafL:'You… I’ll get you all.',ha:['HA','HA','HA'],title:'Mafia Dealer',tag:'Who can you trust?',go:'Tap to start',skip:'Skip',hint:'Tap to move on'},
+ ar:{cap1:'بلدة هادئة. الجميع يعرف الجميع.',cap2:'ثم في إحدى الليالي… سُمع صوت غريب.',bang:'طَخ!',cap3:'أحدهم مات.',
+     doc:'الطبيب',docL:'قد يحدث هذا لأيٍّ منا. سأحميكم الليلة.',det:'المحقق',detL:'أقسم أنني سأجدهم.',
+     maf:'المافيا',mafL:'أنتم… سأنال منكم جميعًا.',ha:['ها','ها','ها'],title:'موزّع المافيا',tag:'بمن تثق؟',go:'اضغط للبدء',skip:'تخطَّ',hint:'اضغط للمتابعة'}};
+// scene, how long it stays (ms)
+const SC=[['s1',3600],['s2',4000],['s3',3400],['s4',3400],['s5',3000],['s6',3800],['end',0]];
+const IC={
+ doc:'<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/>',
+ det:'<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l6 6"/>',
+ maf:'<path d="M2 12h20"/><path d="M5 12l1.6-6.5h10.8L19 12"/><path d="M7 16.5c1.5 1.5 3 2 5 2s3.5-.5 5-2"/>',
+ logo:'<path d="M3 11h18"/><path d="M5 11l1.5-6h11L19 11"/><path d="M7 15a3 3 0 1 0 6 0M11 15a3 3 0 1 0 6 0"/><path d="M10 15h4"/>'};
+let lang='en',look='neon',timer=0,idx=-1,typeT=0;
+const $=s=>document.querySelector(s);
+// one silhouette: head, shoulders, legs (origin at the feet)
+const person=(x,y,s,extra='',cls='f')=>`<g class="${cls}" transform="translate(${x} ${y}) scale(${s})" style="stroke:var(--rim);stroke-width:${(1.4/s).toFixed(2)}"><circle cx="0" cy="-74" r="11"/>
+  <path d="M-15 -58 Q0 -66 15 -58 L18 -22 L11 -22 L9 0 L2 0 L0 -20 L-2 0 L-9 0 L-11 -22 L-18 -22 Z"/>${extra}</g>`;
+const fedora='<path d="M-20 -80 h40 v3 h-40 z"/><path d="M-11 -80 l2 -14 h18 l2 14 z"/>';
+const badge=(k,c)=>`<circle cx="0" cy="-44" r="10" fill="${c}"/><svg x="-7" y="-51" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#06050b" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
+function houses(){let h='',x=-10,i=0;const rnd=n=>((Math.sin(n*12.9898)*43758.5453)%1+1)%1;
+  while(x<370){const w=44+rnd(i)*34,ht=70+rnd(i+7)*70,y=560-ht;
+    h+=`<rect x="${x}" y="${y}" width="${w}" height="${ht}"/><path d="M${x-4} ${y} L${x+w/2} ${y-26-rnd(i+3)*16} L${x+w+4} ${y} Z"/>`;
+    for(let r=0;r<2;r++)for(let c=0;c<2;c++)if(rnd(i*4+r*2+c)>.3)h+=`<rect class="win" style="--d:${(rnd(i+r+c)*1.6).toFixed(2)}s" x="${x+8+c*(w/2-4)}" y="${y+14+r*28}" width="${w/2-14}" height="14" rx="2"/>`;
+    x+=w+2;i++;}return h;}
+function stars(){let s='';for(let i=0;i<46;i++){const x=(Math.sin(i*91.7)*0.5+0.5)*360,y=(Math.sin(i*37.3)*0.5+0.5)*330;s+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${i%5?0.9:1.6}"/>`;}return s;}
+function build(){const T=TXT[lang],C=getComputedStyle(document.documentElement);
+  const col=k=>C.getPropertyValue('--'+k).trim();
+  const crowd=[[70,600,.9],[118,612,1],[242,612,1],[290,600,.9],[42,622,.8],[318,622,.8],[180,640,1.05]].map(([x,y,s],i)=>person(x,y,s)).join('');
+  $('#wl').innerHTML=`<div class="shake" style="position:absolute;inset:0">
+  <svg class="scene" viewBox="0 0 360 700" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+   <defs>
+    <linearGradient id="gDawn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--dawn1)"/><stop offset=".55" style="stop-color:var(--dawn2)"/><stop offset="1" style="stop-color:var(--dawn3)"/></linearGradient>
+    <linearGradient id="gNight" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--night1)"/><stop offset="1" style="stop-color:var(--night2)"/></linearGradient>
+    <linearGradient id="gMorn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--morn1)"/><stop offset="1" style="stop-color:var(--morn2)"/></linearGradient>
+    <linearGradient id="gRed" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--red1)"/><stop offset="1" style="stop-color:var(--red2)"/></linearGradient>
+    <radialGradient id="gSpot" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff" stop-opacity=".42"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="gVign" cx=".5" cy=".62" r=".75"><stop offset=".35" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".85"/></radialGradient>
+    <radialGradient id="gLens" cx=".5" cy=".5" r=".5"><stop offset="0" style="stop-color:var(--det)" stop-opacity=".55"/><stop offset="1" style="stop-color:var(--det)" stop-opacity="0"/></radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
+   </defs>
+   <rect width="360" height="700" style="fill:var(--night1)"/>
+   <rect class="layer sky-dawn" width="360" height="700" fill="url(#gDawn)"/>
+   <rect class="layer sky-night" width="360" height="700" fill="url(#gNight)"/>
+   <rect class="layer sky-morn" width="360" height="700" fill="url(#gMorn)"/>
+   <rect class="layer sky-red" width="360" height="700" fill="url(#gRed)"/>
+   <g class="layer stars" style="fill:var(--star)">${stars()}</g>
+   <circle class="sun" cx="180" cy="420" r="58" fill="#ffd08a" opacity=".9"/>
+   <g class="moon"><circle cx="268" cy="150" r="30" fill="#f4eedd"/><circle cx="280" cy="142" r="27" style="fill:var(--night1)" opacity=".55"/></g>
+   <g style="fill:var(--ink2)" opacity=".6"><path d="M0 520 h30 v-60 h22 v40 h18 v-80 h26 v90 h30 v-50 h24 v70 h28 v-110 h20 v100 h34 v-40 h28 v60 h26 v-70 h30 v90 h24 V640 H0 Z"/></g>
+   <g style="fill:var(--ink2)">${houses()}<rect y="558" width="360" height="142"/></g>
+   <circle class="ring r1" cx="250" cy="470" r="4"/><circle class="ring r2" cx="250" cy="470" r="4"/><circle class="ring r3" cx="250" cy="470" r="4"/>
+   <g class="layer walkers" style="fill:var(--ink)">
+     <g class="w1"><g class="bob">${person(0,610,.95,'<path class="wave" d="M8 -54 l14 -18" style="stroke:var(--ink)" stroke-width="6" stroke-linecap="round"/>','')}</g></g>
+     <g class="w2"><g class="bob">${person(0,616,.85,'','')}</g></g></g>
+   <ellipse class="layer spot" cx="180" cy="610" rx="120" ry="34" fill="url(#gSpot)"/>
+   <g class="layer chalk"><path d="M128 612 q-6 -10 6 -14 l28 -2 q6 -14 18 -10 q12 4 6 16 l34 4 q10 4 0 10 l-26 2 l10 14 q2 8 -8 6 l-18 -12 l-12 14 q-8 4 -8 -6 l6 -14 l-30 4 q-10 -2 -6 -8 z"/></g>
+   <g class="layer crowd" style="fill:var(--ink)">${crowd}</g>
+   <rect class="layer vign" width="360" height="700" fill="url(#gVign)"/>
+   <g class="hero doc"><circle class="pulse" cx="180" cy="540" r="30" style="stroke:var(--doc)"/>
+     <g class="rise"><g filter="url(#glow)" style="fill:var(--doc)" opacity=".75">${person(180,646,2.05,'','')}</g><g style="fill:var(--ink)">${person(180,646,2,badge('doc',col('doc')),'')}</g></g></g>
+   <g class="hero det"><circle class="lens" cx="180" cy="600" r="70" fill="url(#gLens)"/>
+     <g class="rise"><g filter="url(#glow)" style="fill:var(--det)" opacity=".7">${person(180,646,2.05,fedora,'')}</g><g style="fill:var(--ink)">${person(180,646,2,fedora+badge('det',col('det'))+'<g transform="translate(16 -40)"><circle cx="10" cy="-10" r="9" fill="none" style="stroke:var(--ink)" stroke-width="4"/><path d="M4 -4 L-6 8" style="stroke:var(--ink)" stroke-width="5" stroke-linecap="round"/></g>','')}</g></g></g>
+   <g class="hero maf"><g class="rise" style="transform-origin:180px 646px"><g filter="url(#glow)" style="fill:var(--maf)" opacity=".8">${person(180,646,2.12,fedora,'')}</g>
+     <g style="fill:var(--ink)">${person(180,646,2.1,fedora+badge('maf',col('maf')),'')}</g>
+     <g class="eyes" filter="url(#glow)"><circle cx="171" cy="490" r="4"/><circle cx="189" cy="490" r="4"/></g><g class="eyes"><circle cx="171" cy="490" r="2.4"/><circle cx="189" cy="490" r="2.4"/></g></g></g>
+  </svg></div>
+  <div class="flash"></div>
+  <div class="cap" id="cap"></div>
+  <div class="bang">${T.bang}</div>
+  <div class="say" id="say"><div class="who"></div><div class="bub"></div></div>
+  <div class="ha" id="ha">${T.ha.map(h=>`<span>${h}</span>`).join('')}</div>
+  <div class="title"><div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC.logo}</svg></div>
+    <h1>${T.title}</h1><p>${T.tag}</p><div class="go">${T.go}</div></div>
+  <div class="hint">${T.hint}</div>
+  <div class="prog">${SC.slice(0,-1).map(()=>'<i><b></b></i>').join('')}</div>
+  <button class="skip" id="skip" type="button">${T.skip}</button>`;
+  $('#skip').onclick=e=>{e.stopPropagation();go(SC.length-1);};}
+function type(el,txt){clearInterval(typeT);el.textContent='';let i=0;typeT=setInterval(()=>{el.textContent=txt.slice(0,++i);if(i>=txt.length)clearInterval(typeT);},32);}
+function go(n){clearTimeout(timer);idx=n;const [k,ms]=SC[n],T=TXT[lang],wl=$('#wl');
+  wl.className='wl '+k;
+  const cap=$('#cap'),say=$('#say'),ha=$('#ha');
+  const capTxt={s1:T.cap1,s2:T.cap2,s3:T.cap3}[k];
+  cap.classList.remove('on');setTimeout(()=>{if(capTxt){cap.textContent=capTxt;cap.classList.add('on');}},k==='s1'?400:250);
+  const role={s4:['doc',T.doc,T.docL],s5:['det',T.det,T.detL],s6:['maf',T.maf,T.mafL]}[k];
+  say.classList.remove('on');clearInterval(typeT);
+  if(role){setTimeout(()=>{say.style.setProperty('--c',`var(--${role[0]})`);say.querySelector('.who').textContent=role[1];say.classList.add('on');type(say.querySelector('.bub'),role[2]);},500);}
+  ha.classList.toggle('on',false);if(k==='s6')setTimeout(()=>ha.classList.add('on'),1700);
+  document.querySelectorAll('.prog i').forEach((p,i)=>{p.className=i<n?'done':i===n?'now':'';p.style.setProperty('--t',ms+'ms');});
+  $('#skip').hidden=k==='end';
+  if(ms)timer=setTimeout(()=>go(n+1),ms);}
+function play(){document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';document.documentElement.dataset.look=look;build();requestAnimationFrame(()=>requestAnimationFrame(()=>go(0)));}
+$('#wl').addEventListener('click',()=>{if(idx<SC.length-1)go(idx+1);else play();});
+$('#replay').onclick=play;
+const pick=(a,b,on)=>{$(a).classList.toggle('on',on);$(b).classList.toggle('on',!on);};
+$('#look-neon').onclick=()=>{look='neon';pick('#look-neon','#look-noir',true);play();};
+$('#look-noir').onclick=()=>{look='noir';pick('#look-neon','#look-noir',false);play();};
+$('#lang-en').onclick=()=>{lang='en';pick('#lang-en','#lang-ar',true);play();};
+$('#lang-ar').onclick=()=>{lang='ar';pick('#lang-en','#lang-ar',false);play();};
+play();
+</script>

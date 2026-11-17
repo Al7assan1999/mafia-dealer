@@ -29,15 +29,14 @@ function keepPlaying(){$('modal').innerHTML='';enterGame();}
 function quitGame(){hush();$('modal').innerHTML='';if(G&&G.mp){stopTimer();G=null;hostBackRoom();V='host';render();return;}stopTimer();save();G=null;resumeOffer=!!S.game;V='home';render();}
 {const J=lsGet(JNK);if(J&&(S.mpName||'').trim()&&(J.online||hasNet()))setTimeout(()=>{V='home';J.online?joinOnline(J.online.code):joinStart();},0);}
 for(const m of Object.keys(NARR)){const f=NARR[m];NARR[m]=(...a)=>{f(...a);if(MP.role==='host'&&MP.online&&HN&&HN.bc)HN.bc({narr:m,a});};}
-const INTRO=[['users','introT1','introD1'],['eye','introT2','introD2'],['moon','introT3','introD3']];
-function showIntro(i){i=i||0;const [ic,tt,dd]=INTRO[i];
-  const body=`<div class="idots">${INTRO.map((x,j)=>`<i class="${j===i?'on':''}"></i>`).join('')}</div><div class="icard"><div class="iorb">${IC[ic]}</div><h2 class="h">${t(tt)}</h2><p>${t(dd)}</p></div>
-   <div class="row2"><button class="btn ghost" onclick="introDone()">${t('iSkip')}</button><button class="btn primary" onclick="${i<INTRO.length-1?`showIntro(${i+1})`:'introDone()'}">${t(i<INTRO.length-1?'iNext':'iGo')}</button></div>`;
-  const el=document.querySelector('#modal .intro');if(el)el.innerHTML=body;else $('modal').innerHTML=`<div class="intro">${body}</div>`;}
-function introDone(){S.intro=1;save();$('modal').innerHTML='';}
-if(!S.intro&&!navigator.webdriver)setTimeout(showIntro,400);  // automated test browsers skip it
-if(S.lastVer&&S.lastVer<APP.code)setTimeout(()=>toast(t('updatedTo',{v:APP.name})),900);if(S.lastVer!==APP.code){S.lastVer=APP.code;save();}  // v2.13: the update worked
-setTimeout(deepLink,700);setTimeout(()=>checkUpdate(true),1500);setTimeout(acctRefresh,1800);setTimeout(gSync,2000);setTimeout(()=>{inboxTick();friendsLoad(true);},2500);  // every app start: version.json is a free static file
+/* the welcome (v2.14): every start, unless switched off in Settings, or the app opens into something (a room it rejoins, an invite link);
+   automated test browsers skip it */
+const LINK0=(()=>{try{return (window.Net&&Net.link&&Net.link())||'';}catch(e){return '';}})();
+if(S.welcome!==false&&!navigator.webdriver&&!LINK0&&!lsGet(JNK))showWelcome();
+if(S.lastVer&&S.lastVer<APP.code)S.rnShow=APP.code;if(S.lastVer!==APP.code){S.lastVer=APP.code;save();}  // just updated: What's new once (v2.14)
+setTimeout(()=>deepLink(LINK0),700);setTimeout(()=>checkUpdate(true).then(L=>{if(S.rnShow!==APP.code)return;S.rnShow=0;save();  // the update worked: its notes, or a line when offline
+  const show=()=>{if(L&&L.history&&L.history.some(r=>r.code===APP.code)&&!G&&!MP.role&&!$('modal').innerHTML)whatsNew();else toast(t('updatedTo',{v:APP.name}));};
+  if(WL.on)WL.after=show;else show();}),1500);  // after the welcomesetTimeout(acctRefresh,1800);setTimeout(gSync,2000);setTimeout(()=>{inboxTick();friendsLoad(true);},2500);  // every app start: version.json is a free static file
 setInterval(inboxTick,10000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)inboxTick();});  // friends: invites, requests, online status
-window.addEventListener('popstate',()=>{if(chView){chClose();return;}if(S.fpanel&&dockShown()){dockOpen(false);return;}if(G){if(G.phase==='end'){finish();return;}showQuit();}else if(inRoom()){try{history.pushState({v:1},'');}catch(e){}askLeaveRoom();}else if(V!=='home')popNav();});
+window.addEventListener('popstate',()=>{if(WL.on){welcomeEnd();return;}if(chView){chClose();return;}if(S.fpanel&&dockShown()){dockOpen(false);return;}if(G){if(G.phase==='end'){finish();return;}showQuit();}else if(inRoom()){try{history.pushState({v:1},'');}catch(e){}askLeaveRoom();}else if(V!=='home')popNav();});
 render();

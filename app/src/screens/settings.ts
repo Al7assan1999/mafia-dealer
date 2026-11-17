@@ -13,7 +13,7 @@ function settingsView(){
    +grp(IC.crown,t('g_host'),stepRow(t('h_buzz'),t('h_buzz_d'),S.host.buzzMax?S.host.buzzMax:t('off'),'buzStep')
      +`<div class="tg"><div class="rt"><b>${t('h_kick')}</b><span>${t('h_kick_d')}</span></div></div>${seg([['lobby',t('k_lobby')],['any',t('k_any')]],S.host.kick,'setKick')}`)
    +(typeof groupBlock==='function'?grp(IC.users,t('g_group'),groupBlock()):'')
-   +grp(IC.eye,t('g_more'),`<button class="tg wide" onclick="showIntro()"><div class="rt"><b>${t('replayIntro')}</b></div><span class="go">›</span></button><button class="tg wide" id="chk" onclick="checkNow()"><div class="rt"><b>${t('checkUpd')}</b><span>${S.latest&&S.latest.at?t('lastCheck',{v:esc(S.latest.name),d:fdate(S.latest.at)}):''}</span></div><span class="go">›</span></button><div class="tg"><div class="rt"><b>${t('version')}</b></div><span class="vv">v${APP.name}</span></div>`);}
+   +grp(IC.eye,t('g_more'),`<div class="tg" onclick="S.welcome=S.welcome===false;persist();render()"><div class="rt"><b>${t('wlAtStart')}</b><span>${t('wlAtStartD')}</span></div><div class="sw ${S.welcome!==false?'on':''}"></div></div><button class="tg wide" onclick="showWelcome()"><div class="rt"><b>${t('wlReplay')}</b></div><span class="go">›</span></button><button class="tg wide" id="chk" onclick="checkNow()"><div class="rt"><b>${t('checkUpd')}</b><span>${S.latest&&S.latest.at?t('lastCheck',{v:esc(S.latest.name),d:fdate(S.latest.at)}):''}</span></div><span class="go">›</span></button><div class="tg"><div class="rt"><b>${t('version')}</b></div><span class="vv">v${APP.name}</span></div>`);}
 function setLang(l){S.lang=l;persist();render();}
 function setTheme(x){S.theme=x;persist();render();}
 function setKick(k){S.host.kick=k;persist();render();}

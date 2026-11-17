@@ -57,7 +57,7 @@ function joinCode(code: string){if(MP.online&&MP.online.code===code&&MP.role)ret
     $('modal').innerHTML='';MP.lastMode='online';V='home';joinOnline(code);};
   if(G||MP.role)ask(t('fLeaveQ'),t('fLeaveD'),t('fJoin'),go);else go();}
 /** The app was opened (or brought back) by an invite link https://<relay>/j/<code> (Android app link, v2.11). */
-function deepLink(){let u='';try{u=(window.Net&&Net.link&&Net.link())||'';}catch(e){}
+function deepLink(u?: string){if(u==null)try{u=(window.Net&&Net.link&&Net.link())||'';}catch(e){u='';}if(u&&WL.on)welcomeEnd();  // a link while the welcome plays: straight in
   const m=/\/j\/(\d{6})(?:[/?#]|$)/.exec(u);if(m)joinCode(m[1]);}
 
 /* lists and actions */

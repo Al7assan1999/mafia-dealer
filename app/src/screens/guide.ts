@@ -21,4 +21,4 @@ ar:[
  ['توزيع مقترح',['4–6 لاعبين: مافيا واحد، طبيب، ومحقق ابتداءً من 5 لاعبين.','7–9 لاعبين: 2 مافيا، طبيب، محقق.','10 أو أكثر: 3 مافيا، طبيب، محقق. القاعدة: مافيا واحد لكل 3–4 لاعبين تقريبًا.']],
  ['نصائح',['للمواطنين: راقبوا من يصوّت ضد من. أفراد المافيا قلّما يصوّتون ضد بعضهم.','للمحقق: لا تكشف نفسك مبكرًا، فالمافيا ستقتلك بعدها.','للمافيا: شاركوا في النقاش واتهموا الآخرين. الصمت يثير الشك.']]
 ]};
-function guideView(){return head(t('guideT'))+(GUIDE[S.lang]||GUIDE.en).map(([h,ps])=>`<div class="sec guide"><div class="sh"><h3>${h}</h3></div>${ps.map(x=>`<p>${x}</p>`).join('')}</div>`).join('');}
+function guideView(){return head(t('guideT'))+`<button class="btn ghost" style="margin-bottom:14px" onclick="showWelcome()">${IC.film}${t('wlReplay')}</button>`+(GUIDE[S.lang]||GUIDE.en).map(([h,ps])=>`<div class="sec guide"><div class="sh"><h3>${h}</h3></div>${ps.map(x=>`<p>${x}</p>`).join('')}</div>`).join('');}

@@ -6,10 +6,10 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
 (async()=>{const b=await chromium.launch();const errs=[];
  const mk=async(w,h)=>{const p=await (await b.newContext({viewport:{width:w,height:h},reducedMotion:'reduce'})).newPage();p.on('pageerror',e=>errs.push(e.message));await p.goto(URL);return p;};
  const p=await mk(393,780);
- // 2. tutorial in Noir
- for(const th of ['noir','neon']){await p.evaluate(th=>{S.theme=th;render();showIntro(0);},th);await p.waitForTimeout(200);
-   ok(await p.evaluate(()=>{const c=getComputedStyle(document.querySelector('#modal .intro'));return c.backgroundImage!=='none'||c.backgroundColor!=='rgba(0, 0, 0, 0)';}),th+': the tutorial has a background (Home does not show through)');}
- await p.evaluate(()=>introDone());
+ // 2. the welcome (v2.14 replaced the tutorial) covers Home in both looks
+ for(const th of ['noir','neon']){await p.evaluate(th=>{S.theme=th;render();showWelcome();},th);await p.waitForTimeout(300);
+   ok(await p.evaluate(()=>{const c=getComputedStyle(document.querySelector('#welcome .wl'));return c.backgroundColor!=='rgba(0, 0, 0, 0)'&&c.position==='fixed';}),th+': the welcome has a background (Home does not show through)');
+   await p.evaluate(()=>welcomeEnd());await p.waitForTimeout(600);}
  // 3. rules presets stay on screen
  await p.evaluate(()=>nav('rules'));await p.evaluate(()=>scrollTo(0,600));await p.waitForTimeout(200);
  ok(await p.evaluate(()=>{const r=document.querySelector('.preset').getBoundingClientRect();return scrollY>300&&r.top>=-1&&r.top<5&&r.height>40;}),'Rules: scrolled down, Classic / Beginner / Custom still at the top');

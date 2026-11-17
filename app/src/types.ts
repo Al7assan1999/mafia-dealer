@@ -22,7 +22,9 @@ interface Settings {
   game: Game | null; log: LogEntry[];
   mpName?: string; mpLastHost?: string; relay?: string;
   acct?: { tok: string; u: User } | null;
-  latest?: { code: number; name: string; url: string; notes: string; at: number };
+  latest?: { code: number; name: string; url: string; notes: string; at: number; bullets?: string[]; history?: Release[] };
+  rnShow?: number;
+  welcome?: boolean;  // false = no welcome at start (v2.14)  // just updated to this version: show What's new once
   devKey?: string; group?: { code: string } | null; gcache?: LogEntry[] | null; gsent?: number[]; gsync?: number;
   hideOnline?: boolean;  // "Show me as online" switched off
   fpanel?: boolean;  // friends drawer left open
@@ -38,6 +40,8 @@ interface Friend { id: string; uname: string; display: string; avatar: string; f
 interface Invite { id: number; code: string; at: number; from: Friend; ans?: number }  // ans: "let you in" (v2.13)
 /** A note from the relay (v2.11): kind 'acc' = from accepted my friend request. */
 interface Note { id: number; kind: string; at: number; from: Friend }
+/** One release in version.json's history (v2.14). */
+interface Release { code: number; name: string; date: string; notes: string[] }
 /** The bell's history on this phone (v2.12): k inv | jr | req | acc; st '' waiting, else joined | letin | accepted | declined | dismissed | expired | gone. */
 interface NLog { key: string; k: string; id: any; from: Friend; at: number; code?: string; st: string; done?: number; ans?: number }
 

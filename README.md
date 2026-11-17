@@ -49,6 +49,7 @@ constants it uses.
 | `update.ts`, `accounts.ts`, `group.ts` | Update check and in-app install; accounts; shared group history |
 | `friends.ts` | Friends: screen (tabs, Online/Offline groups), requests, profile card, room invites and Ask to join (banner + bell), notifications bell, invite links, the side drawer |
 | `chat.ts` | Room chat (Everyone + 1:1) through the host, memory only |
+| `welcome.ts` | The welcome animation before Home (shadow theatre, vector only) |
 | `mp/common.ts`, `relay.ts`, `host.ts`, `hostGame.ts`, `client.ts` | Multiplayer: shared state, relay socket, host room, host game, player phone |
 | `main.ts` | `render()`, quitting, the intro, start-up |
 
@@ -71,7 +72,7 @@ python3 verify_apk.py out/MafiaDealer.apk
 ## Release
 ```bash
 cd relay && npm install          # once
-python publish.py "what changed"   # keys: $MAFIA_KEYS or Desktop/Mafia (cf.key); needs relay/.account
+python publish.py "first change" "second change"   # one release-notes bullet per argument (kept in relay/releases.json); keys: $MAFIA_KEYS or Desktop/Mafia (cf.key); needs relay/.account
 ```
 Installed apps see the update via version.json and install it in-app.
 
