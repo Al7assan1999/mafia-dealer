@@ -1,5 +1,15 @@
 [
  {
+  "code": 34,
+  "name": "2.15",
+  "date": "2026-11-17",
+  "notes": [
+   "The welcome now has sound: the town, the night, the blade, the Doctor, the Detective and the Mafia’s laugh, with a mute button.",
+   "Blood splashes and runs down the screen in the killing scene.",
+   "The first time you see the welcome it plays in full; after that you can skip it."
+  ]
+ },
+ {
   "code": 33,
   "name": "2.14",
   "date": "2026-11-17",
