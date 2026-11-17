@@ -9,7 +9,7 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## Current state: v2.10.1 (versionCode 29), built 2026-11-17, not published yet
+## Current state: v2.10.1 (versionCode 29), published on the relay 2026-11-17
 Alhassan's notes after trying v2.10:
 - Chat: the keyboard closed on every send (tapping Send took the focus; Send now keeps it in the box), a long chat could not be scrolled back and reopened at the start. Likely cause (not reproduced on a desktop browser): the messages were redrawn on every screen update (room changes, game ticks) and pulled back to the newest whenever you were near it, so on a phone you could never scroll away. Now they are redrawn only when they change, the view follows new messages only when you are at the newest, and it goes to the newest on opening, after layout, when sending and when the keyboard opens or closes (resize). The box and bubbles use dir=auto (Arabic types right to left). Up to 100 messages per player.
 - Online screen, his choice: Host online on its own row first, then "Or join a friend's room" with the code box and Join on one row. The box keeps digits only (a pasted "482 913" becomes 482913), Join is enabled at exactly 6 digits, and `joinOnline` refuses anything that is not exactly 6 digits after dropping spaces.
