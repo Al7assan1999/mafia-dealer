@@ -24,7 +24,7 @@ interface Settings {
   acct?: { tok: string; u: User } | null;
   latest?: { code: number; name: string; url: string; notes: string; at: number; bullets?: string[]; history?: Release[] };
   rnShow?: number;
-  welcome?: boolean;  // false = no welcome at start (v2.14)
+  welcome?: boolean;  // true = the welcome at every start (off by default since v2.16; it still plays once the first time)
   wlSeen?: boolean; wlMute?: boolean;  // watched to the end once (then Skip shows); welcome sounds muted  // just updated to this version: show What's new once
   devKey?: string; group?: { code: string } | null; gcache?: LogEntry[] | null; gsent?: number[]; gsync?: number;
   hideOnline?: boolean;  // "Show me as online" switched off

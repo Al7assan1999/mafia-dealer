@@ -33,7 +33,7 @@ for(const m of Object.keys(NARR)){const f=NARR[m];NARR[m]=(...a)=>{f(...a);if(MP
    automated test browsers skip it */
 if(S.wlSeen==null&&S.lastVer>=33)S.wlSeen=true;  // watched in v2.14: Skip from now on
 const LINK0=(()=>{try{return (window.Net&&Net.link&&Net.link())||'';}catch(e){return '';}})();
-if(S.welcome!==false&&!navigator.webdriver&&!LINK0&&!lsGet(JNK))showWelcome();
+if((S.welcome===true||!S.wlSeen)&&!navigator.webdriver&&!LINK0&&!lsGet(JNK))showWelcome();  // off unless switched on, but always the first time (v2.16)
 if(S.lastVer&&S.lastVer<APP.code)S.rnShow=APP.code;if(S.lastVer!==APP.code){S.lastVer=APP.code;save();}  // just updated: What's new once (v2.14)
 setTimeout(()=>deepLink(LINK0),700);setTimeout(()=>checkUpdate(true).then(L=>{if(S.rnShow!==APP.code)return;S.rnShow=0;save();  // the update worked: its notes, or a line when offline
   const show=()=>{if(L&&L.history&&L.history.some(r=>r.code===APP.code)&&!G&&!MP.role&&!$('modal').innerHTML)whatsNew();else toast(t('updatedTo',{v:APP.name}));};

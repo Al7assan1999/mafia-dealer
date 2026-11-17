@@ -9,7 +9,14 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## Current state: v2.15 (versionCode 34), published on the relay 2026-11-17 (relay version 9f1acee3; relay code unchanged; publish.py writes an empty one-line `notes`)
+## Current state: v2.16 (versionCode 35), built 2026-11-18, not published yet (relay code unchanged)
+Alhassan's list:
+- The welcome's title stays until a tap (no Home by itself).
+- The welcome is off by default (`S.welcome===true` to play at every start), but it always plays once the first time (`!S.wlSeen`); v2.14/2.15 users already count as seen, so it no longer plays for them unless switched on.
+- New launcher icon, his pick "1B: Fedora over the town" (options page `design/icon-options.html`, private artifact): a shadowed figure in a fedora with glowing red eyes looming over the black town under a red sky. Source `design/icon-1b.svg`; `node build/render_icon.js` renders build/icon_bg.png + icon_fg.png (432 px adaptive layers) and build/icon.png (192 px full icon). It is now a real adaptive icon: build_apk.py writes a resources.arsc with drawable/icon, ic_bg, ic_fg and mipmap/ic_launcher (default = the full icon for Android 7, anydpi-v26 = res/mipmap-anydpi-v26/ic_launcher.xml = background + foreground); the manifest's icon and roundIcon point to mipmap/ic_launcher. `bxml()` is the binary-XML writer (manifest + adaptive icon). verify_apk.py lists every resource entry and config. **Not seen on a phone yet** (the launcher may cache the old icon until the app is updated/reopened).
+- Tests: `test_welcome.js` now 39.
+
+## Previous: v2.15 (versionCode 34), published on the relay 2026-11-17 (relay version 9f1acee3)
 Alhassan's list:
 - Welcome sounds, reviewed on a sound-board prototype (`design/welcome-sounds.html` + `design/sound-kit.js`, private artifact): his picks 1A birdsong + warm chord, 2A crickets + owl + low bell then the crack, 3K1 the blade drawn from its sheath (scrape through steel resonances, a loud SHING) then the hit, no music (he rejected the bell/lament and the sword-slash versions as "not different"), 4C a healing glow, 5C a mystery theme (celesta over low strings), 6A horror drone + swell + our recorded laugh (`CLIPS.v_laugh`). In the app: `app/src/audio/welcomeSfx.ts` (`WSFX`, only the picked sounds; each scene on its own gain, the previous fades), through SND's master, at Settings > Effects volume; a mute button on the welcome (`S.wlMute`). Sound in the welcome only; the game keeps its sounds.
 - Blood in the killing scene (his asks: more realistic, a splash first): at the hit a splash across the upper screen, then 8 streams run down (two reach the bottom) and drops fall off; an SVG filter makes it liquid (gooey blur + alpha threshold), wobbly and wet (specular shine). Scene 3 is 4.4 s. **Smoothness on a phone not checked**: if it stutters, drop the shine (feSpecularLighting) first.

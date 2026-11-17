@@ -75,7 +75,7 @@ function wGo(n: number){clearTimeout(WL.timer);WL.idx=n;const [k,ms]=WSC[n],T=WT
   if(role)setTimeout(()=>{if(WL.idx!==n)return;say.style.setProperty('--c',`var(--w${role[0]})`);say.querySelector('.wl-who').textContent=role[1];say.classList.add('on');wType(say.querySelector('.wl-bub'),role[2]);},500);
   ha.classList.remove('on');if(k==='s6')setTimeout(()=>{if(WL.idx===n)ha.classList.add('on');},1700);
   document.querySelectorAll('#welcome .wl-prog i').forEach((p: HTMLElement,i)=>{p.className=i<n?'done':i===n?'now':'';p.style.setProperty('--t',ms+'ms');});
-  WL.timer=setTimeout(()=>{if(n<WSC.length-1)wGo(n+1);else welcomeEnd();},ms);}
+  if(n<WSC.length-1)WL.timer=setTimeout(()=>wGo(n+1),ms);}  // the title stays until a tap (v2.16)
 /** Plays the welcome; then Home (or what was waiting for it: What's new after an update). */
 function showWelcome(){const el=$('welcome');if(!el||WL.on)return;WL.on=true;WL.idx=-1;WL.first=!S.wlSeen;
   try{history.pushState({v:1},'');}catch(e){}  // phone Back skips it

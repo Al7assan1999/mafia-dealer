@@ -57,7 +57,8 @@ ATTR = {"theme": 0x01010000, "label": 0x01010001, "icon": 0x01010002, "name": 0x
         "versionCode": 0x0101021b, "versionName": 0x0101021c, "targetSdkVersion": 0x01010270,
         "allowBackup": 0x01010280, "hardwareAccelerated": 0x010102d3, "usesCleartextTraffic": 0x010104ec,
         "foregroundServiceType": 0x01010599, "authorities": 0x01010018, "grantUriPermissions": 0x0101001b,
-        "launchMode": 0x0101001d, "scheme": 0x01010027, "host": 0x01010028, "pathPrefix": 0x0101002b, "autoVerify": 0x010104ee}
+        "launchMode": 0x0101001d, "scheme": 0x01010027, "host": 0x01010028, "pathPrefix": 0x0101002b, "autoVerify": 0x010104ee,
+        "drawable": 0x01010199, "roundIcon": 0x0101052c}
 RELAY_HOST = "mafia-relay.mafiadealer.workers.dev"  # invite links https://<relay>/j/<code> open the app (v2.11)
 T_REF, T_STR, T_DEC, T_HEX, T_BOOL = 0x01, 0x03, 0x10, 0x11, 0x12
 
@@ -74,7 +75,7 @@ def build_manifest():
         ("uses-permission", [("a", "name", T_STR, "android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE")], []),
         ("uses-permission", [("a", "name", T_STR, "android.permission.REQUEST_INSTALL_PACKAGES")], []),  # in-app updates
         ("queries", [], [("intent", [], [("action", [("a", "name", T_STR, "android.intent.action.TTS_SERVICE")], [])])]),
-        ("application", [("a", "label", T_STR, "Mafia Dealer"), ("a", "icon", T_REF, 0x7f010000),
+        ("application", [("a", "label", T_STR, "Mafia Dealer"), ("a", "icon", T_REF, IC_LAUNCHER), ("a", "roundIcon", T_REF, IC_LAUNCHER),
                          ("a", "allowBackup", T_BOOL, True), ("a", "hardwareAccelerated", T_BOOL, True), ("a", "usesCleartextTraffic", T_BOOL, True)], [
             ("activity", [("a", "name", T_STR, PKG + ".MainActivity"), ("a", "exported", T_BOOL, True),
                           ("a", "screenOrientation", T_DEC, 1), ("a", "configChanges", T_HEX, 0x4a0),
@@ -94,6 +95,10 @@ def build_manifest():
                          ("a", "foregroundServiceType", T_HEX, 0x10)], []),  # 0x10 = connectedDevice
             ("provider", [("a", "name", T_STR, PKG + ".Apk"), ("a", "authorities", T_STR, PKG + ".apk"), ("a", "exported", T_BOOL, False),
                           ("a", "grantUriPermissions", T_BOOL, True)], [])])])  # lets the installer read cache/update.apk
+    return bxml(tree)
+
+def bxml(tree):
+    """Binary XML (Android's compiled XML) for a (tag, attrs, kids) tree."""
     # collect strings: android attribute names first (ordered by id), matching resource map
     attr_names = set()
     others = []
@@ -148,27 +153,59 @@ def build_manifest():
     return struct.pack("<HHI", 0x0003, 8, 8 + len(chunks)) + bytes(chunks)
 
 # ------------------------------------------------------------------ resources.arsc
-def build_arsc(icon_path):
-    gpool = string_pool([icon_path], utf8=True)
-    tpool = string_pool(["drawable"], utf8=True)
-    kpool = string_pool(["icon"], utf8=True)
-    spec = struct.pack("<HHIBBHI", 0x0202, 16, 16 + 4, 1, 0, 0, 1) + struct.pack("<I", 0)
-    config = struct.pack("<I", 64) + bytes(60)
-    hsize = 20 + len(config)
-    entries_start = hsize + 4
-    entry = struct.pack("<HHI", 8, 0, 0) + struct.pack("<HBBI", 8, 0, T_STR, 0)
-    tchunk = struct.pack("<HHIBBHII", 0x0201, hsize, entries_start + len(entry), 1, 0, 0, 1, entries_start) + config + \
-        struct.pack("<I", 0) + entry
+# Resources (v2.16 adaptive icon). Type 1 drawable: the full icon (Android 7) and the two layers; type 2 mipmap: ic_launcher,
+# the full icon by default and the adaptive-icon XML on Android 8+ (any density). IDs are 0x7f TT EEEE.
+RES = [("drawable", [("icon", {"": "res/drawable/icon.png"}), ("ic_bg", {"": "res/drawable/ic_bg.png"}), ("ic_fg", {"": "res/drawable/ic_fg.png"})]),
+       ("mipmap", [("ic_launcher", {"": "res/drawable/icon.png", "anydpi-v26": "res/mipmap-anydpi-v26/ic_launcher.xml"})])]
+IC_BG, IC_FG, IC_LAUNCHER = 0x7f010001, 0x7f010002, 0x7f020000
+
+def res_config(name):
+    """ResTable_config (64 bytes): '' = default; 'anydpi-v26' = density ANY (offset 14) and sdkVersion 26 (offset 24)."""
+    c = bytearray(64); struct.pack_into("<I", c, 0, 64)
+    if name == "anydpi-v26": struct.pack_into("<H", c, 14, 0xFFFE); struct.pack_into("<H", c, 24, 26)
+    return bytes(c)
+
+def build_arsc(res=RES):
+    paths, keys = [], []
+    for _, ents in res:
+        for k, cfgs in ents:
+            keys.append(k)
+            for p in cfgs.values():
+                if p not in paths: paths.append(p)
+    gpool = string_pool(paths, utf8=True)
+    tpool = string_pool([t for t, _ in res], utf8=True)
+    kpool = string_pool(keys, utf8=True)
+    body = b""
+    for ti, (tname, ents) in enumerate(res):
+        tid = ti + 1
+        flags = b"".join(struct.pack("<I", 0x0400 | 0x0100 if len(c) > 1 else 0) for k, c in ents)  # varies by sdk version and density
+        body += struct.pack("<HHIBBHI", 0x0202, 16, 16 + len(flags), tid, 0, 0, len(ents)) + flags
+        cfgs = []
+        for k, c in ents:
+            for n in c:
+                if n not in cfgs: cfgs.append(n)
+        for cn in cfgs:
+            config = res_config(cn)
+            hsize = 20 + len(config)
+            offs, entries = b"", b""
+            for k, c in ents:
+                if cn in c:
+                    offs += struct.pack("<I", len(entries))
+                    entries += struct.pack("<HHI", 8, 0, keys.index(k)) + struct.pack("<HBBI", 8, 0, T_STR, paths.index(c[cn]))
+                else: offs += struct.pack("<I", 0xFFFFFFFF)
+            es = hsize + len(offs)
+            body += struct.pack("<HHIBBHII", 0x0201, hsize, es + len(entries), tid, 0, 0, len(ents), es) + config + offs + entries
     phsize = 288
     name = PKG.encode("utf-16-le").ljust(256, b"\0")
-    type_off = phsize
-    key_off = phsize + len(tpool)
-    body = tpool + kpool + spec + tchunk
+    body = tpool + kpool + body
     pkg = struct.pack("<HHII", 0x0200, phsize, phsize + len(body), 0x7f) + name + \
-        struct.pack("<IIIII", type_off, 1, key_off, 1, 0) + body
-    assert len(pkg) == phsize + len(body)
+        struct.pack("<IIIII", phsize, len(res), phsize + len(tpool), len(keys), 0) + body
     content = gpool + pkg
     return struct.pack("<HHII", 0x0002, 12, 12 + len(content), 1) + content
+
+def build_adaptive_icon():
+    return bxml(("adaptive-icon", [], [("background", [("a", "drawable", T_REF, IC_BG)], []),
+                                       ("foreground", [("a", "drawable", T_REF, IC_FG)], [])]))
 
 # ------------------------------------------------------------------ zip (aligned)
 def build_zip(files):
@@ -237,10 +274,13 @@ def load_key():
 if __name__ == "__main__":
     dex = build_dex()
     manifest = build_manifest()
-    icon_name = "res/drawable/icon.png"
-    arsc = build_arsc(icon_name)
-    files = [("AndroidManifest.xml", manifest, True), ("classes.dex", dex, True),
-             ("resources.arsc", arsc, False), (icon_name, open(ICON, "rb").read(), False)]
+    arsc = build_arsc()
+    idir = os.path.dirname(os.path.abspath(ICON))  # icon_bg.png / icon_fg.png sit next to icon.png (node build/render_icon.js)
+    files = [("AndroidManifest.xml", manifest, True), ("classes.dex", dex, True), ("resources.arsc", arsc, False),
+             ("res/drawable/icon.png", open(ICON, "rb").read(), False),
+             ("res/drawable/ic_bg.png", open(os.path.join(idir, "icon_bg.png"), "rb").read(), False),
+             ("res/drawable/ic_fg.png", open(os.path.join(idir, "icon_fg.png"), "rb").read(), False),
+             ("res/mipmap-anydpi-v26/ic_launcher.xml", build_adaptive_icon(), True)]
     for root, dirs, names in os.walk(ASSET_DIR):  # includes subfolders (assets/fonts/)
         dirs.sort()
         for fn in sorted(names):

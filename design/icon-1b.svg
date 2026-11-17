@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">
+ <!-- Mafia Dealer launcher icon "1B: Fedora over the town", on Android's 108-unit adaptive-icon grid (the phone shows the middle 72).
+      Layers: #bg = the red sky (background), #fg = the figure, the eyes, the town (foreground). build/render_icon.js renders them. -->
+ <defs><radialGradient id="g7" cx=".5" cy=".4" r=".75"><stop offset="0" stop-color="#b3172e"/><stop offset=".55" stop-color="#560a18"/><stop offset="1" stop-color="#16030a"/></radialGradient>
+  <filter id="f7" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.8"/></filter>
+  <filter id="f8" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.2"/></filter></defs>
+ <g id="bg"><rect width="108" height="108" fill="url(#g7)"/></g>
+ <g id="fg">
+  <g fill="#1c040b" stroke="#ff4d6d" stroke-opacity=".3" stroke-width=".8">
+   <path d="M22 108 Q24 81 54 76 Q84 81 86 108 Z"/><circle cx="54" cy="65" r="11.5"/>
+   <path d="M38 55 L41 36 Q47 30.5 54 34 Q61 30.5 67 36 L70 55 Z"/><ellipse cx="54" cy="55.5" rx="31" ry="6.5"/></g>
+  <rect x="39.4" y="48.5" width="29.2" height="4.8" fill="#3a0812"/>
+  <g filter="url(#f7)" fill="#ff2e45"><ellipse cx="48" cy="65" rx="3.8" ry="2"/><ellipse cx="60" cy="65" rx="3.8" ry="2"/></g>
+  <g fill="#ffd0d6"><ellipse cx="48" cy="65" rx="2.3" ry="1"/><ellipse cx="60" cy="65" rx="2.3" ry="1"/></g>
+  <path d="M0 108 V78 L9 70 L18 78 V74 L26 66 L34 74 V82 H44 V86 H64 V82 H74 V74 L82 66 L90 74 V78 L99 71 L108 78 V108 Z" fill="#050204"/>
+  <g fill="#ffd27a" opacity=".85"><rect x="21.5" y="77" width="3.4" height="4.4" rx=".6"/><rect x="28" y="77" width="3.4" height="4.4" rx=".6"/><rect x="36.5" y="85" width="3.4" height="4" rx=".6"/><rect x="77" y="77" width="3.4" height="4.4" rx=".6"/></g>
+  <rect x="83.5" y="77" width="3.4" height="4.4" rx=".6" fill="#ff2e45"/><rect x="83.5" y="77" width="3.4" height="4.4" rx=".6" fill="#ff2e45" opacity=".7" filter="url(#f8)"/>
+ </g>
+</svg>

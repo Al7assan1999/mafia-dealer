@@ -109,9 +109,14 @@ while q < o + sz:
     t, hs, csz = struct.unpack("<HHI", ar[q:q + 8])
     if t == 0x201:
         tid, fl, r, ec, es = struct.unpack("<BBHII", ar[q + 8:q + 20])
-        eo, = struct.unpack("<I", ar[q + hs:q + hs + 4]); e = q + es + eo
-        esz, efl, key = struct.unpack("<HHI", ar[e:e + 8]); vsz, r0, vt, vd = struct.unpack("<HBBI", ar[e + 8:e + 16])
-        print("arsc: %s 0x%02x%02x0000 %s/%s -> %s" % (name, pid, tid, types[tid - 1], keys[key], g[vd]))
-        assert g[vd] in z.namelist()
+        dens, = struct.unpack("<H", ar[q + 20 + 14:q + 20 + 16]); sdk, = struct.unpack("<H", ar[q + 20 + 24:q + 20 + 26])
+        cfg = (("anydpi" if dens == 0xFFFE else "") + ("-v%d" % sdk if sdk else "")).strip("-") or "default"
+        for i in range(ec):
+            eo, = struct.unpack("<I", ar[q + hs + 4 * i:q + hs + 4 * i + 4])
+            if eo == 0xFFFFFFFF: continue
+            e = q + es + eo
+            esz, efl, key = struct.unpack("<HHI", ar[e:e + 8]); vsz, r0, vt, vd = struct.unpack("<HBBI", ar[e + 8:e + 16])
+            print("arsc: %s 0x%02x%02x%04x %s/%s [%s] -> %s" % (name, pid, tid, i, types[tid - 1], keys[key], cfg, g[vd]))
+            assert g[vd] in z.namelist()
     q += csz
 print("ALL CHECKS PASSED")

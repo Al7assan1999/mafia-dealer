@@ -22,7 +22,8 @@ An Android app that replaces the dealer in the Mafia party game. Built without t
 | `app/assets/audio.js` | Narrator clips and name clips in two voices (base64 Opus), packed by `voice/pack.py` |
 | `build/dexasm.py` | Minimal Dalvik assembler (writes `classes.dex`) |
 | `build/app_dex.py` | Native classes: `MainActivity` (WebView, invite links via `onNewIntent`), `Voice` (TTS bridge, unused now), `Net` (JS bridge, `link()`), `Srv` (HTTP server thread) |
-| `build/build_apk.py` | Writes the binary manifest (incl. the verified app link `https://<relay>/j/<code>`), `resources.arsc`, zips and v2-signs the APK |
+| `build/build_apk.py` | Writes the binary manifest (incl. the verified app link `https://<relay>/j/<code>`), `resources.arsc` with the adaptive launcher icon, zips and v2-signs the APK |
+| `build/render_icon.js` | Renders the launcher icon from `design/icon-1b.svg` (adaptive layers + the full icon for Android 7) |
 | `build/verify_apk.py` | Independent checks of the APK (zip, v2 signature, dex via androguard, manifest, resources) |
 | `tests/` | Playwright tests (single-phone game) |
 | `tests/multiplayer/` | `mock_srv.py` mirrors the in-app server; tests simulate a host and several phones |

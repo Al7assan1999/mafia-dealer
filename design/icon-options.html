@@ -1,0 +1,103 @@
+<title>App Icon Options</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;700&family=Special+Elite&display=swap">
+<style>
+/* Six launcher-icon candidates for Mafia Dealer, each drawn on Android's 108-unit adaptive-icon grid (the phone crops it to its own shape),
+   shown in the three common shapes and on a home screen. Dark page like the app. */
+:root{color-scheme:dark;--bg:#0b0a10;--card:#15121d;--line:#2a2536;--text:#f4f2f8;--mute:#a59fb3;--acc:#ff2e63;--gold:#ffb547}
+html,body{background:var(--bg);color:var(--text)}
+body{font-family:'Readex Pro',system-ui,sans-serif;margin:0}
+main{max-width:980px;margin:0 auto;padding-block:calc(18px + env(safe-area-inset-top,0px)) 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font-size:28px;margin:4px 0 6px;text-wrap:balance}.lead{color:var(--mute);line-height:1.55;margin:0 0 20px;max-width:64ch;font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;max-width:700px}
+.opt{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.opt h2{margin:0;font-size:18px;display:flex;align-items:baseline;gap:10px}.opt h2 b{color:var(--gold);font-size:14px}
+.opt p{margin:0;color:var(--mute);font-size:13.5px;line-height:1.45}
+.shapes{display:flex;gap:14px;align-items:center}
+.ic{width:76px;height:76px;flex:none;overflow:hidden;box-shadow:0 6px 18px #0009}.ic svg{width:100%;height:100%;display:block}
+.c{border-radius:50%}.q{border-radius:32%}.r{border-radius:22%}
+.shapes small{font-size:11px;color:var(--mute);display:block;text-align:center;margin-top:6px}
+.home{border-radius:14px;padding:14px 10px 10px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;background:linear-gradient(160deg,#2b3a55,#14182a 60%,#0d0f19)}
+.home.light{background:linear-gradient(160deg,#cfe0f2,#9fb7d6)}
+.app{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0}.app .ic{width:46px;height:46px;border-radius:50%;box-shadow:0 3px 8px #0006}
+.app span{font-size:10.5px;color:#fff;text-shadow:0 1px 3px #000a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.home.light .app span{color:#1b2030;text-shadow:none}
+.dummy{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:20px}
+.wp{display:flex;gap:6px;margin:0 0 14px}.wp button{font:inherit;font-size:13px;font-weight:700;padding:8px 14px;border-radius:99px;border:1px solid var(--line);background:#ffffff10;color:var(--text);cursor:pointer}
+.wp button.on{background:var(--text);color:var(--bg)}
+.now{border-style:dashed}
+</style>
+<main>
+ <h1>App icon options</h1>
+ <p class="lead">Option 1 and option 1 with the town behind it. Each is a proper Android adaptive icon (a background and a foreground layer), so the phone shapes it itself (circle, squircle or rounded square) instead of shrinking it onto a white plate. Reply with the number you like, or mix ideas.</p>
+ <div class="wp" role="group" aria-label="Wallpaper"><button id="wd" class="on" type="button">Dark wallpaper</button><button id="wl" type="button">Light wallpaper</button></div>
+ <div class="grid" id="grid"></div>
+</main>
+<script>
+// each icon: background + foreground on the 108-unit grid (the visible part is the middle 72; keep the art within the middle 66)
+const CUR='<path d="M3 11h18"/><path d="M5 11l1.5-6h11L19 11"/><path d="M7 15a3 3 0 1 0 6 0M11 15a3 3 0 1 0 6 0"/><path d="M10 15h4"/>';
+const ICONS=[
+ {n:1,name:'Fedora in the dark',note:'The Mafia from the welcome: a black fedora, two red eyes glowing under the brim, on a deep blood-red glow.',
+  svg:`<defs><radialGradient id="g1" cx=".5" cy=".38" r=".7"><stop offset="0" stop-color="#9b1024"/><stop offset=".55" stop-color="#3a0610"/><stop offset="1" stop-color="#0b0206"/></radialGradient>
+   <filter id="f1" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.8"/></filter></defs>
+   <rect width="108" height="108" fill="url(#g1)"/>
+   <path d="M38 58 L41 39 Q47 33 54 37 Q61 33 67 39 L70 58 Z" fill="#07030a" stroke="#ff4d6d" stroke-opacity=".28" stroke-width=".8"/>
+   <rect x="39.2" y="51" width="29.6" height="5" fill="#2a0710"/>
+   <ellipse cx="54" cy="58.5" rx="31" ry="6.5" fill="#07030a" stroke="#ff4d6d" stroke-opacity=".28" stroke-width=".8"/>
+   <g filter="url(#f1)" fill="#ff2e45"><ellipse cx="46.5" cy="68" rx="4.2" ry="2.2"/><ellipse cx="61.5" cy="68" rx="4.2" ry="2.2"/></g>
+   <g fill="#ffd0d6"><ellipse cx="46.5" cy="68" rx="2.6" ry="1.2"/><ellipse cx="61.5" cy="68" rx="2.6" ry="1.2"/></g>`},
+ {n:'1B',name:'Fedora over the town',note:'The Mafia looms like a shadow in the red sky over the welcome\u2019s town, eyes glowing; the town in front, a few windows lit and one red.',
+  svg:`<defs><radialGradient id="g7" cx=".5" cy=".4" r=".75"><stop offset="0" stop-color="#b3172e"/><stop offset=".55" stop-color="#560a18"/><stop offset="1" stop-color="#16030a"/></radialGradient>
+   <filter id="f7" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.8"/></filter></defs>
+   <rect width="108" height="108" fill="url(#g7)"/>
+   <g fill="#1c040b" stroke="#ff4d6d" stroke-opacity=".3" stroke-width=".8">
+    <path d="M22 108 Q24 81 54 76 Q84 81 86 108 Z"/><circle cx="54" cy="65" r="11.5"/>
+    <path d="M38 55 L41 36 Q47 30.5 54 34 Q61 30.5 67 36 L70 55 Z"/><ellipse cx="54" cy="55.5" rx="31" ry="6.5"/></g>
+   <rect x="39.4" y="48.5" width="29.2" height="4.8" fill="#3a0812"/>
+   <g filter="url(#f7)" fill="#ff2e45"><ellipse cx="48" cy="65" rx="3.8" ry="2"/><ellipse cx="60" cy="65" rx="3.8" ry="2"/></g>
+   <g fill="#ffd0d6"><ellipse cx="48" cy="65" rx="2.3" ry="1"/><ellipse cx="60" cy="65" rx="2.3" ry="1"/></g>
+   <path d="M0 108 V78 L9 70 L18 78 V74 L26 66 L34 74 V82 H44 V86 H64 V82 H74 V74 L82 66 L90 74 V78 L99 71 L108 78 V108 Z" fill="#050204"/>
+   <g fill="#ffd27a" opacity=".85"><rect x="21.5" y="77" width="3.4" height="4.4" rx=".6"/><rect x="28" y="77" width="3.4" height="4.4" rx=".6"/><rect x="36.5" y="85" width="3.4" height="4" rx=".6"/><rect x="77" y="77" width="3.4" height="4.4" rx=".6"/></g>
+   <rect x="83.5" y="77" width="3.4" height="4.4" rx=".6" fill="#ff2e45"/><rect x="83.5" y="77" width="3.4" height="4.4" rx=".6" fill="#ff2e45" opacity=".7" style="filter:blur(1.2px)"/>`},
+ {n:2,name:'The dealer’s card',note:'A dealt card with the Mafia hat, a second card behind it: says “dealer” and “game” at a glance.',
+  svg:`<defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1d1626"/><stop offset="1" stop-color="#0b0a10"/></linearGradient>
+   <pattern id="p2" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="4" fill="#9d0f22"/></pattern></defs>
+   <rect width="108" height="108" fill="url(#g2)"/>
+   <g transform="rotate(-14 54 56)"><rect x="34" y="30" width="34" height="48" rx="4" fill="#7c0812" stroke="#ff8a8a" stroke-opacity=".35"/><rect x="38" y="34" width="26" height="40" rx="2" fill="url(#p2)" opacity=".6"/></g>
+   <g transform="rotate(9 58 56)"><rect x="40" y="31" width="34" height="48" rx="4" fill="#f6efe2"/>
+    <text x="44" y="41" font-family="Georgia,serif" font-weight="700" font-size="8" fill="#b3241f">M</text><text x="70" y="77" font-family="Georgia,serif" font-weight="700" font-size="8" fill="#b3241f" transform="rotate(180 70 74.5)">M</text>
+    <svg x="45" y="43" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b3241f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"/><path d="M5 12l1.6-6.5h10.8L19 12"/><path d="M7 16.5c1.5 1.5 3 2 5 2s3.5-.5 5-2"/></svg></g>`},
+ {n:3,name:'Night over the town',note:'The welcome’s skyline at dusk, a pale moon, and one window glowing red: something is wrong in this town.',
+  svg:`<defs><linearGradient id="g3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#120f30"/><stop offset=".55" stop-color="#3b1c52"/><stop offset="1" stop-color="#c2456a"/></linearGradient></defs>
+   <rect width="108" height="108" fill="url(#g3)"/>
+   <circle cx="66" cy="38" r="10" fill="#f4eedd"/><circle cx="70.5" cy="35" r="8.6" fill="#1b1538" opacity=".55"/>
+   <g fill="#0a0812"><path d="M14 108 V70 l9-8 9 8 V66 h8 v-6 l8-7 8 7 v10 h6 V62 l10-9 10 9 v8 h8 v38 Z"/></g>
+   <rect x="49" y="70" width="5" height="6" rx="1" fill="#ff2e45"/><rect x="49" y="70" width="5" height="6" rx="1" fill="#ff2e45" opacity=".6" style="filter:blur(1px)"/>
+   <rect x="68" y="72" width="4" height="5" rx="1" fill="#ffd27a" opacity=".35"/>`},
+ {n:4,name:'Blood drop',note:'A single glossy drop of blood with the Mafia hat cut into it. Simple and bold, readable even very small.',
+  svg:`<defs><linearGradient id="g4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d81b2a"/><stop offset="1" stop-color="#5a0008"/></linearGradient></defs>
+   <rect width="108" height="108" fill="#0e0b12"/>
+   <path d="M54 23 C54 23 33 49 33 63 A21 21 0 0 0 75 63 C75 49 54 23 54 23 Z" fill="url(#g4)"/>
+   <ellipse cx="45" cy="56" rx="3.2" ry="7" fill="#fff" opacity=".28" transform="rotate(20 45 56)"/>
+   <svg x="40" y="55" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0e0b12" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"/><path d="M5 12l1.6-6.5h10.8L19 12"/><path d="M7 16.5c1.5 1.5 3 2 5 2s3.5-.5 5-2"/></svg>`},
+ {n:5,name:'The masquerade',note:'A white eye mask on the app’s pink-to-orange: mystery and hidden identities, bright and friendly.',
+  svg:`<defs><linearGradient id="g5" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff2e63"/><stop offset="1" stop-color="#ff8a3d"/></linearGradient>
+   <filter id="f5" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="2.5" stdDeviation="2" flood-color="#5a0018" flood-opacity=".45"/></filter></defs>
+   <rect width="108" height="108" fill="url(#g5)"/>
+   <path filter="url(#f5)" fill="#fff" fill-rule="evenodd" d="M27 52 C28 43 42 41 54 47 C66 41 80 43 81 52 C80 63 67 66 54 59 C41 66 28 63 27 52 Z
+     M35.5 53 a7 4.6 -8 1 0 14 0 a7 4.6 -8 1 0 -14 0 Z M58.5 53 a7 4.6 8 1 0 14 0 a7 4.6 8 1 0 -14 0 Z"/>`},
+ {n:6,name:'Today’s mark, redrawn',note:'The current hat-and-glasses mark, bolder and full-bleed on the app gradient, without the frame that made it look boxed in.',
+  svg:`<defs><linearGradient id="g6" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff2e63"/><stop offset="1" stop-color="#ff8a3d"/></linearGradient></defs>
+   <rect width="108" height="108" fill="url(#g6)"/>
+   <svg x="31" y="31" width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">${CUR}</svg>`}];
+// every copy gets its own ids (one page shows each icon several times)
+const svg=(i,s)=>{const k='_'+i.n+'_'+(svgN++);return `<svg viewBox="18 18 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Option ${i.n}: ${i.name}">${s.replace(/id="(\w+)"/g,'id="$1'+k+'"').replace(/url\(#(\w+)\)/g,'url(#$1'+k+')')}</svg>`;};
+let svgN=0;
+const dummy=(bg,glyph,l)=>`<div class="app"><div class="dummy" style="background:${bg}">${glyph}</div><span>${l}</span></div>`;
+document.getElementById('grid').innerHTML=ICONS.filter(i=>i.n===1||i.n==='1B').map(i=>`<section class="opt" aria-label="Option ${i.n}"><h2><b>${i.n}</b>${i.name}</h2>
+  <div class="shapes"><div><div class="ic c">${svg(i,i.svg)}</div><small>Circle</small></div><div><div class="ic q">${svg(i,i.svg)}</div><small>Squircle</small></div><div><div class="ic r">${svg(i,i.svg)}</div><small>Rounded</small></div></div>
+  <div class="home">${dummy('#3a86ff','⏰','Clock')}<div class="app"><div class="ic">${svg(i,i.svg)}</div><span>Mafia Dealer</span></div>${dummy('#2ec4b6','✉','Messages')}${dummy('#ffbe0b','♫','Music')}</div>
+  <p>${i.note}</p></section>`).join('');
+const set=l=>{document.querySelectorAll('.home').forEach(h=>h.classList.toggle('light',l));document.getElementById('wl').classList.toggle('on',l);document.getElementById('wd').classList.toggle('on',!l);};
+document.getElementById('wd').onclick=()=>set(false);document.getElementById('wl').onclick=()=>set(true);
+</script>
