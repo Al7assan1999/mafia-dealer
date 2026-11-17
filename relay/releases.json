@@ -1,5 +1,15 @@
 [
  {
+  "code": 35,
+  "name": "2.16",
+  "date": "2026-11-17",
+  "notes": [
+   "A new app icon: the Mafia in his fedora, eyes glowing, looming over the town. It now fits your phone's icon shape.",
+   "The welcome waits on its last screen until you tap.",
+   "The welcome is now off by default (it still plays once for new players); turn it on in Settings."
+  ]
+ },
+ {
   "code": 34,
   "name": "2.15",
   "date": "2026-11-17",
