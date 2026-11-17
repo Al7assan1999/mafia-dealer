@@ -9,7 +9,8 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## Current state: v2.11 (versionCode 30), built 2026-11-17, not published yet
+## Current state: v2.11 (versionCode 30), published on the relay 2026-11-17 (relay version d0131aa9)
+Open question for Alhassan (decide later): Let in currently sends a normal invite back (the asker auto-joins if their app still remembers asking); option: make it its own "X let you in" message.
 Alhassan's list of 2026-11-17 (plan approved; his choices: Friends "Tabs + status pills", bell "Banner + bell", accepted notes kept 7 days, Telegram "App link + fallback page"):
 - Fixed: the tutorial was see-through in Noir. Noir's `--bgfx` ends with a colour, so `background:var(--bgfx),var(--bg)` was invalid (a colour may only be the last layer) and dropped; Noir now uses `var(--bgfx)` alone.
 - Fixed: Rules presets (Classic / Beginner / Custom) stay at the top while scrolling (sticky).
