@@ -9,7 +9,7 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## Current state: v2.12 (versionCode 31), built 2026-11-17, not published yet (app only; the relay is unchanged since v2.11)
+## Current state: v2.12 (versionCode 31), published on the relay 2026-11-17 (relay version aa11b100; relay code unchanged since v2.11)
 Alhassan's list (plan approved; his choices: minimize "Lobby only", return "Bar at the top", bell history "On this phone"):
 - Minimize a room (lobby only, host and players): a Minimize button in the lobby header (`roomMin`) goes Home while the room keeps running. On every menu screen a bar at the top (`#rbar`, `rbarDraw`) says "Your room · N players" / "In X's room" and goes back (`roomBack`); the chat button stays. Minimized players are pulled back when roles are dealt (with buzzFx) or when the room ends for them (kicked, closed...). Starting an Offline game, hosting or joining another room while minimized asks "Leave this room?" first (`leaveFirst`). `roomMinned()` counts only a live room (host, or a player whose status is ok/lost/joining/search). During a game nothing changes.
 - The invite / Ask-to-join banner comes from the top, just under the header row (and under the room bar), so Back, profile and bell stay tappable.
