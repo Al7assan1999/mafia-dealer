@@ -5,7 +5,9 @@
  * they react only to messages only out players see, and mention only out players. The host checks everything.
  * Wi-Fi: the host adds my messages to my state (host phone memory). Online: sent live to my phone, never through the relay's stored state. */
 interface ChatMsg { i: number; f: number; n: string; to: number; x: string; d?: number; k?: string; at?: number; re?: number; mt?: number[]; r?: Record<string,number[]>; e?: number; pk?: string; fail?: number }
-const CH_RX=['\u{1F44D}','❤️','\u{1F602}','\u{1F62E}','\u{1F52A}','\u{1F92B}'];  // 👍 ❤️ 😂 😮 🔪 (suspicious) 🤫 (lying)
+const CH_RX=['\u{1F44D}','❤️','\u{1F602}','\u{1F62E}','\u{1F52A}','\u{1F92B}',  // 👍 ❤️ 😂 😮 🔪 (suspicious) 🤫 (lying): the quick six
+  '😡','🤬','😢','😭','💔','🖕','🙏','🔥','💀','🤔','🙄','😱','🤡','👀','👏','😈','🥲','😴','🤝','💯','🎯','🐀','🕵️','🩸'];  // v2.19: behind + (🐀 = snitch)
+const CH_RXQ=6,CH_RXV=40;  // quick ones on the bar; the host version that knows all of them
 let CH: ChatMsg[]=[];  // host: the whole room. player: what the host sends me
 let chSeq=0,chMe=0;let chRate: Record<number,number[]>={},chRxRate: Record<number,number[]>={},chSent: Record<string,string>={};
 let chPend: {k: string; to: number; x: string; at: number; t0: number; re?: number; fail?: number}[]=[];  // player: sent, not back from the host yet (fail: not back in 8 s)
@@ -42,7 +44,7 @@ function chEditIn(h: number,i: any,x: any,mt?: any){const m=CH.find(v=>v.i===+i)
   if(!m||m.f!==h||!x||Date.now()-(m.at||0)>CH_EDIT||!chLimit(chRate,h,8))return false;if(m.x===x)return true;
   const mts=chMts(h,m.to,mt);m.x=x;m.e=1;m.mt=mts.length?mts:undefined;return true;}
 /** A reaction (toggles). Out players react only to messages only out players see, so a reaction can't pass a hint. */
-function chReactIn(h: number,i: any,e: any){const m=CH.find(x=>x.i===+i);e=+e;if(!m||!chVis(m,h)||!(e>=0&&e<CH_RX.length))return false;
+function chReactIn(h: number,i: any,e: any){const m=CH.find(x=>x.i===+i);e=+e;if(!m||!chVis(m,h)||!(Number.isInteger(e)&&e>=0&&e<CH_RX.length))return false;
   if(chOut(h)&&!(m.d||m.to!==-1&&chOut(m.f)&&chOut(m.to)))return false;
   if(!chLimit(chRxRate,h,20))return false;
   const r=m.r||(m.r={}),L=r[e]||(r[e]=[]),j=L.indexOf(h);if(j>=0)L.splice(j,1);else L.push(h);if(!L.length)delete r[e];if(!Object.keys(r).length)delete m.r;return true;}
@@ -96,7 +98,7 @@ function chFindMentions(x: string,conv: number){const lx=x.toLowerCase();return 
 function chOpenList(){if(!chView){chView=true;chAnim='up';try{history.pushState({v:1},'');}catch(e){}}chConv=null;chReply=0;chActI=0;chEditI=0;chDraw();}  // phone Back closes it first
 function chGo(c: number){chConv=c;chReply=0;chActI=0;chEditI=0;chAnim=chAnim||'in';try{history.pushState({v:1},'');}catch(e){}chDraw();setTimeout(()=>{const i=$('chin');if(i)i.focus();},50);}
 function chClose(){chView=false;chConv=null;chReply=0;chActI=0;chEditI=0;chDraw();dockDraw();}
-/** Phone Back / the ‹ button: a conversation goes back to the list, the list back to the room. */
+/** Phone Back / the Back button: a conversation goes back to the list, the list back to the room. */
 function chBack(){if(chConv!=null){chConv=null;chReply=0;chActI=0;chEditI=0;chAnim='back';chDraw();}else chClose();}
 const chCalm=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return true;}};
 /** The panel's entrance (opened, a conversation in, back to the list); used once, on the next full draw. */
@@ -132,7 +134,7 @@ function chDraw(){scrollLock();const el=$('chat');if(!el)return;
         <div class="t2"><span dir="auto">${prev}</span>${at?'<i class="atb">@</i>':''}${n?`<i class="unb">${n}</i>`:''}</div></div></button>${plus}</div>`;};
     const rows=row(-1,`<span class="avt chx grp">${IC.users}</span>`,t('chatAll'),'','')
       +ppl.map(q=>row(q.c,chAv(q,44),esc(q.name),q.out?` <small class="oldv">${t('chatDeadTag')}</small>`:'',plusBtn(q.uid))).join('');
-    const html=`<div class="chh"><button class="ib" onclick="chBack()" aria-label="${t('chatBack')}">‹</button><b>${t('chatT')}</b>${minBtn}</div>
+    const html=`<div class="chh"><button class="ib" onclick="chBack()" aria-label="${t('chatBack')}">${IC.back}</button><b>${t('chatT')}</b>${minBtn}</div>
       <div class="chb">${rows}<p class="mpinfo chnote">${t(ms.length?'chatGone':'chatNone')}</p></div>`;
     const w=el.querySelector('.chw');if(el.dataset.c===''&&w&&!w.classList.contains('a-down')&&!chAnim){if(html!==chList){chList=html;w.innerHTML=html;}return;}  // a new message: only the rows change, no flash
     el.dataset.c='';chList=html;el.innerHTML=`<div class="chw${chIn()}">${html}</div>`;return;}
@@ -145,7 +147,7 @@ function chDraw(){scrollLock();const el=$('chat');if(!el)return;
   el.dataset.c=String(c);el.dataset.can=String(can);chLines=lines;chList='';
   const title=c===-1?`<span class="avt chx grp" style="width:34px;height:34px">${IC.users}</span><div><b>${t('chatAll')}</b><small>${t('chatPeopleN',{n:ppl.length+1})}</small></div>`
     :`${chAv(p||{name:''} as RoomPlayer,34)}<div><b>${esc(p?p.name:(mine[0]&&mine[0].f===c?mine[0].n:''))}</b>${p&&p.out?`<small>${t('chatDeadTag')}</small>`:''}</div>`;
-  el.innerHTML=`<div class="chw${chIn()}"><div class="chh"><button class="ib" onclick="chBack()" aria-label="${t('chatBack')}">‹</button><div class="cht">${title}</div>${minBtn}</div>
+  el.innerHTML=`<div class="chw${chIn()}"><div class="chh"><button class="ib" onclick="chBack()" aria-label="${t('chatBack')}">${IC.back}</button><div class="cht">${title}</div>${minBtn}</div>
     <div class="chm" id="chm" onscroll="chStick=this.scrollHeight-this.scrollTop-this.clientHeight<40">${lines}</div>${out&&c===-1?`<p class="mpinfo" style="margin:6px 2px 0">${t('chatDeadOnly')}</p>`:''}
     <div id="chmen"></div><div id="chrep"></div>
     ${can?`<div class="chf"><input id="chin" dir="auto" maxlength="200" autocomplete="off" enterkeyhint="send" placeholder="${t('chatPh')}" onkeydown="if(event.key==='Enter')chSend()" oninput="chMentDraw()" onfocus="setTimeout(chEnd,350)">
@@ -164,11 +166,23 @@ function chSend(){const el=$('chin') as HTMLInputElement,x=el?el.value.trim().sl
   const k=rnd(8),now=Date.now();chPend.push({k,to:c,x,at:now,t0:now,re});send({t:'chat',to:c,x,k,re,mt});chDraw();chEnd();}
 /* long-press a message: reactions and Reply */
 let chPressT: any=0;
-function chPress(e: PointerEvent,i: number){clearTimeout(chPressT);const x0=e.clientX,y0=e.clientY;
-  const stop=()=>{clearTimeout(chPressT);removeEventListener('pointerup',stop);removeEventListener('pointercancel',stop);removeEventListener('pointermove',mv);};
-  const mv=(ev: PointerEvent)=>{if(Math.abs(ev.clientX-x0)+Math.abs(ev.clientY-y0)>10)stop();};
-  addEventListener('pointerup',stop);addEventListener('pointercancel',stop);addEventListener('pointermove',mv);
-  chPressT=setTimeout(()=>{stop();chActs(i);},450);}
+const CH_SW=60;  // swipe this far to reply
+/** Long-press (450 ms, held still): reactions, Reply, Edit. Swipe right (left in Arabic) past 60 px: Reply, on any message (v2.19, like Telegram).
+ *  The bubble follows the finger with a reply icon behind it; an upward / downward move is left to scrolling (.cm has touch-action: pan-y). */
+function chPress(e: PointerEvent,i: number){clearTimeout(chPressT);const x0=e.clientX,y0=e.clientY,sg=document.documentElement.dir==='rtl'?-1:1;
+  const row=(e.currentTarget as HTMLElement).closest('.cmr') as HTMLElement;let sw=false,armed=false,ic: HTMLElement=null;
+  const done=(ok: boolean)=>{clearTimeout(chPressT);removeEventListener('pointerup',up);removeEventListener('pointercancel',no);removeEventListener('pointermove',mv);
+    if(!sw)return;row.style.transition='transform .18s ease';row.style.transform='';setTimeout(()=>{row.style.transition='';if(ic)ic.remove();},200);if(ok&&armed)chReplyStart(i);};
+  const up=()=>done(true),no=()=>done(false);
+  const mv=(ev: PointerEvent)=>{const dx=(ev.clientX-x0)*sg,dy=Math.abs(ev.clientY-y0);
+    if(!sw){if(dy>10&&dy>=Math.abs(dx)||dx<-12){done(false);return;}  // scrolling, or the other way
+      if(Math.abs(dx)+dy>10)clearTimeout(chPressT);  // moving: no long-press
+      if(dx>12&&dx>dy*1.5){sw=true;ic=document.createElement('i');ic.className='swr';ic.innerHTML=IC.reply;row.prepend(ic);}
+      return;}
+    const d=Math.max(0,Math.min(dx,90));row.style.transform=`translateX(${d*sg}px)`;ic.style.opacity=String(Math.min(1,d/CH_SW));
+    if(!armed&&d>=CH_SW){armed=true;ic.classList.add('on');try{navigator.vibrate&&navigator.vibrate(10);}catch(err){}}else if(armed&&d<CH_SW){armed=false;ic.classList.remove('on');}};
+  addEventListener('pointerup',up);addEventListener('pointercancel',no);addEventListener('pointermove',mv);
+  chPressT=setTimeout(()=>{done(false);chActs(i);},450);}
 function chCanAct(i: number){const m=chMsgs().find(x=>x.i===i);if(!m)return false;const me=chMine();
   return !chAmOut()||!!(m.d||m.to!==-1&&chWho(m.f)&&chWho(m.to)&&(m.f===me?chWho(m.to).out:chWho(m.f).out));}
 /** Edit is offered on my own messages for 15 minutes, when the host's app knows edits (v2.18+). */
@@ -182,10 +196,17 @@ function chActs(i: number){chActI=i;const el=$('chact');if(!el)return;if(!i){el.
   const right=r.left+r.width/2>W/2;  // hangs from the side the message is on
   const side=right?`right:${Math.max(8,W-r.right)}px;align-items:flex-end`:`left:${Math.max(8,r.left)}px;align-items:flex-start`;
   el.innerHTML=`<div class="chact" onclick="if(event.target===this)chActs(0)"><div class="chpop" style="top:0;${side}">
-    ${rx?`<div class="rxp">${CH_RX.map((x,e)=>`<button onclick="chReact(${i},${e})" aria-label="${x}">${x}</button>`).join('')}</div>`:''}
+    ${rx?`<div class="rxp">${chRxBtns(i,CH_RXQ)}${chRxMoreOk()?`<button class="rxm" onclick="chRxMore(${i})" aria-label="${t('chatMoreRx')}">${IC.plus}</button>`:''}</div>`:''}
     <div class="${row.className.replace(/\b(last|hit|flash)\b/g,'')} chlift"><div class="cm" style="width:${r.width}px">${b.innerHTML}</div></div>${menu}</div></div>`;
-  const pop=el.querySelector('.chpop') as HTMLElement,lift=pop.querySelector('.chlift') as HTMLElement;  // offsets ignore the pop-in scale
-  pop.style.top=Math.max(12,Math.min(r.top-lift.offsetTop,H-pop.offsetHeight-12))+'px';}  // the message where it was; the whole menu stays on screen
+  chPopR=r.top;chPlace();}
+let chPopR=0;  // where the long-pressed message is on screen
+/** The message where it was; the whole menu stays on screen (offsets ignore the pop-in scale). */
+function chPlace(){const pop=document.querySelector('#chact .chpop') as HTMLElement,lift=pop&&pop.querySelector('.chlift') as HTMLElement;if(!lift)return;
+  pop.style.top=Math.max(12,Math.min(chPopR-lift.offsetTop,innerHeight-pop.offsetHeight-12))+'px';}
+const chRxBtns=(i: number,n: number)=>CH_RX.slice(0,n).map((x,e)=>`<button onclick="chReact(${i},${e})" aria-label="${x}">${x}</button>`).join('');
+const chRxMoreOk=()=>MP.role==='host'||((MP.room&&MP.room.hv)||0)>=CH_RXV;
+/** +: the bar grows into the grid of all reactions, in place (v2.19). */
+function chRxMore(i: number){const b=document.querySelector('#chact .rxp') as HTMLElement;if(!b)return;b.classList.add('all');b.innerHTML=chRxBtns(i,CH_RX.length);chPlace();}
 function chReact(i: number,e: number){chActs(0);if(MP.role==='host'){if(chReactIn(0,i,e)){hostPublish();chDraw();}return;}send({t:'react',i,e});}
 function chReplyStart(i: number){chActs(0);chEditI=0;chReply=i;chRepDraw();const n=$('chin');if(n)n.focus();}
 function chEditStart(i: number){const m=chMsgs().find(x=>x.i===i);chActs(0);if(!m)return;chReply=0;chEditI=i;chRepDraw();

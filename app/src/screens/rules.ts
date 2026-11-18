@@ -13,7 +13,7 @@ function deckRules(n,err){const c=n-S.counts.mafia-S.counts.doctor-S.counts.dete
 const rulesChips=rs=>rs&&rs.length?`<div class="sec mt"><div class="sh"><h3>${t('hostRules')}</h3></div><div class="chips">${rs.map(k=>`<span class="chipb">${t('c_'+k)}</span>`).join('')}</div></div>`:'';
 function rulesCard(){const on=activeRules();
   return `<button class="sec rsum" onclick="nav('rules')"><div class="sh"><h3>${t('rules')}</h3><span class="badge ok">${t('pre_'+presetOf())}</span></div>
-   <div class="chips">${on.map(k=>`<span class="chipb">${t('c_'+k)}</span>`).join('')}<span class="chipb">${t('c_timer',{n:fmt(S.rules.timer)})}</span>${S.rules.nightT?`<span class="chipb">${t('c_nightT',{n:S.rules.nightT})}</span>`:''}</div><span class="go">›</span></button>`;}
+   <div class="chips">${on.map(k=>`<span class="chipb">${t('c_'+k)}</span>`).join('')}<span class="chipb">${t('c_timer',{n:fmt(S.rules.timer)})}</span>${S.rules.nightT?`<span class="chipb">${t('c_nightT',{n:S.rules.nightT})}</span>`:''}</div><span class="go">${IC.fwd}</span></button>`;}
 const grp=(icon: string,title: string,body: string,cls?: string)=>`<div class="sec rgrp ${cls||''}"><div class="sh"><h3><i class="gi">${icon}</i>${title}</h3></div>${body}</div>`;
 const stepRow=(label,desc,val,fn)=>`<div class="tg"><div class="rt"><b>${label}</b>${desc?`<span>${desc}</span>`:''}</div><div class="step"><button onclick="${fn}(-1)">−</button><i style="min-width:52px;direction:ltr">${val}</i><button onclick="${fn}(1)">+</button></div></div>`;
 const seg=(opts,cur,fn)=>`<div class="seg">${opts.map(([v,l])=>`<button class="${cur===v?'on':''}" onclick="${fn}('${v}')">${l}</button>`).join('')}</div>`;

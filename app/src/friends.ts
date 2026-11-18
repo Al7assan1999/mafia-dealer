@@ -106,7 +106,7 @@ const fEmpty=(icon: string,txt: string)=>`<div class="fempty">${icon}<p>${txt}</
 function friendsView(){
   if(!me())return head(t('friendsT'))+`<p class="mpinfo">${t('fWhy')}</p><button class="btn primary" onclick="nav('account')">${t('aIn')} / ${t('aUp')}</button>`;
   const u=me();
-  const card=`<div class="sec mecard"><div class="meline">${avatarHtml(u.avatar,u.id,56)}<div><b>${esc(u.display)}</b><small style="direction:ltr">@${esc(u.uname)}</small></div></div>
+  const card=`<div class="sec mecard"><div class="meline">${avatarHtml(u.avatar,u.id,56)}<div><b>${esc(u.display)}</b><small><bdi>@${esc(u.uname)}</bdi></small></div></div>
     <button class="btn ghost" onclick="shareMe()">${IC.share}${t('fShareMe')}</button></div>`;
   const add=`<div class="prow fadd">${IC.search}<input id="fun" maxlength="21" autocapitalize="none" autocomplete="off" placeholder="@username" style="direction:ltr" onkeydown="if(event.key==='Enter')friendAdd()"><button class="btn primary" onclick="friendAdd()">${t('fAddBtn')}</button></div>`;
   return head(t('friendsT'))+card+add+`<div id="flists">${fListsHtml()}</div>`;}
@@ -129,7 +129,7 @@ function acctCard(id: string){const mine=me()&&me().id===id,f: Friend=mine?Objec
     :f.rel==='out'?`<button class="btn ghost" onclick="friendDo('remove','${id}')">${t('fCancelReq')}</button>`
     :f.rel==='in'?`<button class="btn primary" onclick="friendDo('accept','${id}')">${t('fAccept')}</button>`
     :`<button class="btn primary" onclick="friendReq({id:'${id}'})">${IC.friend}${t('fAddFriend')}</button>`;
-  return `<div class="sec pcard"><div class="meline">${avatarHtml(f?f.avatar:'p:0',id,56)}<div><b>${esc(f?f.display:PROFN)}</b><small style="direction:ltr">${f?'@'+esc(f.uname):t('verifiedAcct')}</small>
+  return `<div class="sec pcard"><div class="meline">${avatarHtml(f?f.avatar:'p:0',id,56)}<div><b>${esc(f?f.display:PROFN)}</b><small><bdi>${f?'@'+esc(f.uname):t('verifiedAcct')}</bdi></small>
     ${f&&f.rel==='ok'?`<small><span class="dot ${f.on?'on':''}"></span>${stTxt(f)}</small>`:''}${f&&f.fav?`<small>${t('aFav')}: <span style="color:${RC[f.fav]};font-weight:800">${t(f.fav)}</span></small>`:''}</div></div>${btn?`<div class="mt">${btn}</div>`:''}</div>`;}
 /* the friends drawer (#fdock, outside #app): a tab on the screen edge, slides out over menus and room lobbies, never during a game */
 const DOCKV=['home','wifi','online','history','stats','profile','guide','settings','rules'];
@@ -153,7 +153,7 @@ function dockDraw(){scrollLock();const el=$('fdock');if(!el)return;
     :(F.inc.length?`<div class="flbl">${t('fRequests')} · ${F.inc.length}</div>${F.inc.map(f=>fRow(f,reqBtns(f))).join('')}`:'')
      +(F.friends.length?fGroups(F.friends):`<p class="mpinfo" style="margin:4px 0">${t(code?'fNoneInv':'fNone')}</p>`);
   el.innerHTML=`<div class="fdim${a}" onclick="dockOpen(false)"></div><aside class="fdrawer${a}" ontouchstart="dockSwipe(event,0)">
-    <div class="fdh"><b>${t('friendsT')}</b><button class="ib" onclick="openFriends()" aria-label="${t('fAddFriend')}" title="${t('fAddFriend')}">${IC.friend}</button><button class="ib" onclick="dockOpen(false)" aria-label="${t('fMin')}" title="${t('fMin')}">${S.lang==='ar'?'‹':'›'}</button></div>
+    <div class="fdh"><b>${t('friendsT')}</b><button class="ib" onclick="openFriends()" aria-label="${t('fAddFriend')}" title="${t('fAddFriend')}">${IC.friend}</button><button class="ib" onclick="dockOpen(false)" aria-label="${t('fMin')}" title="${t('fMin')}">${IC.fwd}</button></div>
     ${code?`<p class="mpinfo" style="margin:0 0 4px">${t('fInviteD',{c:fmtCode(code)})}</p>`:''}${rows}</aside>`;}
 /** Side column: drag up/down to move it (remembered), swipe the tab inward to open. Drawer: swipe outward to minimize.
  *  (Edge swipes belong to Android's Back gesture.) kind: 0 drawer, 1 friends tab, 2 chat button. */

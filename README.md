@@ -102,6 +102,7 @@ node test_s3.js cit                         # full multiplayer game, Citizens wi
 node test_s3.js maf                         # Mafia win
 node test_v217.js                           # ping, Back, chat reactions/replies/mentions (spawns mock_srv.py itself)
 node test_v218.js                           # sending status, edit, long-press menu, chat slides, bell mentions, update alerts (app side)
+node test_v219.js                           # swipe to reply, the reaction grid, RTL arrows (motion on)
 ```
 
 ## Multiplayer protocol

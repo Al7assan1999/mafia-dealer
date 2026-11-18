@@ -1,4 +1,4 @@
-const head=(title: string,right?: string)=>`<div class="top"><button class="pill" aria-label="back" onclick="back()">‹</button><div class="brand"><b>${title}</b></div>${right||''}</div>`;
+const head=(title: string,right?: string)=>`<div class="top"><button class="pill" aria-label="back" onclick="back()">${IC.back}</button><div class="brand"><b>${title}</b></div>${right||''}</div>`;
 const fdate=ts=>{try{return new Date(ts).toLocaleString(S.lang==='ar'?'ar':'en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return new Date(ts).toDateString();}};
 let askFn: ()=>void=null;  // the confirm button of the open ask() sheet
 function ask(title: string,desc: string,yes: string,fn: ()=>void){askFn=fn;$('modal').innerHTML=`<div class="modal" onclick="if(event.target===this)$('modal').innerHTML=''"><div class="sheet"><h3>${title}</h3><p>${desc}</p>

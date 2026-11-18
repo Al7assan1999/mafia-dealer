@@ -9,7 +9,14 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## Current state: v2.18.2 (versionCode 39), published on the relay 2026-11-18 (relay version 67e07f78; relay code unchanged; Telegram announce sent to 5 accounts)
+## Current state: v2.19 (versionCode 40), built 2026-11-18, NOT published yet (relay code unchanged)
+Alhassan's list (his choices: swipe = Reply on every message, Edit stays in long-press for own messages; the 24-emoji "Mafia mix"; the bar grows into a grid):
+- Swipe to reply: drag a message right (left in Arabic) past 60 px; it follows the finger with a reply icon that lights up (buzz) when armed; short swipes and vertical moves do nothing (`.cm{touch-action:pan-y}`, `chPress`). A swipe cancels the long-press.
+- Reactions: `CH_RX` now has 30 (the quick 6, then 😡 🤬 😢 😭 💔 🖕 🙏 🔥 💀 🤔 🙄 😱 🤡 👀 👏 😈 🥲 😴 🤝 💯 🎯 🐀 🕵️ 🩸). The long-press bar shows the 6 + a +, which grows the bar in place into a 6-column grid (`chRxMore`, re-placed by `chPlace` to stay on screen). The + shows only when the host is v2.19+ (`CH_RXV=40`): older hosts refuse the new indexes, and apps before v2.19 show nothing for them. The host now also refuses non-integer indexes.
+- RTL: arrows are SVG now (`IC.back`, `IC.fwd`, class `flip`, one rule `[dir=rtl] svg.flip{transform:scaleX(-1)}`). The text arrows ‹ › were mirrored by the phone's text engine but not by desktop Chromium, and CSS flipped them again, so they pointed the wrong way on phones only. `@username` lines use `<bdi>` instead of a direction:ltr block (it sat on top of Settings' arrow). The vote arrow is ← in Arabic. The reply icon flips. Titles next to the four corner buttons are 19 px (Arabic "new game" wrapped to 3 lines). Audited every screen in Arabic in both themes (scratchpad `rtl_audit.js`).
+- Tests: new `test_v219.js` (23, motion ON); it checks there is no ‹ or › text left on screen.
+
+## Previous: v2.18.2 (versionCode 39), published on the relay 2026-11-18 (relay version 67e07f78; relay code unchanged; Telegram announce sent to 5 accounts)
 - Hotfix: in v2.18.1 long-press only vibrated. The conversation slide animated every child of the chat panel with `fill-mode: both`, including `#chact`; an element holding a transform animation becomes the containing block for its absolute/fixed children, so the menu's layer was 0 px tall at the bottom and the menu was placed below the screen. Now only the visible children animate (`:not(#chact)`), with `backwards` (nothing held after the slide).
 - **Lesson:** the Playwright tests run with `reducedMotion:'reduce'`, which switches these animations off, so they could not see it. `test_v218.js` now does a real long-press with motion on (41 checks); check anything positioned inside the chat with motion on.
 

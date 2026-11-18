@@ -10,7 +10,7 @@ function mpCheckNight(){if(G&&G.phase==='mpNight'&&!G.hostTurn&&aliveIdx().every
 function mpCheckVote(){if(G&&G.phase==='mpVote'&&!G.hostTurn&&aliveIdx().every(i=>G.votes[i]!==undefined))tallyVotes(G.votes);}
 function mpStartVote(open){stopTimer();go('mpVote',{votes:{},voteId:Date.now(),hostTurn:false,open:!!open});}
 const voteBoard=()=>aliveIdx().map(k=>({n:G.names[k],v:G.votes[k]===undefined?null:G.votes[k]==='none'?'none':G.votes[k]==='abstain'?'abstain':G.names[G.votes[k]]}));
-const boardHtml=bd=>bd?`<div class="sec board"><div class="sh"><h3>${t('liveVotes')}</h3></div>${bd.map(x=>`<div class="endrow"><span>${esc(x.n)}</span><b class="${x.v?'':'pend'}">${x.v==null?t('notYet'):x.v==='none'?t('noOne'):x.v==='abstain'?t('abstained'):'→ '+esc(x.v)}</b></div>`).join('')}</div>`:'';
+const boardHtml=bd=>bd?`<div class="sec board"><div class="sh"><h3>${t('liveVotes')}</h3></div>${bd.map(x=>`<div class="endrow"><span>${esc(x.n)}</span><b class="${x.v?'':'pend'}">${x.v==null?t('notYet'):x.v==='none'?t('noOne'):x.v==='abstain'?t('abstained'):(S.lang==='ar'?'← ':'→ ')+esc(x.v)}</b></div>`).join('')}</div>`:'';
 function mpStuck(){const night=G.phase==='mpNight';return aliveIdx().filter(i=>!isOn(i)&&(night?!G.done[i]:G.votes[i]===undefined));}
 function mpSkipStuck(){mpStuck().forEach(i=>{if(G.phase==='mpNight')G.done[i]=true;else G.votes[i]='abstain';});hostPublish();if(G.phase==='mpNight')mpCheckNight();else mpCheckVote();if(G&&(G.phase==='mpNight'||G.phase==='mpVote'))render();}
 function mpProg(){const night=G.phase==='mpNight',al=aliveIdx(),n=al.filter(i=>night?G.done[i]:G.votes[i]!==undefined).length,st=mpStuck();

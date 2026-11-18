@@ -629,4 +629,5 @@ const AR: Partial<Record<keyof typeof EN, string>> = {
   ns_ended: 'أُغلقت الدردشة',
   updAlertT: 'تنبيهات الإصدارات الجديدة',
   updAlertD: 'إشعار عند صدور تحديث (يتحقق الهاتف بين 11:00 و17:00).',
+  chatMoreRx: 'تفاعلات أخرى',
 };

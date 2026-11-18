@@ -15,7 +15,7 @@ function leaveFirst(fn: ()=>void){if(!roomMinned()){fn();return;}
 function rbarDraw(){const el=$('rbar');if(!el)return;const on=roomMinned();document.body.classList.toggle('rmin',on);
   if(!on){if(el.innerHTML)el.innerHTML='';return;}
   const txt=MP.role==='host'?t('rbHost',{n:1+Object.values(MP.players).filter(q=>q.on).length}):t(MP.status==='ok'?'rbIn':'rbLost',{n:esc((MP.host&&MP.host.name)||'')});
-  const h=`<button class="rbar" onclick="roomBack()"><i class="dot ${MP.role==='host'||MP.status==='ok'?'on':''}"></i><span>${txt}</span><b>${t('rbBack')} ›</b></button>`;
+  const h=`<button class="rbar" onclick="roomBack()"><i class="dot ${MP.role==='host'||MP.status==='ok'?'on':''}"></i><span>${txt}</span><b>${t('rbBack')} ${IC.fwd}</b></button>`;
   if(el.innerHTML!==h)el.innerHTML=h;}
 const inRoom=()=>(V==='host'&&MP.role==='host')||(V==='join'&&MP.role==='client'&&['ok','lost','joining','search'].includes(MP.status));
 function askLeaveRoom(){if(V==='host')ask(t('closeQ'),t('closeD'),t('closeRoom'),leaveNow);else ask(t('leaveQ'),t(MP.room&&MP.room.g?'leaveD':'leaveLobbyD'),t('leave'),leaveNow);}

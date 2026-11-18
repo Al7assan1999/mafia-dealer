@@ -57,7 +57,8 @@ input{font:inherit;color:inherit}
 .brand{flex:1;min-width:0}.brand b{display:block;font-size:22px;line-height:1.2}.brand span{font-size:12.5px;color:var(--mute)}
 .pill{height:40px;min-width:40px;padding:0 14px;border-radius:var(--rx);background:var(--card);border:1px solid var(--line);font-weight:700;font-size:14px;backdrop-filter:var(--blur)}
 .top .pill:first-child{font-size:22px;line-height:1;padding:0}
-[dir=rtl] .top .pill:first-child{transform:scaleX(-1)}
+[dir=rtl] svg.flip{transform:scaleX(-1)}  /* v2.19: the only RTL arrow flip (arrows are SVG, never text) */
+.top .pill:first-child svg{width:20px;height:20px;display:block;margin:auto}
 
 /* cards and sections */
 .sec{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px;backdrop-filter:var(--blur)}
@@ -66,7 +67,7 @@ input{font:inherit;color:inherit}
 .link{color:var(--gold);font-weight:700;font-size:14px;padding:6px 2px}.ver{display:block;margin:20px auto 0;text-align:center;color:var(--dim);font-size:12.5px;padding:8px 12px}
 .banner.upd small{display:block;color:var(--mute);font-size:12.5px;margin-top:2px}.banner.upd .btn{width:auto;min-height:40px;padding:8px 16px;font-size:14.5px}
 .rsum{position:relative;display:block;width:100%;text-align:start;padding-inline-end:40px}.rsum .chips{margin:0}.rsum .chipb{height:28px;font-size:12px;display:inline-flex;align-items:center;cursor:default}
-.rsum .go,.wide .go{position:absolute;inset-inline-end:16px;top:50%;transform:translateY(-50%);font-size:24px;color:var(--mute)}[dir=rtl] .rsum .go,[dir=rtl] .wide .go{transform:translateY(-50%) scaleX(-1)}
+.rsum .go,.wide .go{position:absolute;inset-inline-end:16px;top:50%;transform:translateY(-50%);font-size:24px;color:var(--mute)}.go svg{width:20px;height:20px;display:block}.rbar b svg{width:13px;height:13px;vertical-align:-1px;display:inline-block}
 .rec{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;margin-top:4px;border-radius:var(--rs);border:1px dashed color-mix(in srgb,var(--gold) 50%,transparent);color:var(--gold);font-size:13.5px;text-align:start}
 .rec svg{width:18px;height:18px;flex:none}.rec span{flex:1}.rec b{font-size:13px}
 .preset{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 -16px 14px;padding:8px 16px;position:sticky;top:0;z-index:6;background:var(--bg);box-shadow:0 10px 18px -12px #000c}
@@ -187,7 +188,6 @@ body.home{padding-bottom:16px}
 .tile b{display:block;font-size:20px;margin:12px 0 3px}.tile small{font-size:14px;color:var(--mute);display:block;line-height:1.45}
 .tile .ti{width:46px;height:46px;border-radius:var(--rs);display:grid;place-items:center}.tile .ti svg{width:24px;height:24px}
 .tile .go{position:absolute;inset-inline-end:16px;top:50%;transform:translateY(-50%);font-size:26px;color:var(--mute)}
-[dir=rtl] .tile .go{transform:translateY(-50%) scaleX(-1)}
 .tile.t1{background:linear-gradient(135deg,#1f3b2e,#14171d)}.tile.t2{background:linear-gradient(135deg,#1d2a52,#14171d)}
 .tile.t1 .ti{background:#3ce0a026;color:#5ff0b0}.tile.t2 .ti{background:#5a8bff26;color:#8fb0ff}
 [data-theme=noir] .tile{background:var(--alt);color:var(--alt-t);border:0;box-shadow:3px 3px 0 var(--red)}
@@ -550,3 +550,12 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}.fdrawer,.bell
 .bellsh{max-height:min(62vh,560px);overflow:hidden;display:flex;flex-direction:column}
 .bellsh .bl{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 -4px;padding:0 4px}
 .bellsh .prs q{display:block;font-size:12.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;quotes:"\201C" "\201D"}
+/* v2.19: swipe to reply, the reaction grid, arrows */
+.chm .cm{touch-action:pan-y}.cmr{position:relative}
+.swr{position:absolute;top:50%;inset-inline-start:-36px;width:30px;height:30px;margin-top:-15px;border-radius:50%;display:grid;place-items:center;background:var(--card2);color:var(--mute);opacity:0;transition:background .15s,color .15s,transform .15s}
+.swr svg{width:17px;height:17px}.swr.on{background:var(--sel);color:#fff;transform:scale(1.12)}
+.chpop .rxp .rxm{font-size:0;color:var(--mute);background:var(--card)}.chpop .rxp .rxm svg{width:22px;height:22px;margin:auto;display:block}
+.chpop .rxp.all{display:grid;grid-template-columns:repeat(6,44px);gap:4px;padding:8px;border-radius:22px;animation:chPop .16s cubic-bezier(.2,.8,.2,1) both}
+[data-theme=noir] .chpop .rxp.all{border-radius:6px}
+.fdh .ib svg{width:20px;height:20px;display:block;margin:auto}
+.top:has(.corner) .brand b{font-size:19px;text-wrap:balance}  /* v2.19: a title next to the four corner buttons (Arabic wrapped to 3 lines) */

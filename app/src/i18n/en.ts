@@ -629,4 +629,5 @@ const EN = {
   ns_ended: 'Chat closed',
   updAlertT: 'New version alerts',
   updAlertD: 'A notification when an update is out (the phone checks at 11:00–17:00).',
+  chatMoreRx: 'More reactions',
 };

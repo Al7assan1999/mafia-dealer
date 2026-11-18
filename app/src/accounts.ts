@@ -45,7 +45,7 @@ function accountView(){const u=me();
       ${up?'':`<button class="link discard" onclick="RS=null;nav('forgot')">${t('aForgot')}</button>`}</div>`;}
   const av=AF.av||u.avatar,fav=AF.fav!=null?AF.fav:u.fav;
   return head(t('profT'))+`<div class="big pro"><div class="pav">${AF.av&&AF.av.indexOf('data:')===0?`<span class="avt" style="width:96px;height:96px"><img src="${AF.av}" alt=""></span>`:avatarHtml(av,u.id,96)}</div>
-     <div class="who" style="font-size:26px">${esc(u.display)}</div><p class="hint" style="margin:0;direction:ltr">@${esc(u.uname)}</p></div>
+     <div class="who" style="font-size:26px">${esc(u.display)}</div><p class="hint" style="margin:0"><bdi>@${esc(u.uname)}</bdi></p></div>
    <div class="sec mt"><div class="flbl" style="margin-top:0">${t('aAvatar')}</div><div class="avgrid">${AVP.map((x,i)=>`<button class="${av==='p:'+i?'on':''}" onclick="setAv('p:${i}')">${avatarHtml('p:'+i,'',40)}</button>`).join('')}
      <label class="avup">${IC.share}<span>${t('aPhoto')}</span><input type="file" accept="image/*" onchange="pickPhoto(this)" style="display:none"></label></div>
     <div class="flbl">${t('aName')}</div><input id="adn" class="search" maxlength="18" value="${esc(AF.dn!=null?AF.dn:u.display)}" oninput="AF.dn=this.value">
