@@ -1,5 +1,13 @@
 [
  {
+  "code": 39,
+  "name": "2.18.2",
+  "date": "2026-11-18",
+  "notes": [
+   "Fixed: long-press on a message shows the reactions and Reply / Edit again."
+  ]
+ },
+ {
   "code": 38,
   "name": "2.18.1",
   "date": "2026-11-18",
