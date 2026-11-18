@@ -15,28 +15,28 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  for(const p of [d,s]){await p.click('#mode-wifi');await p.click('.big2 .btn.ghost');await wait(p,()=>MP.status==='ok'&&MP.room&&MP.room.cv);}
  ok(await host.isVisible('#fdock .fchat')&&await d.isVisible('#fdock .fchat'),'chat button in the host and player lobbies (signed out too)');
  await wait(d,()=>MP.room.players.length===3);await d.click('#fdock .fchat');await d.waitForSelector('#chat .chw');
- const names=await d.$$eval('#chat .prs .fn b',e=>e.map(x=>x.textContent));ok(names.join()==='Everyone,Alhassan,Sami','list: Everyone, the host, the other player ('+names+')');
+ const names=await d.$$eval('#chat .chr .t1 b',e=>e.map(x=>x.textContent));ok(names.join()==='Everyone,Alhassan,Sami','list: Everyone, the host, the other player ('+names+')');
  // Everyone
- await d.click('#chat .prs:has-text("Everyone") .fl');await d.fill('#chin','hi all');await d.press('#chin','Enter');
+ await d.click('#chat .chr:has(.t1 b:text-is("Everyone")) .fl');await d.fill('#chin','hi all');await d.press('#chin','Enter');
  await wait(host,()=>chMsgs().some(m=>m.x==='hi all'));await wait(s,()=>CH.some(m=>m.x==='hi all'));ok(true,'Everyone: the host and Sami get it');
- await wait(d,()=>!document.querySelector('#chm .cm.pend')&&!!document.querySelector('#chm .cm.me'));ok(true,'my message is confirmed by the host (no longer pending)');
+ await wait(d,()=>!document.querySelector('#chm .cm.pend')&&!!document.querySelector('#chm .cmr.me'));ok(true,'my message is confirmed by the host (no longer pending)');
  // 1:1, private
- await d.click('#chat .chh .ib >> nth=0');await d.click('#chat .prs:has-text("Sami") .fl');await d.fill('#chin','psst');await d.click('#chat .chf .pill');
+ await d.click('#chat .chh .ib >> nth=0');await d.click('#chat .chr:has(.t1 b:text-is("Sami")) .fl');await d.fill('#chin','psst');await d.click('#chat .chsend');
  await wait(s,()=>CH.some(m=>m.x==='psst'));await host.waitForTimeout(800);ok(!(await has(host,'psst')),'1:1 Dareer to Sami: Sami gets it, the host does not see it');
  ok(await s.evaluate(()=>document.querySelector('#fdock .fchat .cnt').textContent==='2'),'Sami: unread count on the chat button');
- await s.click('#fdock .fchat');await s.click('#chat .prs:has-text("Dareer") .fl');ok((await s.textContent('#chm')).includes('psst'),'Sami opens the 1:1 and reads it');
+ await s.click('#fdock .fchat');await s.click('#chat .chr:has(.t1 b:text-is("Dareer")) .fl');ok((await s.textContent('#chm')).includes('psst'),'Sami opens the 1:1 and reads it');
  await s.fill('#chin','hey');await s.press('#chin','Enter');await wait(d,()=>CH.some(m=>m.x==='hey'));ok(await d.isVisible('#chm .cm:has-text("hey")'),'reply shows in Dareer\'s open 1:1');
  // the host writes
- await host.click('#fdock .fchat');await host.click('#chat .prs:has-text("Everyone") .fl');await host.fill('#chin','welcome');await host.press('#chin','Enter');
+ await host.click('#fdock .fchat');await host.click('#chat .chr:has(.t1 b:text-is("Everyone")) .fl');await host.fill('#chin','welcome');await host.press('#chin','Enter');
  await wait(d,()=>CH.some(m=>m.x==='welcome'&&m.f===0));ok(true,'the host writes to Everyone');await host.evaluate(()=>chClose());
  // v2.10.1: long chats scroll, open at the newest message, the keyboard stays up, Arabic types right to left
  await host.evaluate(()=>{for(let i=0;i<40;i++){chRate={};chPost(0,-1,'line '+i);}hostPublish();});await wait(d,()=>CH.some(m=>m.x==='line 39'));
- await d.evaluate(()=>chOpenList());await d.click('#chat .prs:has-text("Everyone") .fl');
+ await d.evaluate(()=>chOpenList());await d.click('#chat .chr:has(.t1 b:text-is("Everyone")) .fl');
  const atEnd=()=>d.evaluate(()=>{const b=document.querySelector('#chm');return b.scrollHeight>b.clientHeight+50&&b.scrollHeight-b.scrollTop-b.clientHeight<5;});
  ok(await atEnd(),'a long chat scrolls and opens at the newest message');
  await d.waitForTimeout(400);await d.evaluate(()=>{document.querySelector('#chm').scrollTop=0;});ok(await d.evaluate(()=>document.querySelector('#chm').scrollTop===0),'older messages: scrolled to the top');
- await d.evaluate(()=>chClose());await d.click('#fdock .fchat');await d.click('#chat .prs:has-text("Everyone") .fl');ok(await atEnd(),'closed and opened again: at the newest message');
- await d.click('#chin');await d.fill('#chin','one');await d.click('#chat .chf .pill');ok(await d.evaluate(()=>document.activeElement&&document.activeElement.id==='chin'),'Send keeps the typing box focused (keyboard stays up)');
+ await d.evaluate(()=>chClose());await d.click('#fdock .fchat');await d.click('#chat .chr:has(.t1 b:text-is("Everyone")) .fl');ok(await atEnd(),'closed and opened again: at the newest message');
+ await d.click('#chin');await d.fill('#chin','one');await d.click('#chat .chsend');ok(await d.evaluate(()=>document.activeElement&&document.activeElement.id==='chin'),'Send keeps the typing box focused (keyboard stays up)');
  await d.press('#chin','x');await d.press('#chin','Enter');ok(await d.evaluate(()=>document.activeElement.id==='chin'),'Enter keeps it focused too');await wait(d,()=>!chPend.length);ok(await atEnd(),'my new message scrolls into view');
  ok(await d.evaluate(()=>document.querySelector('#chin').getAttribute('dir')==='auto'&&document.querySelector('#chm .cm span').getAttribute('dir')==='auto'),'box and bubbles use dir=auto (Arabic right to left)');
  await d.fill('#chin','مرحبا');ok(await d.evaluate(()=>getComputedStyle(document.querySelector('#chin')).direction==='rtl'),'typing Arabic: the box turns right to left');await d.fill('#chin','');
@@ -49,7 +49,7 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  ok(await d.evaluate(()=>document.querySelector('#chm').scrollTop===100),'reading older messages: a new message does not pull the view down');
  await d.evaluate(()=>{chEnd();});await host.evaluate(()=>{chRate={};chPost(0,-1,'at the end');hostPublish();});await wait(d,()=>CH.some(m=>m.x==='at the end'));await d.waitForTimeout(300);ok(await atEnd(),'at the newest message: a new one stays in view');
  await d.setViewportSize({width:390,height:450});await d.waitForTimeout(300);ok(await atEnd(),'the keyboard opens (screen shorter): still at the newest message');await d.setViewportSize({width:390,height:800});
- await d.evaluate(()=>chOpenList());await d.click('#chat .prs:has-text("Sami") .fl');
+ await d.evaluate(()=>chOpenList());await d.click('#chat .chr:has(.t1 b:text-is("Sami")) .fl');
  // typing is kept while messages arrive
  await d.fill('#chin','half typed');await host.evaluate(()=>{chPost(0,-1,'new one');hostPublish();});await wait(d,()=>CH.some(m=>m.x==='new one'));
  ok(await d.inputValue('#chin')==='half typed','a new message does not wipe what is being typed');await d.fill('#chin','');
@@ -57,11 +57,11 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  await host.evaluate(()=>{const ids=['host',...Object.keys(MP.players)];MP.players.x1={name:'X1',on:true,seen:Date.now(),v:0,uid:null,uav:''};ids.push('x1');
    MP.game={deal:1,ids,names:ids.map(id=>id==='host'?S.mpName:MP.players[id].name),roles:['mafia','doctor','citizen','citizen'],ready:{}};hostStartGame();G.alive[1]=false;hostPublish();render();});
  await wait(d,()=>MP.room.players.find(q=>q.c===chMe).out===true);
- await d.evaluate(()=>chOpenList());await d.click('#chat .prs:has-text("Sami") .fl');
+ await d.evaluate(()=>chOpenList());await d.click('#chat .chr:has(.t1 b:text-is("Sami")) .fl');
  ok(!(await d.$('#chin'))&&(await d.textContent('#chat')).includes('only message players who are out'),'out: no box to message a player still in');
  const sc=await d.evaluate(()=>MP.room.players.find(q=>q.name==='Sami').c);await d.evaluate(c=>send({t:'chat',to:c,x:'cheat',k:'forged1'}),sc);await d.waitForTimeout(1500);
  ok(!(await s.evaluate(()=>CH.some(m=>m.x==='cheat')))&&!(await has(host,'cheat')),'a forged 1:1 from an out player is refused by the host');
- await d.evaluate(()=>chOpenList());await d.click('#chat .prs:has-text("Everyone") .fl');ok((await d.textContent('#chat')).includes('only message players who are out'),'out: Everyone shows the note');
+ await d.evaluate(()=>chOpenList());await d.click('#chat .chr:has(.t1 b:text-is("Everyone")) .fl');ok((await d.textContent('#chat')).includes('only message players who are out'),'out: Everyone shows the note');
  await d.fill('#chin','boo');await d.press('#chin','Enter');await wait(d,()=>CH.some(m=>m.x==='boo'));await s.waitForTimeout(1200);
  ok(!(await s.evaluate(()=>CH.some(m=>m.x==='boo')))&&!(await has(host,'boo')),'out player to Everyone: players still in do not see it');
  await host.evaluate(()=>{G.alive[2]=false;hostPublish();});await wait(s,()=>CH.some(m=>m.x==='boo'&&m.d));ok(true,'once Sami is out too, he sees it (tagged out)');

@@ -25,7 +25,7 @@ function hostTick(){let m,ch=false;const now=Date.now();
       MP.players[o.id]={name:nm,seen:now,on:true,v:o.v||0,uid:o.uid||null,uav:o.uav||''};ch=true;}
     else if(p){p.seen=now;if(!p.on){p.on=true;ch=true;}
       if(o.t==='buzz'){p.buzz=(p.buzz||0)+1;const mx=S.host.buzzMax;if(!mx||p.buzz<=mx){buzzFx();toast(t(mx&&p.buzz===mx?'buzzLast':'buzzed',{n:p.name}));}ch=true;}
-      if(o.t==='chat')chHostIn(o.id,o);
+      if(o.t==='chat'||o.t==='react')chHostIn(o.id,o);
       if(o.t==='ready'&&MP.game&&o.deal===MP.game.deal&&!MP.game.ready[o.id]){MP.game.ready[o.id]=true;ch=true;}
       if(G&&G.mp){const i=G.ids.indexOf(o.id);
         if(o.t==='act'&&i>=0&&G.phase==='mpNight'&&o.n===G.day&&o.deal===MP.game.deal&&G.alive[i]&&!G.done[i]){const no=nightOpts(i);
@@ -66,7 +66,7 @@ function roleCard(name,role,mates,btn){return `<div class="big"><div class="lbl"
    <div class="rv"><div class="ric" style="width:56px;height:56px;background:${RC[role]}1f;color:${RC[role]}">${IC[role]}</div><div class="rn" style="color:${RC[role]}">${t(role)}</div><div class="rd">${t('d_'+role)}</div>${mates&&mates.length?`<div class="mates">${t('mates',{n:mates.map(esc).join(S.lang==='ar'?'، ':', ')})}</div>`:''}</div></div>
    <button class="btn ghost" id="memo" onclick="${btn}" disabled style="opacity:.4">${t('gotIt')}</button></div>`;}
 function hostPing(){MP.seq++;hostPublish();toast(t('pinged'));}
-function hostStop(){chReset();clearInterval(MP.timer);MP.timer=null;if(MP.role==='host'){lsSet(MPK,null);keepOn(false);if(HN){HN.clear();if(HN.close)HN.close();}}MP.role=null;MP.online=null;}
+function hostStop(){hush();chReset();clearInterval(MP.timer);MP.timer=null;if(MP.role==='host'){lsSet(MPK,null);keepOn(false);if(HN){HN.clear();if(HN.close)HN.close();}}MP.role=null;MP.online=null;}
 function roomList(players){return players.map(q=>`<div class="prs"><span class="dot ${q.on?'on':''}"></span>${q.uid?avatarHtml(q.av,q.uid,28):''}<b>${esc(q.name)}</b>${q.host?`<small>${t('youHost')}</small>`:''}${q.old?`<small class="oldv">${t('oldApp')}</small>`:''}${plusBtn(q.uid)}</div>`).join('');}
 function hostView(){const g=MP.game;
   if(g){const i=g.ids.indexOf('host');

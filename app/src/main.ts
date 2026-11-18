@@ -37,7 +37,12 @@ if((S.welcome===true||!S.wlSeen)&&!navigator.webdriver&&!LINK0&&!lsGet(JNK))show
 if(S.lastVer&&S.lastVer<APP.code)S.rnShow=APP.code;if(S.lastVer!==APP.code){S.lastVer=APP.code;save();}  // just updated: What's new once (v2.14)
 setTimeout(()=>deepLink(LINK0),700);setTimeout(()=>checkUpdate(true).then(L=>{if(S.rnShow!==APP.code)return;S.rnShow=0;save();  // the update worked: its notes, or a line when offline
   const show=()=>{if(L&&L.history&&L.history.some(r=>r.code===APP.code)&&!G&&!MP.role&&!$('modal').innerHTML)whatsNew();else toast(t('updatedTo',{v:APP.name}));};
-  if(WL.on)WL.after=show;else show();}),1500);  // after the welcomesetTimeout(acctRefresh,1800);setTimeout(gSync,2000);setTimeout(()=>{inboxTick();friendsLoad(true);},2500);  // every app start: version.json is a free static file
+  if(WL.on)WL.after=show;else show();}),1500);  // after the welcome
+setTimeout(acctRefresh,1800);setTimeout(gSync,2000);setTimeout(()=>{inboxTick();friendsLoad(true);},2500);  // every app start: version.json is a free static file
 setInterval(inboxTick,10000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)inboxTick();});  // friends: invites, requests, online status
-window.addEventListener('popstate',()=>{if(WL.on){if(WL.first){try{history.pushState({v:1},'');}catch(e){}return;}welcomeEnd();return;}if(chView){chClose();return;}if(S.fpanel&&dockShown()){dockOpen(false);return;}if(G){if(G.phase==='end'){finish();return;}showQuit();}else if(inRoom()){try{history.pushState({v:1},'');}catch(e){}askLeaveRoom();}else if(V!=='home')popNav();});
+window.addEventListener('popstate',()=>{if(WL.on){if(WL.first){try{history.pushState({v:1},'');}catch(e){}return;}welcomeEnd();return;}if(chView){chBack();return;}if(S.fpanel&&dockShown()){dockOpen(false);return;}if(G){if(G.phase==='end'){finish();return;}showQuit();}else if(inRoom()){try{history.pushState({v:1},'');}catch(e){}askLeaveRoom();}else if(V!=='home')popNav();else homeBack();});
+/** Back on Home (v2.17): asks before closing the app. Home always keeps one step of history, so Back lands here instead of Android closing the app. */
+function homeBack(){try{history.pushState({v:1},'');}catch(e){}if($('modal').innerHTML){$('modal').innerHTML='';bellBtnDraw();scrollLock();return;}
+  ask(t('exitQ'),t('exitD'),t('exitBtn'),()=>{try{if(window.Net&&Net.quit)Net.quit();else window.close();}catch(e){}});}
+try{history.pushState({v:1},'');}catch(e){}
 render();

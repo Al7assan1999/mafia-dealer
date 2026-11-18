@@ -118,6 +118,9 @@ net = Class(NET, OBJ, [("L", STR, ACC_PUBLIC | ACC_STATIC), ("S", CHM, ACC_PUBLI
         ('label', 'done'), ('return-void',)], js=True),
     Method(NET, "link", STR, [], ACC_PUBLIC, 3, [  # p0=v2: the invite link the app was opened with, once
         ('sget-object', 0, F_L), ('const/4', 1, 0), ('sput-object', 1, F_L), ('return-object', 0)], js=True),
+    Method(NET, "quit", "V", [], ACC_PUBLIC, 2, [  # p0=v1: close the app (the page asked first); c is the MainActivity
+        ('label', 't0'), ('iget-object', 0, 1, F_C), ('check-cast', 0, ACT), ('invoke-virtual', m(ACT, "finish", "V"), 0),
+        ('label', 't1'), ('label', 'ret'), ('return-void',), ('label', 'fail'), ('goto/16', 'ret'), ('try', 't0', 't1', 'fail')], js=True),
     Method(NET, "running", "Z", [], ACC_PUBLIC, 2, [  # p0=v1
         ('sget-object', 0, F_TH), ('if-eqz', 0, 'no'), ('const/4', 0, 1), ('return', 0),
         ('label', 'no'), ('const/4', 0, 0), ('return', 0)], js=True),

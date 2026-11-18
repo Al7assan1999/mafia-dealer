@@ -95,6 +95,7 @@ function fAct(f: Friend){if(f.rel!=='ok')return '';const code=roomCode(),now=Dat
   if(code&&roomUids().includes(f.id))return `<span class="stp inroom">${t('fInYourRoom')}</span>`;
   if(code)return b(invSent[f.id+code]||0,`inviteGo('${f.id}')`,['fInviteBtn','fInvited','fInviteAgain']);
   if(f.op)return b(jrAsked[f.id]||0,`joinAsk('${f.id}')`,['fAskJoin','fAsked','fAskAgain']);
+  if(!MP.role&&f.on&&!f.st)return b(0,`inviteNew('${f.id}')`,['fInviteBtn','fInvited','fInviteAgain']);  // not in a room: Invite opens one (online friends only)
   return '';}
 const reqBtns=(f: Friend)=>`<button class="mini pri" onclick="friendDo('accept','${f.id}')">${t('fAccept')}</button><button class="mini bad" onclick="friendDo('decline','${f.id}')">${t('fDecline')}</button>`;
 /** Friends grouped Online / Offline, each with its main action. */
@@ -142,7 +143,7 @@ const tabTap=(f: string)=>`if(Date.now()-dockDrag>400)${f}`;
 /** The side column: the friends tab (menus, lobbies) and the chat button (rooms, games). Dragged up and down together. */
 function sideHtml(tab: boolean,cb: boolean){const F=FR,on=tab&&F?F.friends.filter(f=>f.on).slice(0,3):[],y=S.ftabY!=null?`top:${Math.min(S.ftabY,innerHeight-170)}px`:'';
   return `<div class="fside" style="${y}">${tab?`<button class="ftab" onclick="${tabTap('dockOpen(true)')}" ontouchstart="dockSwipe(event,1)" aria-label="${t('friendsT')}">${IC.friend}${on.map(f=>avatarHtml(f.avatar,f.id,26)).join('')}<b>${FON}</b>${FREQ?'<i class="rdot"></i>':''}</button>`:''}
-    ${cb?`<button class="ftab fchat" onclick="${tabTap('chOpenList()')}" ontouchstart="dockSwipe(event,2)" aria-label="${t('chatT')}">${IC.chat}${chUnread()?`<i class="cnt">${chUnread()}</i>`:''}</button>`:''}</div>`;}
+    ${cb?`<button class="ftab fchat" onclick="${tabTap('chOpenList()')}" ontouchstart="dockSwipe(event,2)" aria-label="${t('chatT')}">${IC.chat}${chMentN()?'<i class="cnt at">@</i>':chUnread()?`<i class="cnt">${chUnread()}</i>`:''}</button>`:''}</div>`;}
 function dockDraw(){scrollLock();const el=$('fdock');if(!el)return;
   const tab=dockShown(),cb=chatShown();if(!cb&&chView)chClose();else if(chView)chDraw();  // out of the game now: the chat rules change
   if(!tab&&!cb){el.innerHTML='';return;}
@@ -166,6 +167,8 @@ function dockSwipe(e: TouchEvent,kind: number){const p=e.touches[0],x0=p.clientX
     const dx=ev.changedTouches[0].clientX-x0,inward=rtl?dx>40:dx<-40,outward=rtl?dx<-50:dx>50;
     if(kind===1&&inward)dockOpen(true);else if(kind===0&&outward)dockOpen(false);};
   document.addEventListener('touchmove',move,{passive:false});document.addEventListener('touchend',end);}
+/** Invite from Home (v2.17): no room yet, so an online room opens with me as host and the invite goes straight away. */
+function inviteNew(id: string){if(MP.role)return;hostStart(true);if(MP.role==='host'&&MP.online)inviteGo(id);}
 function inviteGo(id: string,name?: string){const code=MP.online&&MP.online.code;if(!code)return;invSent[id+code]=Date.now();fRedraw();setTimeout(fRedraw,AGAIN+50);
   const f=FR&&FR.friends.find(x=>x.id===id);name=name||(f?f.display:'');
   aReq('/acc/invite',{id,code}).then(j=>toast(j.ans?t('fLetInSent',{n:name}):t(j.tg?'fInvTg':'fInvSent'))).catch(e=>{delete invSent[id+code];fRedraw();aErr(e);});}

@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "node app/build.mjs",
-    "check": "tsc -p app"
+    "check": "tsc -p app && node app/check-comments.mjs"
   },
   "devDependencies": {
     "esbuild": "0.28.2",

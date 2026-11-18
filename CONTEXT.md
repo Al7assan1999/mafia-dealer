@@ -9,7 +9,19 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## Current state: v2.16 (versionCode 35), published on the relay 2026-11-17 (relay version 16e45a6f; relay code unchanged)
+## Current state: v2.17 (versionCode 36), built 2026-11-18, NOT published yet (relay code unchanged)
+Alhassan's list (approved; his choices: invite from Home = room opens + invite, reactions 👍 ❤️ 😂 😮 🔪 🤫, mentions = highlight + buzz, chat = messenger style):
+- The host's Ping everyone reached no one: a `// comment` in the middle of a one-line statement in client.ts hid the code after it (same bug as the start-up calls in main.ts). Both split onto their own lines; `npm run check` now also runs `app/check-comments.mjs`, which fails on code after a `//` comment.
+- Phone Back on Home asks "Close Mafia Dealer?" (`homeBack()` in main.ts keeps one history entry so Android doesn't just finish); Close calls the new native `Net.quit()` (Activity.finish, build/app_dex.py). An open sheet closes first.
+- Leaving a room (player `clientStop`, host `hostStop`) stops the narrator (`hush()`).
+- Back returns to the right screen: each of account / rules / settings remembers where it came from (`RET` in nav.ts) instead of one shared `navRet` (Settings > profile > Back looped).
+- Invite from Home: Invite next to an online friend when you're not in a room opens an online room and invites them (`inviteNew`); an offline friend gets Invite only from inside a room. The invite toast for an offline friend says "Sent to their Telegram (they're offline)" (the relay only uses Telegram when their app is closed).
+- Drawer tab: built-in avatars are see-through, so each gets a solid backing (`#fdock .ftab .avt::before`).
+- Chat rewritten messenger style (`app/src/chat.ts`, CSS "v2.17 chat"): ‹ Back on the left (conversation > list > room; phone Back does the same), Minimize on the right (no ✕); the list has avatars, last message + time, unread counts, @ badge, Everyone pinned; messages grouped with the sender's avatar; long-press (450 ms) a message for reactions (6, toggled, 20 per 10 s) and Reply (quoted, tap the quote to jump); @mentions pick from people in the room, are highlighted, buzz the person and show @ on their chat button. The host enforces the out-player rules for these too: out players react only to messages that only out players see, and can mention only out players. Handles: `cn` per player, 0 = host, -1 = Everyone. Still nothing stored, game only.
+- Tests: new `test_v217.js` (31, Wi-Fi mock) and `test_v217_app.js` (6, local relay); `test_chat_wifi.js` (33) and `test_social_app.js` selectors updated for the new chat. Fixed on the way after screenshots: an old `.cm b{display:block}` rule made @mentions a block; message avatars weren't centred; the chat list said "No messages yet" under real messages (now `chatGone`).
+- **Not seen on a phone yet**: long-press feel, the keyboard with the mention list, `Net.quit`.
+
+## Previous: v2.16 (versionCode 35), published on the relay 2026-11-17 (relay version 16e45a6f; relay code unchanged)
 Alhassan's list:
 - The welcome's title stays until a tap (no Home by itself).
 - The welcome is off by default (`S.welcome===true` to play at every start), but it always plays once the first time (`!S.wlSeen`); v2.14/2.15 users already count as seen, so it no longer plays for them unless switched on.

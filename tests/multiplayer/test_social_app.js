@@ -45,10 +45,10 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  // 5. online chat
  await c.click('#mode-online');await c.fill('#ocode',code);await c.click('button:has-text("Join online")');await wait(c,()=>MP.status==='ok'&&MP.room&&MP.room.cv);
  await wait(a,()=>MP.room&&MP.room.players.length===3);await a.evaluate(()=>dockOpen(false));
- await a.click('#fdock .fchat');await a.waitForSelector('#chat .prs:has-text("Sami") button.mini:has-text("+ Add")');ok(!(await a.isVisible('#chat .prs:has-text("Dareer") button.mini:has-text("+ Add")')),'chat list: + Add next to a non-friend only');
- await a.click('#chat .prs:has-text("Everyone") .fl');await a.fill('#chin','hello all');await a.press('#chin','Enter');
+ await a.click('#fdock .fchat');await a.waitForSelector('#chat .chr:has(.t1 b:text-is("Sami")) button.mini:has-text("+ Add")');ok(!(await a.isVisible('#chat .chr:has(.t1 b:text-is("Dareer")) button.mini:has-text("+ Add")')),'chat list: + Add next to a non-friend only');
+ await a.click('#chat .chr:has(.t1 b:text-is("Everyone")) .fl');await a.fill('#chin','hello all');await a.press('#chin','Enter');
  await wait(c,()=>CH.some(m=>m.x==='hello all'));await wait(bp,()=>chMsgs().some(m=>m.x==='hello all'));ok(true,'online: Everyone reaches the host and Sami');
- await a.click('#chat .chh .ib >> nth=0');await a.click('#chat .prs:has-text("Sami") .fl');await a.fill('#chin','just you');await a.press('#chin','Enter');
+ await a.click('#chat .chh .ib >> nth=0');await a.click('#chat .chr:has(.t1 b:text-is("Sami")) .fl');await a.fill('#chin','just you');await a.press('#chin','Enter');
  await wait(c,()=>CH.some(m=>m.x==='just you'));await bp.waitForTimeout(800);ok(!(await bp.evaluate(()=>chMsgs().some(m=>m.x==='just you'))),'online 1:1: Sami only');
  ok(!(await a.evaluate(()=>MP.last||'')).includes('hello all')&&!(await c.evaluate(()=>MP.last||'')).includes('just you'),'chat is not in the room state the relay stores');
  // reconnect: the chat comes back live
