@@ -1,5 +1,15 @@
 [
  {
+  "code": 42,
+  "name": "2.20",
+  "date": "2026-11-18",
+  "notes": [
+   "Noir chat redesign: paper notes, typewriter labels, sharper look.",
+   "A connection bar shows when the connection is weak or lost, and when it's back.",
+   "If the host drops, the first player who joined takes over after 30 s (2 min in a game) and the game goes on."
+  ]
+ },
+ {
   "code": 41,
   "name": "2.19.1",
   "date": "2026-11-18",

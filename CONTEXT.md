@@ -9,7 +9,7 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## Current state: v2.20 (versionCode 42), built 2026-11-18, NOT published yet (relay code unchanged)
+## Current state: v2.20 (versionCode 42), published on the relay 2026-11-18 (relay version 3b00efe6; relay code changed: host generations `ep`, checked live: ep 1 connects, ep 0 gets "replaced"; Telegram announce sent to 5 accounts)
 - Noir chat redesign, Alhassan's pick "A · Case file" of three options made on the real app (B Velvet = Neon's shapes in Noir colours, C Spotlight = my messages on cream with a red edge; scratchpad noir/*.css): others' messages are cream paper notes (--alt) with dark ink, mine are red, hard black offset shadows, names / times / titles / menu in the typewriter font (Elite) in capitals, dashed dividers, stamped square avatars with a red shadow, cream reaction bar / grid / Edit menu / @ list / reply bar with red shadows. CSS block "v2.20 Noir chat" at the end of style.css; Neon unchanged.
 - The message box had the browser's white focus ring in both themes; now the accent colour (Noir: red border + red offset shadow).
 - Checked in English and Arabic, with the grid, reply bar, @ list, a failed message and the focused box.
