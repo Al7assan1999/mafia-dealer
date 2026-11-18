@@ -9,7 +9,7 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## Current state: v2.18.1 (versionCode 38), built 2026-11-18, NOT published yet (relay code unchanged)
+## Current state: v2.18.1 (versionCode 38), published on the relay 2026-11-18 (relay version cfb7b806; relay code unchanged; Telegram announce sent to 5 accounts)
 - The host's "Hosting a game" notification opens the room: its contentIntent carries `md:room` (Keep.onStartCommand); the page's `deepLink` goes back to the room when it is minimized (a running game stays on screen) and closes the chat.
 - Chat list <-> conversation no longer flashes: the panel used to slide and fade as a whole, so the room behind showed through. Now the panel stays solid and only its content rises in (`chRise`, the same motion as opening the chat).
 - Tests: `test_v218.js` now 40.

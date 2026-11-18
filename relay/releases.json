@@ -1,5 +1,14 @@
 [
  {
+  "code": 38,
+  "name": "2.18.1",
+  "date": "2026-11-18",
+  "notes": [
+   "Tap the Hosting a game notification to go back to your room.",
+   "Opening a chat from the list is smooth now (no flash)."
+  ]
+ },
+ {
   "code": 37,
   "name": "2.18",
   "date": "2026-11-18",
