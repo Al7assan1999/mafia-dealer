@@ -11,7 +11,7 @@ async function findHost(tok: number,want?: string): Promise<any>{const my=parseI
     const res=await Promise.all(c.slice(i,i+64).map(ip=>probe(ip,1800).then(n=>ok(n)?{ip,name:n}:null)));const f=res.find(Boolean);if(f)return f;}
   return{err:'notfound'};}
 async function joinStart(manual?: string){if(roomMinned()){leaveFirst(()=>joinStart(manual));return;}if(needName())return;SND.unlock();S.mpName=S.mpName.trim();save();
-  clientStop(false);chReset();MP.role='client';MP.lastMode='wifi';MP.joinedAt=Date.now();MP.id=myId();MP.room=null;MP.host=null;MP.status='search';MP.pct=0;const tok=++MP.scanTok;
+  clientStop(false);chReset();MP.bk=null;MP.role='client';MP.lastMode='wifi';MP.joinedAt=Date.now();MP.id=myId();MP.room=null;MP.host=null;MP.status='search';MP.pct=0;const tok=++MP.scanTok;
   if(V!=='join')nav('join');else render();
   let r;
   if(manual){const ip=manual.trim();const n=await probe(ip,2500);r=n?{ip,name:n}:{err:'notfound'};}else r=await findHost(tok);
@@ -21,19 +21,19 @@ async function joinStart(manual?: string){if(roomMinned()){leaveFirst(()=>joinSt
   MP.hb=0;MP.lastOk=Date.now();clearInterval(MP.timer);MP.timer=setInterval(clientTick,700);render();}
 /** Exactly 6 digits, nothing else (spaces from a pasted share text are dropped). */
 function joinOnline(code){code=String(code||'').replace(/\s/g,'');if(!/^\d{6}$/.test(code)){toast(t('enterCode'));return;}if(roomMinned()){leaveFirst(()=>joinOnline(code));return;}if(needName(true))return;SND.unlock();S.mpName=S.mpName.trim();save();
-  clientStop(false);chReset();MP.role='client';MP.lastMode='online';MP.joinedAt=Date.now();MP.id=myId();MP.room=null;MP.host={name:'',ip:''};MP.online={code};MP.status='joining';MP.last=null;MP.roomName=null;MP.hostOn=0;MP.everOk=false;
+  clientStop(false);chReset();MP.bk=null;MP.role='client';MP.lastMode='online';MP.joinedAt=Date.now();MP.id=myId();MP.room=null;MP.host={name:'',ip:''};MP.online={code};MP.status='joining';MP.last=null;MP.roomName=null;MP.hostOn=0;MP.everOk=false;
   if(V!=='join')nav('join');else render();
   clientWs();lsSet(JNK,{online:{code}});MP.hb=0;MP.lastOk=Date.now();clearInterval(MP.timer);MP.timer=setInterval(clientTick,700);}
 function clientWs(){const o=MP.online;if(!o||MP.role!=='client')return;MP.wsAt=Date.now();const ws=MP.ws=new WebSocket(relayUrl()+'/r/'+o.code+'?role=p&id='+MP.id+(S.acct?'&tok='+S.acct.tok:''));
   ws.onopen=()=>hello();
-  ws.onmessage=e=>{MP.wsAt=Date.now();if(e.data==='pong')return;let m;try{m=JSON.parse(e.data);}catch(x){return;}
+  ws.onmessage=e=>{MP.wsAt=Date.now();if(e.data==='pong'){if(MP.pingAt)MP.lat=MP.wsAt-MP.pingAt;return;}let m;try{m=JSON.parse(e.data);}catch(x){return;}
     if(m.k==='room'){MP.roomName=m.v;MP.host.name=m.v;}else if(m.k)MP.last=m.v;
     if(m.host!=null)MP.hostOn=m.host;
     if(m.c)chRecv(m.c.ch);  // room chat, live from the host
     if(m.bc&&m.bc.narr&&NARR[m.bc.narr])try{NARR[m.bc.narr](...(m.bc.a||[]));}catch(x){}};
   ws.onclose=()=>{if(MP.ws===ws&&MP.role==='client'&&MP.online)setTimeout(()=>{if(MP.ws===ws)clientWs();},1500);};}
 async function cGet(){
-  if(MP.online){const w=MP.ws;if(w&&w.readyState===1&&MP.hb%3===0)w.send('ping');
+  if(MP.online){const w=MP.ws;if(w&&w.readyState===1&&MP.hb%3===0){w.send('ping');MP.pingAt=Date.now();}
     if(w&&Date.now()-MP.wsAt>7000){MP.ws=null;try{w.close();}catch(e){}clientWs();throw 0;}  // silent dead link (Wi-Fi gone): reconnect
     if(!w||w.readyState!==1||Date.now()-MP.wsAt>4500||(!MP.hostOn&&MP.roomName!==''))throw 0;return MP.last||'';}
   const c=new AbortController(),tm=setTimeout(()=>c.abort(),2500);
@@ -43,22 +43,28 @@ function send(o){if(MP.online){o.id=MP.id;try{if(MP.ws&&MP.ws.readyState===1)MP.
 function hello(){MP.helloAt=Date.now();(MP.hellos=MP.hellos||[]).push(MP.helloAt);MP.hellos=MP.hellos.slice(-6);const u=me();send(Object.assign({t:'hello',h:MP.helloAt,name:S.mpName,v:APP.code},u?{uid:u.id,uav:u.avatar}:{}));}
 async function clientTick(){if(MP.busy||MP.role!=='client')return;MP.busy=true;const t0=Date.now();
   try{const tx=await cGet();
-    MP.lat=Date.now()-t0;MP.lastOk=Date.now();
+    if(!MP.online)MP.lat=Date.now()-t0;MP.lastOk=Date.now();  // online: the relay's ping time (onmessage)
     if(!tx){const n=MP.online?MP.roomName:await probe(MP.host.ip,1500);
       if(!n&&!(MP.online&&MP.roomName==null)){MP.status=MP.online&&!MP.everOk?'noroom':'closed';lsSet(JNK,null);}else{MP.status='joining';if(Date.now()-MP.helloAt>2000)hello();}}
     else{const st=JSON.parse(tx);
       if(st.err==='kicked'&&st.kicked>(MP.joinedAt||0)){MP.status='kicked';clientStop(false);lsSet(JNK,null);}
       else if(st.err&&!(MP.hellos||[]).includes(st.h)){MP.status='joining';if(Date.now()-MP.helloAt>2000)hello();}  // an old rejection still stored on the relay: ask again
       else if(st.err){MP.status=st.err==='name'?'taken':st.err==='started'?'started':st.err==='kicked'?'kicked':'full';clientStop(false);lsSet(JNK,null);}
-      else{const ping=MP.room&&st.seq>MP.room.seq;MP.room=st;MP.status='ok';MP.everOk=true;chRecv(st.ch,st.mc);if(ping){buzzFx();toast(t('pingedYou'));}
+      else{const ping=MP.room&&st.seq>MP.room.seq,was=MP.room&&MP.room.host;MP.room=st;MP.bk=st.bk||null;MP.status='ok';
+        if(was&&st.host&&st.host!==was)toast(t('newHost',{n:st.host}));  // a player took over the room (v2.20)
+        MP.everOk=true;chRecv(st.ch,st.mc);if(ping){buzzFx();toast(t('pingedYou'));}
         if(st.g&&V!=='join'&&!G){buzzFx();nav('join');}  // minimized: roles dealt, back to the room
         if(st.g&&!st.g.ph&&MP.readyDeal===st.g.deal&&!st.g.meReady&&MP.hb%2===0)send({t:'ready',deal:st.g.deal});
         const g=st.g;if(g&&MP.sent&&MP.hb%2===0){if(g.ph==='night'&&MP.sent.k===nkeyN(g))send({t:'act',n:g.n,deal:g.deal,sel:MP.sent.sel});if(g.ph==='vote'&&MP.sent.k==='v'+g.v)send({t:'vote',v:g.v,sel:MP.sent.sel});}}}}
   catch(e){const gone=Date.now()-MP.lastOk;if(gone>4000)MP.status='lost';if(gone>8000&&!MP.online)rescan();}
-  MP.busy=false;chResend();if(MP.role==='client'&&++MP.hb%3===0)send({t:'hb'});
+  MP.busy=false;tkCheck();if(MP.role!=='client')return;chResend();cbarDraw();if(MP.role==='client'&&++MP.hb%3===0)send({t:'hb'});
   if(V!=='join'&&MP.role==='client'&&['kicked','closed','noroom','started','taken','full'].includes(MP.status))nav('join');  // minimized: show what happened
   else if(V!=='join')rbarDraw();
   if(V==='join'){const sig=joinSig();if(sig!==MP.sig)render();else{const e=$('lat');if(e&&!MP.online)e.textContent=t('lat',{n:MP.lat});}}}
+/** v2.20: the host has been gone for the wait: the successor takes over; on Wi-Fi the others start looking for the successor's room. */
+function tkCheck(){if(MP.role!=='client'||!MP.room||!['lost','joining'].includes(MP.status))return;const gone=Date.now()-(MP.lastOk||Date.now()),lim=tkLimit();
+  if(MP.bk&&gone>lim&&(!MP.online||(MP.ws&&MP.ws.readyState===1&&!MP.hostOn))){hostTakeover();return;}  // online: only when my own link is fine
+  const sn=MP.room.succ;if(!MP.bk&&!MP.online&&sn&&sn!==S.mpName&&gone>lim+3000&&MP.host&&MP.host.name!==sn){MP.host={name:sn,ip:''};MP.rescanAt=0;rescan();}}
 function clientStop(bye){hush();if(bye)chReset();clearInterval(MP.timer);MP.timer=null;MP.scanTok++;if(bye&&MP.role==='client'&&MP.host)send({t:'bye'});if(MP.ws){const w=MP.ws;MP.ws=null;setTimeout(()=>{try{w.close();}catch(e){}},300);}if(bye){MP.role=null;MP.online=null;lsSet(JNK,null);}}
 async function rescan(){if(MP.rescan||Date.now()-(MP.rescanAt||0)<3000)return;MP.rescan=true;const tok=MP.scanTok,want=MP.host.name;
   const r=await findHost(tok,want);MP.rescan=false;MP.rescanAt=Date.now();
@@ -115,9 +121,9 @@ function joinView(){const st=MP.status;MP.sig=joinSig();let b='';
   else if(st==='noroom')b=`<div class="big"><div class="orb">${IC.lock}</div><p class="hint">${t('badCode')}</p><button class="btn primary" onclick="back()">${t('tryAgain')}</button></div>`;
   else if(st==='closed')b=`<div class="big"><div class="orb">${IC.lock}</div><p class="hint">${t('closed')}</p><button class="btn primary" onclick="joinStart()">${t('tryAgain')}</button></div>`;
   else{const h=MP.host?esc(MP.host.name):'';
-    b=`<div class="big"><div class="chip">${st==='ok'?t('connected',{n:h}):st==='lost'?t('lost'):t('joining',{n:h})}</div><div class="who" style="font-size:28px">${esc(S.mpName)}</div>
+    b=`<div class="big"><div class="chip">${st==='ok'?t('connected',{n:h}):st==='lost'?(MP.online&&MP.ws&&MP.ws.readyState===1&&!MP.hostOn?t('connHost',{n:h}):t('lost')):t('joining',{n:h})}</div><div class="who" style="font-size:28px">${esc(S.mpName)}</div>
      <p class="hint" id="lat" style="margin:0">${st==='ok'&&!MP.online?t('lat',{n:MP.lat}):''}</p></div>
-     ${MP.room?`<div class="sec mt"><div class="sh"><h3>${t('playersIn',{n:MP.room.players.length})}</h3></div>${roomList(MP.room.players)}</div>`:''}
+     ${MP.room?`<div class="sec mt"><div class="sh"><h3>${t('playersIn',{n:MP.room.players.length})}</h3></div>${roomList(MP.room.players)}${MP.room.succ?`<p class="mpinfo tkline">${IC.crown}${MP.bk?t('tkYou',{h:h}):t('tkOther',{h:h,n:esc(MP.room.succ)})}</p>`:''}</div>`:''}
      ${st==='ok'&&MP.room&&MP.room.g&&!MP.room.g.ph?`<div class="big mt"><div class="res" style="font-size:20px">${t('youReady')}</div><p class="hint" style="margin:0">${t('waitOthers')} ${t('readyN',{n:MP.room.g.readyN,m:MP.room.g.total})}</p></div>`
        :st==='ok'?`<p class="mpinfo" style="text-align:center;margin:4px 0 12px">${t('waitDeal')}</p>${MP.room.mu?`<p class="hint" style="text-align:center">${t('buzzMuted')}</p>`:`<button class="btn primary" onclick="send({t:'buzz'});toast(t('buzzSent'))">${t('buzzHost')}</button>`}${copyRow()}<button class="btn ghost mt" onclick="shareRoom()">${IC.share}${t(MP.online?'shareCode':'shareAddr')}</button>${MP.online&&me()?`<button class="btn ghost mt" onclick="dockOpen(true)">${IC.friend}${t('fInviteT')}</button>`:''}${rulesChips(MP.room.rules)}`:''}`;}
   return head(joinTitle(),roomLobby()?minBtn():'')+(MP.room&&MP.room.hv>APP.code?`<div class="banner"><div>${t('hostNewer')}</div></div>`:'')+b+`<button class="danger" onclick="leaveAsk()">${t('leave')}</button>`;}

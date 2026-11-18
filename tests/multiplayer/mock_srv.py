@@ -24,7 +24,8 @@ def handle(c):
         c.sendall((HEADER + body).encode('utf-8'))
     except Exception as e: print('ERR', e, file=sys.stderr)
     finally: c.close()
-s = socket.socket(); s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1); s.bind(('0.0.0.0', 8765)); s.listen(64)
+s = socket.socket(); s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1); # optional address: two phones on one PC (127.0.0.1 and 127.0.0.2), test_v220
+s.bind((sys.argv[1] if len(sys.argv) > 1 else '0.0.0.0', 8765)); s.listen(64)
 print('ready', flush=True)
 while True:
     c, _ = s.accept(); threading.Thread(target=handle, args=(c,), daemon=True).start()

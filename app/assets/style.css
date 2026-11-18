@@ -559,3 +559,55 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}.fdrawer,.bell
 [data-theme=noir] .chpop .rxp.all{border-radius:6px}
 .fdh .ib svg{width:20px;height:20px;display:block;margin:auto}
 .top:has(.corner) .brand b{font-size:19px;text-wrap:balance}  /* v2.19: a title next to the four corner buttons (Arabic wrapped to 3 lines) */
+/* v2.20 Noir chat, "Case file" (Alhassan's pick of three): others' messages are cream paper notes, mine are red, hard ink shadows,
+   typewriter labels, dashed rules; it matches Noir's tiles and recap. Neon is unchanged. */
+[data-theme=noir] .chh{border-bottom:1px dashed var(--line2)}
+[data-theme=noir] .chh>b,[data-theme=noir] .cht b{font-family:var(--head);font-weight:400;letter-spacing:.08em;text-transform:uppercase;font-size:18px}
+[data-theme=noir] .cht small{font-family:var(--head);letter-spacing:.06em}
+[data-theme=noir] .chh .ib{border-radius:2px;background:var(--card);border:1px solid var(--line2)}
+[data-theme=noir] .chr{border-bottom:1px dashed var(--line)}
+[data-theme=noir] .chr .t1 b{font-family:var(--head);font-weight:400;letter-spacing:.05em;font-size:16.5px}
+[data-theme=noir] .chr time,[data-theme=noir] .cm time{font-family:var(--head);letter-spacing:.04em}
+[data-theme=noir] .unb{background:var(--red);border-radius:2px;box-shadow:2px 2px 0 #000}
+[data-theme=noir] .atb,[data-theme=noir] #fdock .fchat .cnt.at{background:var(--gold);color:#1c1915;border-radius:2px;box-shadow:2px 2px 0 #000}
+[data-theme=noir] .avt.chx{background:var(--alt);color:var(--red);font-family:var(--head);font-weight:400;border-radius:3px;box-shadow:2px 2px 0 var(--red)}
+[data-theme=noir] .avt.chx.grp{background:none;color:var(--red);border:1.5px solid var(--red);box-shadow:2px 2px 0 #000}
+[data-theme=noir] .chm .cm{background:var(--alt);color:var(--alt-t);border:0;border-radius:3px;box-shadow:3px 3px 0 #000}
+[data-theme=noir] .cm .cnm{color:var(--red);font-family:var(--head);letter-spacing:.08em;text-transform:uppercase;font-size:11px}
+[data-theme=noir] .cm time{color:#6b6255}
+[data-theme=noir] .cmr.me .cm{background:var(--red);color:#f6efe2;border-radius:3px;box-shadow:3px 3px 0 #000}
+[data-theme=noir] .cmr.me .cm time{color:#f6efe2b3}
+[data-theme=noir] .rq{background:#0000000f;border-inline-start:3px solid var(--red);border-radius:2px}
+[data-theme=noir] .rq b{color:var(--red);font-family:var(--head);letter-spacing:.05em}
+[data-theme=noir] .cmr.me .rq{background:#00000026;border-inline-start-color:#f6efe2}[data-theme=noir] .cmr.me .rq b{color:#f6efe2}
+[data-theme=noir] .cm .ment{color:var(--red)}[data-theme=noir] .cm .ment.me{background:#b3241f26}
+[data-theme=noir] .cmr.me .cm .ment{color:#fff}
+[data-theme=noir] .rx{border-radius:2px;background:var(--alt);color:var(--alt-t);border:0;box-shadow:2px 2px 0 #000}[data-theme=noir] .rx.on{box-shadow:2px 2px 0 var(--red)}
+[data-theme=noir] .chf{border-top:1px dashed var(--line2)}
+[data-theme=noir] .chf input{border-radius:2px;background:var(--card);border:1px solid var(--line2)}
+[data-theme=noir] .chsend{background:var(--alt);color:var(--red);border-radius:2px;box-shadow:3px 3px 0 var(--red)}
+[data-theme=noir] .crp{background:var(--alt);border-radius:2px;border-inline-start:3px solid var(--red)}[data-theme=noir] .crp b{color:var(--red);font-family:var(--head)}[data-theme=noir] .crp span{color:#5a5248}[data-theme=noir] .crp .ib{background:none;border:0;color:var(--alt-t)}
+[data-theme=noir] .chmn{background:var(--alt);border:0;border-radius:3px;box-shadow:3px 3px 0 var(--red)}[data-theme=noir] .chmn button{color:var(--alt-t);border-color:#00000018}
+[data-theme=noir] .chpop .rxp{background:var(--alt);border:0;border-radius:3px;box-shadow:4px 4px 0 var(--red)}
+[data-theme=noir] .chpop .rxp .rxm{background:none;color:var(--red);border:1.5px dashed var(--red);border-radius:3px}
+[data-theme=noir] .chmenu{background:var(--alt);border:0;border-radius:3px;box-shadow:4px 4px 0 var(--red)}
+[data-theme=noir] .chmenu button{color:var(--alt-t);border-color:#00000018;font-family:var(--head);font-weight:400;letter-spacing:.08em;text-transform:uppercase}[data-theme=noir] .chmenu svg{color:var(--red)}
+[data-theme=noir] .chlift .cm{box-shadow:5px 5px 0 #000,0 14px 36px #000c}
+[data-theme=noir] .swr{border-radius:3px;background:var(--alt);color:var(--red)}[data-theme=noir] .swr.on{background:var(--red);color:#f6efe2}
+[data-theme=noir][dir=rtl] .cmr.me .cm,[data-theme=noir][dir=rtl] .chm .cm{border-radius:3px}  /* the RTL bubble-tail rules are more specific */
+/* the message box: no browser focus ring (it drew a harsh white outline), the theme's accent instead */
+.chf input:focus{outline:none;border-color:var(--sel)}
+[data-theme=noir] .chf input:focus{border-color:var(--red);box-shadow:2px 2px 0 var(--red)}
+/* v2.20 connection bar (and the same colours in the minimized room bar) */
+#cbar .cbar{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;justify-content:center;gap:8px;padding:calc(6px + env(safe-area-inset-top)) 14px 6px;font-size:13px;font-weight:700;color:#fff;animation:drop .25s ease both}
+#cbar .cbar i{width:8px;height:8px;border-radius:50%;background:#fff;flex:none}#cbar .cbar span{min-width:0;text-align:center;line-height:1.3}
+#cbar .cbar.lost{background:#c62f2f}#cbar .cbar.lost i{animation:cbBlink 1s steps(2) infinite}
+#cbar .cbar.wait,#cbar .cbar.weak{background:#b9770e}#cbar .cbar.back{background:#2e8b57}
+@keyframes cbBlink{50%{opacity:.2}}
+body.cbon{padding-top:var(--cbh,30px)}body.cbon #chat .chw{padding-top:calc(var(--cbh,30px) + 10px)}
+#rbar .rbar.lost{background:#c62f2f}#rbar .rbar.wait,#rbar .rbar.weak{background:#b9770e}#rbar .rbar.back{background:#2e8b57}
+#rbar .rbar.lost .dot{animation:cbBlink 1s steps(2) infinite;background:#fff}
+[data-theme=noir] #cbar .cbar{font-family:var(--head);font-weight:400;letter-spacing:.03em;text-transform:uppercase;font-size:12.5px;box-shadow:0 2px 0 #000}
+[data-theme=noir] #cbar .cbar.lost{background:var(--red)}[data-theme=noir] #cbar .cbar.wait,[data-theme=noir] #cbar .cbar.weak{background:#8a6a2a}[data-theme=noir] #cbar .cbar.back{background:#4f7a5a}
+[data-theme=noir] #cbar .cbar i{border-radius:1px}
+.tkline{display:flex;align-items:flex-start;gap:8px;margin:12px 2px 0;font-size:12.5px;line-height:1.45}.tkline svg{width:16px;height:16px;flex:none;color:var(--gold);margin-top:1px}

@@ -82,6 +82,11 @@ export class Room {
       const key = u.searchParams.get("key") || "", have = await this.s.get("key");
       if (key.length < 16 || (have && have !== key)) return this.reject(client, server, "taken");
       if (!have) await this.s.put("key", key);
+      // v2.20 host takeover: ep = which host this is (0 the first, +1 each time a player takes the room over). An earlier host coming
+      // back is told "replaced" (it then joins as a player) instead of pushing out the one who took over.
+      const ep = Math.max(0, Math.floor(+u.searchParams.get("ep") || 0)), haveEp = (await this.s.get("ep")) || 0;
+      if (ep < haveEp) return this.reject(client, server, "replaced");
+      if (ep > haveEp) await this.s.put("ep", ep);
       for (const old of this.ctx.getWebSockets("host")) try { old.close(4002, "replaced"); } catch (e) {}
       this.ctx.acceptWebSocket(server, ["host"]);
       const q = (await this.s.get("q")) || [];

@@ -20,7 +20,10 @@ const MPK='mafiaDealer.mp',JNK='mafiaDealer.join',FRESH=12*3600e3;
 const keepOn=on=>{try{window.Net&&Net.keep&&Net.keep(on);}catch(e){}};
 function lsGet(k){try{const s=JSON.parse(localStorage.getItem(k)||'null');return s&&Date.now()-s.at<FRESH?s:null;}catch(e){return null;}}
 function lsSet(k,v){try{if(v)localStorage.setItem(k,JSON.stringify(Object.assign({at:Date.now()},v)));else localStorage.removeItem(k);}catch(e){}}
-function mpSnap(){lsSet(MPK,MP.role==='host'&&MP.game?{seq:MP.seq,game:MP.game,G:G&&G.mp?G:null,players:MP.players,online:MP.online}:null);}
+function mpSnap(){lsSet(MPK,MP.role==='host'&&MP.game?{seq:MP.seq,game:MP.game,G:G&&G.mp?G:null,players:MP.players,online:MP.online,ph:MP.prevHost||'',sn:MP.succName||''}:null);}
+/** v2.20 host takeover: how long players wait for a lost host (lobby / roles dealt or a game on); the app version that can take over. */
+const TK={lobby:30e3,game:120e3,v:42};
+const tkLimit=()=>MP.room&&MP.room.g?TK.game:TK.lobby;
 /* online: one WebSocket to the relay (one Durable Object per room code); same put/take/clear as the native Net */
 const RELAY='wss://mafia-relay.mafiadealer.workers.dev';
 const relayUrl=()=>(S.relay||RELAY).replace(/\/+$/,'');

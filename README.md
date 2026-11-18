@@ -103,6 +103,7 @@ node test_s3.js maf                         # Mafia win
 node test_v217.js                           # ping, Back, chat reactions/replies/mentions (spawns mock_srv.py itself)
 node test_v218.js                           # sending status, edit, long-press menu, chat slides, bell mentions, update alerts (app side)
 node test_v219.js                           # swipe to reply, the reaction grid, RTL arrows (motion on)
+node test_v220.js                           # Wi-Fi host takeover mid-game (two mock phones: 127.0.0.1 and 127.0.0.2), connection bar
 ```
 
 ## Multiplayer protocol

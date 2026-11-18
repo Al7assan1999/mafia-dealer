@@ -89,7 +89,9 @@ interface HostNet {
 
 /** Multiplayer state (MP), for both the host and the players. */
 interface Mp {
-  role: 'host' | 'client' | null; status: string; online?: { code: string; key?: string } | null; lastMode?: string;
+  role: 'host' | 'client' | null; status: string; online?: { code: string; key?: string; ep?: number } | null; lastMode?: string;
+  // v2.20 host takeover: bk is the host's backup (only the successor gets it), succ the successor's id (on the host), succName and prevHost the rooms to look for
+  bk?: any; succ?: string | null; succName?: string; prevHost?: string; aloneAt?: number; stepScan?: boolean; stepAt?: number; pingAt?: number; cPrev?: string; cOkAt?: number;
   // host
   players: Record<string, MpPlayer>; kicked?: Record<string, any>; seq: number; pubAt?: number; game?: MpDeal | null; myIp?: string;
   // player

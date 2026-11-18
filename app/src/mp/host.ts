@@ -1,12 +1,13 @@
 /* host */
 function hostStart(online){if(roomMinned()){leaveFirst(()=>hostStart(online));return;}if(needName(online))return;SND.unlock();S.mpName=S.mpName.trim();save();
-  chReset();MP.role='host';MP.players={};MP.kicked={};MP.seq=0;MP.pubAt=0;MP.game=null;
+  chReset();MP.role='host';MP.players={};MP.kicked={};MP.seq=0;MP.pubAt=0;MP.game=null;MP.prevHost='';MP.succName='';MP.succ=null;MP.aloneAt=0;
   MP.online=online?{code:String(100000+Math.floor(Math.random()*900000)),key:rnd(24)}:null;HN=MP.online?onlineNet(MP.online):window.Net;
   hostOpen();hostPublish();nav('host');}
-function hostOpen(){lsSet(JNK,null);HN.clear();HN.start(PORT);HN.put('room',S.mpName);MP.myIp=parseIp(HN.ip()).ip;keepOn(true);
+function hostOpen(keep?: boolean){lsSet(JNK,null);if(!keep)HN.clear();HN.start(PORT);  // keep: a takeover keeps what the relay holds (state, queued actions)
+  HN.put('room',S.mpName);MP.myIp=parseIp(HN.ip()).ip;keepOn(true);
   clearInterval(MP.timer);MP.timer=setInterval(hostTick,250);}
 function hostResume(){const s=lsGet(MPK);if(!s||needName(!!s.online))return;SND.unlock();chReset();
-  MP.online=s.online||null;HN=MP.online?onlineNet(MP.online):window.Net;MP.role='host';MP.seq=s.seq||0;MP.pubAt=0;MP.game=s.game;MP.players=s.players||{};
+  MP.online=s.online||null;HN=MP.online?onlineNet(MP.online):window.Net;MP.role='host';MP.seq=s.seq||0;MP.pubAt=0;MP.game=s.game;MP.players=s.players||{};MP.prevHost=s.ph||'';MP.succName=s.sn||'';MP.aloneAt=0;
   for(const q of Object.values(MP.players)){q.on=false;q.seen=0;}
   if(s.G){G=s.G;G.hostTurn=false;G.hostRes=false;G.sel=null;}
   hostOpen();hostPublish();nav('host');if(G)enterGame();}
@@ -38,14 +39,18 @@ function hostTick(){let m,ch=false;const now=Date.now();
     else{const e=$('mpprog');if(e)e.innerHTML=mpProg();}}
   if(ch&&G&&G.mp&&G.phase==='mpNight')mpCheckNight();
   if(ch&&V!=='host')rbarDraw();
+  hostStepTick(now);cbarDraw();
   if(ch&&V==='host'){if(G){if(G.mp&&$('mpprog'))$('mpprog').innerHTML=mpProg();if(G.mp&&G.open&&$('hboard'))$('hboard').innerHTML=boardHtml(voteBoard());}else if(MP.game&&$('rdy'))$('rdy').innerHTML=readyHtml();else render();}}
 function hostPublish(){MP.pubAt=Date.now();chHandles();
-  const room={host:S.mpName,hv:APP.code,cv:1,rules:activeRules(),seq:MP.seq,players:([{name:S.mpName,on:true,host:true,uid:me()&&me().id,av:me()&&me().avatar,c:0,out:chOut(0)}] as RoomPlayer[]).concat(Object.values(MP.players).map(q=>({name:q.name,on:q.on,uid:q.uid,av:q.uav,c:(q.v||0)>=28?q.cn:undefined,out:chOut(q.cn)})))};
+  // v2.20: the successor = the first player who joined (and is connected, on an app that can take over); only they get the backup
+  MP.succ=Object.keys(MP.players).find(id=>MP.players[id].on&&(MP.players[id].v||0)>=TK.v)||null;if(MP.succ)MP.succName=MP.players[MP.succ].name;
+  const room={host:S.mpName,hv:APP.code,cv:1,rules:activeRules(),seq:MP.seq,succ:MP.succ?MP.players[MP.succ].name:'',players:([{name:S.mpName,on:true,host:true,uid:me()&&me().id,av:me()&&me().avatar,c:0,out:chOut(0)}] as RoomPlayer[]).concat(Object.values(MP.players).map(q=>({name:q.name,on:q.on,uid:q.uid,av:q.uav,c:(q.v||0)>=28?q.cn:undefined,out:chOut(q.cn)})))};
   const g=MP.game;
   for(const id in MP.players){const st: Record<string,any>=Object.assign({you:MP.players[id].name,mu:buzzMuted(MP.players[id])},room);
     if(g&&G&&G.mp){const i=G.ids.indexOf(id);if(i>=0)st.g=mpPriv(i);}
     else if(g){const i=g.ids.indexOf(id);if(i>=0){const r=g.roles[i];
       st.g={deal:g.deal,phase:'deal',role:r,mates:r==='mafia'?g.names.filter((n,j)=>j!==i&&g.roles[j]==='mafia'):[],meReady:!!g.ready[id],readyN:Object.keys(g.ready).length,total:g.ids.length};}}
+    if(id===MP.succ)st.bk=mpBackup();
     chPublish(id,st);HN.put('p_'+id,JSON.stringify(st));}
   mpSnap();}
 function hostIds(){return ['host'].concat(Object.keys(MP.players).filter(id=>MP.players[id].on));}
@@ -66,6 +71,39 @@ function roleCard(name,role,mates,btn){return `<div class="big"><div class="lbl"
    <div class="rv"><div class="ric" style="width:56px;height:56px;background:${RC[role]}1f;color:${RC[role]}">${IC[role]}</div><div class="rn" style="color:${RC[role]}">${t(role)}</div><div class="rd">${t('d_'+role)}</div>${mates&&mates.length?`<div class="mates">${t('mates',{n:mates.map(esc).join(S.lang==='ar'?'، ':', ')})}</div>`:''}</div></div>
    <button class="btn ghost" id="memo" onclick="${btn}" disabled style="opacity:.4">${t('gotIt')}</button></div>`;}
 function hostPing(){MP.seq++;hostPublish();toast(t('pinged'));}
+/* ---------- v2.20 host takeover ----------
+ * The host keeps one player (the first who joined and is connected) up to date with a hidden backup: players, the dealt roles and the
+ * whole game. If the host is gone for 30 s (2 min once roles are dealt), that player's phone becomes the host of the same room:
+ * online the same code (one generation up, so the old host can't push them out), on Wi-Fi its own phone, which the others find by name.
+ * Seats stay: the successor's seat becomes 'host', the old host's seat becomes a player (their phone's id), so when the old host comes
+ * back they join as a player and see their own role. The room chat starts over. */
+function mpBackup(){return {seq:MP.seq,game:MP.game,G:G&&G.mp?G:null,players:MP.players,kicked:MP.kicked,online:MP.online,
+  hname:S.mpName,hid:myId(),huid:me()?me().id:null,hav:me()?me().avatar:'',hv:APP.code};}
+function hostTakeover(){const bk=MP.bk,mine=MP.id;if(!bk||MP.role!=='client')return;
+  const map=(id: string)=>id==='host'?bk.hid:id===mine?'host':id;
+  clientStop(false);chReset();MP.bk=null;
+  const players: Record<string,MpPlayer>={};for(const id in bk.players)if(id!==mine)players[id]=bk.players[id];
+  players[bk.hid]={name:bk.hname,on:false,seen:0,v:bk.hv,uid:bk.huid,uav:bk.hav};  // the old host: a player now (off until they come back)
+  for(const q of Object.values(players)){q.on=false;q.seen=0;}
+  MP.role='host';MP.players=players;MP.kicked=bk.kicked||{};MP.seq=bk.seq||0;  // the same seq: a higher one reads as a Ping on the players' phones
+  MP.pubAt=0;MP.prevHost=bk.hname;MP.succName='';MP.aloneAt=0;
+  MP.game=bk.game?Object.assign({},bk.game,{ids:bk.game.ids.map(map),ready:Object.fromEntries(Object.entries(bk.game.ready||{}).map(([k,v])=>[map(k),v]))}):null;
+  G=bk.G?Object.assign(bk.G,{ids:bk.G.ids.map(map),hostTurn:false,hostRes:false,sel:null}):null;
+  MP.online=bk.online?{code:bk.online.code,key:bk.online.key,ep:(bk.online.ep||0)+1}:null;HN=MP.online?onlineNet(MP.online):window.Net;
+  SND.unlock();hostOpen(true);hostPublish();toast(t('youHostNow',{n:bk.hname}));
+  if(G)enterGame();else nav('host');}
+/** Online: the relay says another player took this room over while we were away: join it as a player (same seat, same role). */
+function hostReplaced(){if(MP.role!=='host'||!MP.online)return;const code=MP.online.code;G=null;hostStop();toast(t('hostReplaced'));joinOnline(code);}
+/** Wi-Fi: a host whose players have all been gone a while looks for the room of the player who took over (or of the host it replaced). */
+function hostStepTick(now: number){if(MP.online||!(MP.succName||MP.prevHost))return;const ids=Object.keys(MP.players);
+  if(!ids.length||ids.some(id=>MP.players[id].on)){MP.aloneAt=0;return;}
+  if(!MP.aloneAt)MP.aloneAt=now;
+  if(now-MP.aloneAt>TK.lobby+15e3&&!MP.stepScan&&now-(MP.stepAt||0)>20e3)hostStepCheck();}
+async function hostStepCheck(){MP.stepScan=true;MP.stepAt=Date.now();const tok=MP.scanTok;
+  for(const n of [MP.succName,MP.prevHost].filter(Boolean)){const r=await findHost(tok,n);
+    if(tok!==MP.scanTok||MP.role!=='host')break;
+    if(r&&r.ip&&r.ip!==MP.myIp){G=null;hostStop();toast(t('hostReplaced'));joinStart(r.ip);break;}}
+  MP.stepScan=false;}
 function hostStop(){hush();chReset();clearInterval(MP.timer);MP.timer=null;if(MP.role==='host'){lsSet(MPK,null);keepOn(false);if(HN){HN.clear();if(HN.close)HN.close();}}MP.role=null;MP.online=null;}
 function roomList(players){return players.map(q=>`<div class="prs"><span class="dot ${q.on?'on':''}"></span>${q.uid?avatarHtml(q.av,q.uid,28):''}<b>${esc(q.name)}</b>${q.host?`<small>${t('youHost')}</small>`:''}${q.old?`<small class="oldv">${t('oldApp')}</small>`:''}${plusBtn(q.uid)}</div>`).join('');}
 function hostView(){const g=MP.game;
@@ -80,7 +118,7 @@ function hostView(){const g=MP.game;
      :`<p class="hint" style="margin-bottom:0">${MP.myIp?`<span class="ipline sel">${t('hostAddr',{ip:MP.myIp})}</span> <button class="mini" onclick="copyText(MP.myIp)">${t('copy')}</button>`:t('hotspotMode')}</p>`}</div>
   <button class="btn ghost mt" onclick="shareRoom()">${IC.share}${t(MP.online?'shareCode':'shareAddr')}</button>
   ${MP.online?`<button class="btn ghost mt" onclick="dockOpen(true)">${IC.friend}${t('fInviteT')}</button>`:''}
-  <div class="sec mt"><div class="sh"><h3>${t('playersIn',{n:ps.length})}</h3><button class="link" onclick="hostPing()">${t('pingAll')}</button></div>${hostRows()}</div>
+  <div class="sec mt"><div class="sh"><h3>${t('playersIn',{n:ps.length})}</h3><button class="link" onclick="hostPing()">${t('pingAll')}</button></div>${hostRows()}${ps.length>1?`<p class="mpinfo tkline">${IC.crown}${MP.succ?t('tkHost',{n:esc(MP.players[MP.succ].name)}):t('tkNone')}</p>`:''}</div>
   ${deckRules(ps.length,err)}
   <button class="btn primary" ${err?'disabled':''} onclick="hostDeal()">${t('dealRoles')}</button>
   <button class="danger" onclick="askLeaveRoom()">${t('closeRoom')}</button>
