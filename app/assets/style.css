@@ -525,9 +525,9 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}.fdrawer,.bell
 [data-theme=noir] .chm .cm,[data-theme=noir] .chf input,[data-theme=noir] .chas,[data-theme=noir] .chmn{border-radius:4px}[data-theme=noir] .chsend{border-radius:4px}
 /* v2.18 chat: sending status, edit, the long-press menu beside the message, panel slides */
 #chat .chw{animation:none}
-#chat .chw.a-up{animation:chUp .28s cubic-bezier(.2,.8,.2,1) both}
+#chat .chw.a-up{animation:chUp .28s cubic-bezier(.2,.8,.2,1) backwards}
 #chat .chw.a-down{animation:chDown .2s ease-in both;pointer-events:none}
-#chat .chw.a-in>*,#chat .chw.a-back>*{animation:chRise .28s cubic-bezier(.2,.8,.2,1) both}
+#chat .chw.a-in>:not(#chact),#chat .chw.a-back>:not(#chact){animation:chRise .28s cubic-bezier(.2,.8,.2,1) backwards}  /* v2.18.2: not the menu's layer, and nothing held afterwards (a held transform made it the box the long-press menu was placed in: 0 px tall, off-screen) */
 @keyframes chUp{from{transform:translateY(48px);opacity:0}to{transform:none;opacity:1}}
 @keyframes chDown{to{transform:translateY(48px);opacity:0}}
 @keyframes chRise{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}

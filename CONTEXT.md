@@ -9,7 +9,11 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## Current state: v2.18.1 (versionCode 38), published on the relay 2026-11-18 (relay version cfb7b806; relay code unchanged; Telegram announce sent to 5 accounts)
+## Current state: v2.18.2 (versionCode 39), built 2026-11-18, NOT published yet (relay code unchanged)
+- Hotfix: in v2.18.1 long-press only vibrated. The conversation slide animated every child of the chat panel with `fill-mode: both`, including `#chact`; an element holding a transform animation becomes the containing block for its absolute/fixed children, so the menu's layer was 0 px tall at the bottom and the menu was placed below the screen. Now only the visible children animate (`:not(#chact)`), with `backwards` (nothing held after the slide).
+- **Lesson:** the Playwright tests run with `reducedMotion:'reduce'`, which switches these animations off, so they could not see it. `test_v218.js` now does a real long-press with motion on (41 checks); check anything positioned inside the chat with motion on.
+
+## Previous: v2.18.1 (versionCode 38), published on the relay 2026-11-18 (relay version cfb7b806; relay code unchanged; Telegram announce sent to 5 accounts)
 - The host's "Hosting a game" notification opens the room: its contentIntent carries `md:room` (Keep.onStartCommand); the page's `deepLink` goes back to the room when it is minimized (a running game stays on screen) and closes the chat.
 - Chat list <-> conversation no longer flashes: the panel used to slide and fade as a whole, so the room behind showed through. Now the panel stays solid and only its content rises in (`chRise`, the same motion as opening the chat).
 - Tests: `test_v218.js` now 40.

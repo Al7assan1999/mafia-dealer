@@ -75,6 +75,12 @@ const VJ={code:99,name:'9.9',url:'https://example.invalid/MafiaDealer.apk',notes
  await s.evaluate(()=>chGo(-1));ok(await s.evaluate(()=>!!document.querySelector('#chat .chw.a-in')),'into a conversation: slides in');
  ok(await s.evaluate(()=>{const w=document.querySelector('#chat .chw');return getComputedStyle(w).animationName==='none'&&getComputedStyle(w).opacity==='1'&&getComputedStyle(w.querySelector('.chh')).animationName==='chRise';}),
    'v2.18.1: the panel stays solid (no flash of the room behind); its content rises in like opening the chat');
+ // v2.18.2: with motion on (as on a phone) the long-press menu was placed in a 0 px box below the screen
+ await s.waitForTimeout(450);{const bb=await s.$(`#chm .cmr[data-i="${hid}"] .cm`).then(e=>e.boundingBox());
+   await s.mouse.move(bb.x+20,bb.y+12);await s.mouse.down();await s.waitForTimeout(600);await s.mouse.up();await s.waitForTimeout(300);}
+ ok(await s.evaluate(()=>{const a=document.querySelector('#chact .chact'),p=document.querySelector('#chact .chpop');if(!a||!p)return false;const ra=a.getBoundingClientRect(),rp=p.getBoundingClientRect();
+   return ra.top===0&&ra.height===innerHeight&&rp.top>=0&&rp.bottom<=innerHeight&&rp.height>100;}),'v2.18.2: long-press with motion on: the dimmed layer covers the screen and the menu is on it');
+ await s.evaluate(()=>chActs(0));
  await s.evaluate(()=>chClose());ok(await s.evaluate(()=>!!document.querySelector('#chat .chw.a-down')),'Minimize: slides down');
  await s.waitForTimeout(300);ok(await s.evaluate(()=>!document.querySelector('#chat .chw')),'then it is gone');
  await s.evaluate(()=>chOpenList());ok(await s.evaluate(()=>!!document.querySelector('#chat .chw.a-up')),'opening the chat: slides up');await s.evaluate(()=>chClose());await s.waitForTimeout(300);
