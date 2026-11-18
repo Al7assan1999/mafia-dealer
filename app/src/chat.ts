@@ -118,10 +118,10 @@ function chLinesHtml(list: ChatMsg[],h: number,group: boolean){return list.map((
   const first=!prev||prev.f!==m.f,last=!next||next.f!==m.f;
   const av=mine?'':`<span class="cav">${last?chAv(chWho(m.f)||{name:m.n} as RoomPlayer,28):''}</span>`;
   const name=group&&first&&!mine?`<b class="cnm">${esc(m.n)}${m.d?' · '+t('chatDeadTag'):''}</b>`:'';
-  const acts=pend?'':`onpointerdown="chPress(event,${m.i})" oncontextmenu="event.preventDefault();chActs(${m.i})"`;
+  const acts=pend?'':`oncontextmenu="event.preventDefault();chActs(${m.i})"`;  // the swipe listens on the whole line (below), long-press on the bubble
   const meta=[m.e?t('chatEdited'):'',last&&m.at?chTime(m.at):''].filter(Boolean).join(' · ')+(mine&&last&&!m.fail?(pend?CH_CLK:CH_OK):'');  // sending: a clock; delivered: a tick
   const fail=m.fail?`<button class="cfail" onclick="chRetry('${m.pk}')">${t('chatFail')}</button>`:'';
-  return `<div class="cmr${mine?' me':''}${last?' last':''}${chMent[m.i]?' hit':''}${m.fail?' nsent':''}" data-i="${m.i||''}">${av}<div class="cmc"><div class="cm${pend?' pend':''}" ${acts}>${name}${m.re?chQuote(m.re):''}<span dir="auto">${chText(m)}</span>${meta?`<time>${meta}</time>`:''}</div>${chRx(m)}${fail}</div></div>`;}).join('');}
+  return `<div class="cmr${mine?' me':''}${last?' last':''}${chMent[m.i]?' hit':''}${m.fail?' nsent':''}" data-i="${m.i||''}"${pend?'':` onpointerdown="chPress(event,${m.i})"`}>${av}<div class="cmc"><div class="cm${pend?' pend':''}" ${acts}>${name}${m.re?chQuote(m.re):''}<span dir="auto">${chText(m)}</span>${meta?`<time>${meta}</time>`:''}</div>${chRx(m)}${fail}</div></div>`;}).join('');}
 function chDraw(){scrollLock();const el=$('chat');if(!el)return;
   if(!chView){chList='';chAnim='';const w=el.querySelector('.chw');if(!w||chCalm()){el.innerHTML='';return;}  // minimized: slides down, then goes
     w.classList.add('a-down');setTimeout(()=>{if(!chView)el.innerHTML='';},200);return;}
@@ -164,35 +164,38 @@ function chSend(){const el=$('chin') as HTMLInputElement,x=el?el.value.trim().sl
   chRepDraw();chMentDraw();
   if(MP.role==='host'){if(chPost(0,c,x,undefined,re,mt))hostPublish();else toast(t('chatSlow'));chDraw();chEnd();return;}
   const k=rnd(8),now=Date.now();chPend.push({k,to:c,x,at:now,t0:now,re});send({t:'chat',to:c,x,k,re,mt});chDraw();chEnd();}
-/* long-press a message: reactions and Reply */
+/* swipe a message: Reply; long-press: reactions, and Edit on my own */
 let chPressT: any=0;
 const CH_SW=60;  // swipe this far to reply
-/** Long-press (450 ms, held still): reactions, Reply, Edit. Swipe right (left in Arabic) past 60 px: Reply, on any message (v2.19, like Telegram).
- *  The bubble follows the finger with a reply icon behind it; an upward / downward move is left to scrolling (.cm has touch-action: pan-y). */
-function chPress(e: PointerEvent,i: number){clearTimeout(chPressT);const x0=e.clientX,y0=e.clientY,sg=document.documentElement.dir==='rtl'?-1:1;
+/** Long-press (450 ms, held still): reactions, and Edit on my own. Swipe sideways past 60 px: Reply, on any message (v2.19.1: either way, in both
+ *  languages; v2.19 only accepted the mirrored direction in Arabic, so a swipe to the right did nothing there). The bubble follows the finger with
+ *  a reply icon on the side it leaves; an upward / downward move is left to scrolling (.cm has touch-action: pan-y). */
+function chPress(e: PointerEvent,i: number){clearTimeout(chPressT);const x0=e.clientX,y0=e.clientY;let sg=1;
   const row=(e.currentTarget as HTMLElement).closest('.cmr') as HTMLElement;let sw=false,armed=false,ic: HTMLElement=null;
   const done=(ok: boolean)=>{clearTimeout(chPressT);removeEventListener('pointerup',up);removeEventListener('pointercancel',no);removeEventListener('pointermove',mv);
     if(!sw)return;row.style.transition='transform .18s ease';row.style.transform='';setTimeout(()=>{row.style.transition='';if(ic)ic.remove();},200);if(ok&&armed)chReplyStart(i);};
   const up=()=>done(true),no=()=>done(false);
-  const mv=(ev: PointerEvent)=>{const dx=(ev.clientX-x0)*sg,dy=Math.abs(ev.clientY-y0);
-    if(!sw){if(dy>10&&dy>=Math.abs(dx)||dx<-12){done(false);return;}  // scrolling, or the other way
-      if(Math.abs(dx)+dy>10)clearTimeout(chPressT);  // moving: no long-press
-      if(dx>12&&dx>dy*1.5){sw=true;ic=document.createElement('i');ic.className='swr';ic.innerHTML=IC.reply;row.prepend(ic);}
+  const mv=(ev: PointerEvent)=>{const raw=ev.clientX-x0,dy=Math.abs(ev.clientY-y0);
+    if(!sw){if(dy>10&&dy>=Math.abs(raw)){done(false);return;}  // scrolling
+      if(Math.abs(raw)+dy>10)clearTimeout(chPressT);  // moving: no long-press
+      if(Math.abs(raw)>12&&Math.abs(raw)>dy*1.5){sw=true;sg=raw>0?1:-1;ic=document.createElement('i');ic.className='swr';ic.innerHTML=IC.reply;
+        ic.style[sg>0?'left':'right']='-36px';row.prepend(ic);}
       return;}
+    const dx=raw*sg;
     const d=Math.max(0,Math.min(dx,90));row.style.transform=`translateX(${d*sg}px)`;ic.style.opacity=String(Math.min(1,d/CH_SW));
     if(!armed&&d>=CH_SW){armed=true;ic.classList.add('on');try{navigator.vibrate&&navigator.vibrate(10);}catch(err){}}else if(armed&&d<CH_SW){armed=false;ic.classList.remove('on');}};
   addEventListener('pointerup',up);addEventListener('pointercancel',no);addEventListener('pointermove',mv);
-  chPressT=setTimeout(()=>{done(false);chActs(i);},450);}
+  if((e.target as Element).closest('.cm'))chPressT=setTimeout(()=>{done(false);chActs(i);},450);}  // long-press on the bubble; the swipe from anywhere on its line (v2.19.1, like Telegram)
 function chCanAct(i: number){const m=chMsgs().find(x=>x.i===i);if(!m)return false;const me=chMine();
   return !chAmOut()||!!(m.d||m.to!==-1&&chWho(m.f)&&chWho(m.to)&&(m.f===me?chWho(m.to).out:chWho(m.f).out));}
 /** Edit is offered on my own messages for 15 minutes, when the host's app knows edits (v2.18+). */
 function chCanEdit(i: number){const m=chMsgs().find(x=>x.i===i);return !!m&&m.f===chMine()&&Date.now()-(m.at||0)<CH_EDIT-20e3&&(MP.role==='host'||((MP.room&&MP.room.hv)||0)>=37);}
-/** Long-press (v2.18, like Messenger): the message lifts in place over a dimmed chat, reactions just above it, Reply / Edit just below. */
+/** Long-press (v2.18, like Messenger): the message lifts in place over a dimmed chat, reactions just above it, Edit just below (my own, 15 min). */
 function chActs(i: number){chActI=i;const el=$('chact');if(!el)return;if(!i){el.innerHTML='';return;}
   const row=document.querySelector(`#chm .cmr[data-i="${i}"]`) as HTMLElement,b=row&&row.querySelector('.cm') as HTMLElement;if(!b)return;
+  const rx=chCanAct(i),ed=chCanEdit(i),r=b.getBoundingClientRect(),W=innerWidth,H=innerHeight;if(!rx&&!ed)return;  // nothing to offer (Reply is the swipe)
   try{navigator.vibrate&&navigator.vibrate(15);}catch(e){}
-  const rx=chCanAct(i),ed=chCanEdit(i),r=b.getBoundingClientRect(),W=innerWidth,H=innerHeight;
-  const menu=`<div class="chmenu"><button onclick="chReplyStart(${i})">${IC.reply}<span>${t('chatReply')}</span></button>${ed?`<button onclick="chEditStart(${i})">${IC.edit}<span>${t('chatEdit')}</span></button>`:''}</div>`;
+  const menu=ed?`<div class="chmenu"><button onclick="chEditStart(${i})">${IC.edit}<span>${t('chatEdit')}</span></button></div>`:'';
   const right=r.left+r.width/2>W/2;  // hangs from the side the message is on
   const side=right?`right:${Math.max(8,W-r.right)}px;align-items:flex-end`:`left:${Math.max(8,r.left)}px;align-items:flex-start`;
   el.innerHTML=`<div class="chact" onclick="if(event.target===this)chActs(0)"><div class="chpop" style="top:0;${side}">

@@ -9,7 +9,12 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## Current state: v2.19 (versionCode 40), published on the relay 2026-11-18 (relay version aca1f9e8; relay code unchanged; Telegram announce sent to 5 accounts)
+## Current state: v2.19.1 (versionCode 41), built 2026-11-18, NOT published yet (relay code unchanged)
+- Swipe to reply didn't work for Alhassan: (1) in Arabic v2.19 only took a swipe to the left, and he swipes right; now either direction replies, in both languages; (2) it had to start on the bubble, hard on short messages; now it starts anywhere on the message's line, like Telegram (`onpointerdown` on `.cmr`, `.chm .cmr{touch-action:pan-y}`; long-press still only on the bubble).
+- The long-press menu has no Reply any more (that is the swipe, his decision): reactions, and Edit on my own messages; with neither, a long-press does nothing.
+- Tests: `test_v219.js` now 32, with real touch input (CDP `Input.dispatchTouchEvent`, mobile-emulated page) in English and Arabic, including swipes that start beside the bubble. Mouse-only checks had passed while the phone failed: use touch for gestures.
+
+## Previous: v2.19 (versionCode 40), published on the relay 2026-11-18 (relay version aca1f9e8; relay code unchanged; Telegram announce sent to 5 accounts)
 Alhassan's list (his choices: swipe = Reply on every message, Edit stays in long-press for own messages; the 24-emoji "Mafia mix"; the bar grows into a grid):
 - Swipe to reply: drag a message right (left in Arabic) past 60 px; it follows the finger with a reply icon that lights up (buzz) when armed; short swipes and vertical moves do nothing (`.cm{touch-action:pan-y}`, `chPress`). A swipe cancels the long-press.
 - Reactions: `CH_RX` now has 30 (the quick 6, then 😡 🤬 😢 😭 💔 🖕 🙏 🔥 💀 🤔 🙄 😱 🤡 👀 👏 😈 🥲 😴 🤝 💯 🎯 🐀 🕵️ 🩸). The long-press bar shows the 6 + a +, which grows the bar in place into a 6-column grid (`chRxMore`, re-placed by `chPlace` to stay on screen). The + shows only when the host is v2.19+ (`CH_RXV=40`): older hosts refuse the new indexes, and apps before v2.19 show nothing for them. The host now also refuses non-integer indexes.

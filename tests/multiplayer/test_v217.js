@@ -46,12 +46,13 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  const mid=await s.evaluate(()=>CH.find(m=>m.x==='hey @Sami who is it?').i);
  const bubble=`#chm .cmr[data-i="${mid}"] .cm`;const bb=await s.$(bubble).then(e=>e.boundingBox());
  await s.mouse.move(bb.x+20,bb.y+12);await s.mouse.down();await s.waitForTimeout(600);await s.mouse.up();
- ok(await s.isVisible('#chact .rxp'),'long-press a message: reactions and Reply');
+ ok(await s.isVisible('#chact .rxp'),'long-press a message: reactions');
  await s.click('#chact .rxp button:nth-child(5)');await wait(d,id=>{const m=CH.find(x=>x.i===id);return m&&m.r&&m.r['4']&&m.r['4'].length===1;},mid);
  ok(await d.isVisible(`#chm .cmr[data-i="${mid}"] .rx:has-text("🔪 1")`),'🔪 shows under the message for everyone');
  await s.click(`#chm .cmr[data-i="${mid}"] .rx`);await wait(d,id=>{const m=CH.find(x=>x.i===id);return m&&!m.r;},mid);ok(true,'tapping my reaction again removes it');
  // reply
- await s.evaluate(i=>chActs(i),mid);await s.click('#chact button:has-text("Reply")');ok(await s.isVisible('#chrep :text("Replying to Dareer")'),'Reply: a bar with what I reply to');
+ await s.evaluate(i=>chReplyStart(i),mid);  // v2.19.1: Reply is the swipe (test_v219)
+ ok(await s.isVisible('#chrep :text("Replying to Dareer")'),'Reply: a bar with what I reply to');
  await s.fill('#chin','not me!');await s.press('#chin','Enter');await wait(d,()=>CH.some(m=>m.x==='not me!'&&m.re));
  ok(await d.isVisible('#chm .cmr:has-text("not me!") .rq:has-text("who is it?")'),'the reply shows the quoted message');
  await d.click('#chm .cmr:has-text("not me!") .rq');await d.waitForTimeout(300);ok(await d.evaluate(()=>!!document.querySelector('#chm .cmr.flash')),'tapping the quote jumps to the original');

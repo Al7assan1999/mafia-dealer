@@ -64,7 +64,7 @@ const VJ={code:99,name:'9.9',url:'https://example.invalid/MafiaDealer.apk',notes
  const pop=await s.evaluate(()=>{const c=document.querySelector('#chact .chlift .cm').getBoundingClientRect(),x=document.querySelector('#chact .rxp').getBoundingClientRect(),m=document.querySelector('#chact .chmenu').getBoundingClientRect();return {top:c.top,right:c.right,bottom:c.bottom,rxB:x.bottom,mT:m.top,H:innerHeight};});
  ok(Math.abs(pop.top-r0.top)<3&&Math.abs(pop.right-r0.right)<3,'long-press: the message stays where it was, lifted over the dimmed chat');
  ok(pop.rxB<=pop.top&&pop.mT>=pop.bottom&&pop.mT+40<pop.H,'reactions just above it, Reply / Edit just below, on screen');
- ok(await s.isVisible('#chact .chmenu button:has-text("Edit")')&&await s.isVisible('#chact .chmenu button:has-text("Reply")'),'my message: Reply and Edit');
+ ok(await s.isVisible('#chact .chmenu button:has-text("Edit")')&&!(await s.isVisible('#chact .chmenu button:has-text("Reply")')),'my message: Edit (v2.19.1: no Reply there, that is the swipe)');
  await s.click('#chact .chact',{position:{x:10,y:10}});ok(!(await s.isVisible('#chact .chpop')),'tapping outside closes it');
  // the slides (motion on)
  await s.emulateMedia({reducedMotion:'no-preference'});

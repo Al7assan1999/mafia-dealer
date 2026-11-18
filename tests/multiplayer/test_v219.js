@@ -30,7 +30,7 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  m=await drag(s,si,80,0);ok(await s.isVisible('#chrep :text("Replying to Sami")'),'swipe right on my own message: reply too');await s.evaluate(()=>{chReply=0;chRepDraw();});
  m=await drag(s,hi,35,0);ok(!m.on&&!(await s.isVisible('#chrep .crp')),'a short swipe: nothing');
  m=await drag(s,hi,8,90);ok(!m.ic&&!(await s.isVisible('#chrep .crp')),'moving up or down: left to scrolling');
- m=await drag(s,hi,-80,0);ok(!m.ic&&!(await s.isVisible('#chrep .crp')),'swiping left (English): nothing');
+ m=await drag(s,hi,-80,0);ok(m.on&&/translateX\(-80px\)/.test(m.t)&&await s.isVisible('#chrep .crp'),'v2.19.1: swiping left replies too');await s.evaluate(()=>{chReply=0;chRepDraw();});
  ok(!(await s.isVisible('#chact .chpop')),'a swipe never opens the long-press menu');
  // 2. the + grid
  const bb=await s.$(`#chm .cmr[data-i="${hi}"] .cm`).then(e=>e.boundingBox());await s.mouse.move(bb.x+20,bb.y+12);await s.mouse.down();await s.waitForTimeout(600);await s.mouse.up();await s.waitForTimeout(300);
@@ -47,8 +47,8 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  await d.evaluate(()=>{MP.room.hv=39;});await d.evaluate(i=>chActs(i),hi);ok(!(await d.isVisible('#chact .rxp .rxm'))&&await d.isVisible('#chact .rxp'),'host on an older app: no + (it would refuse them)');await d.evaluate(()=>chActs(0));
  // 3. Arabic
  await s.evaluate(()=>{S.lang='ar';save();chClose();render();chOpenList();chGo(-1);});await s.waitForTimeout(500);
- m=await drag(s,hi,80,0);ok(!m.ic&&!(await s.isVisible('#chrep .crp')),'Arabic: swiping right does nothing');
- m=await drag(s,hi,-80,0);ok(m.on&&/translateX\(-80px\)/.test(m.t)&&await s.isVisible('#chrep .crp'),'Arabic: swiping left replies (mirrored)');
+ m=await drag(s,hi,80,0);ok(m.on&&/translateX\(80px\)/.test(m.t)&&await s.isVisible('#chrep .crp'),'v2.19.1 Arabic: swiping right replies (it did nothing in v2.19)');await s.evaluate(()=>{chReply=0;chRepDraw();});
+ m=await drag(s,hi,-80,0);ok(m.on&&/translateX\(-80px\)/.test(m.t)&&await s.isVisible('#chrep .crp'),'Arabic: swiping left replies too');
  await s.evaluate(()=>{chReply=0;chRepDraw();});
  const flip=(p,sel)=>p.evaluate(sel=>{const e=document.querySelector(sel);return e?getComputedStyle(e).transform:'missing';},sel);
  ok((await flip(s,'#chat .chh .ib svg.flip')).startsWith('matrix(-1'),'Arabic: the chat Back arrow is flipped once (points right)');
@@ -59,4 +59,22 @@ const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
  ok(await s.evaluate(()=>!/[‹›]/.test(document.body.innerText)),'Settings: no text arrows');
  await s.evaluate(()=>{S.lang='en';save();render();});await s.waitForTimeout(300);
  ok((await flip(s,'.top .pill:first-child svg.flip'))==='none','English: the same arrow is not flipped');
+ // v2.19.1: real touch input on a phone-like page (the mouse checks above passed while the phone failed)
+ {const ctx=await b.newContext({viewport:{width:390,height:800},hasTouch:true,isMobile:true,reducedMotion:'no-preference'});const t=await ctx.newPage();t.on('pageerror',e=>errs.push('touch: '+e.message));
+  await t.route('**/version.json',r=>r.fulfill({json:{code:1,name:'1'}}));await t.addInitScript(clientShim);await t.goto(URL);await t.evaluate(()=>{S.mpName='Touch';save();});
+  await t.tap('#mode-wifi');await t.tap('.big2 .btn.ghost');await wait(t,()=>MP.status==='ok'&&MP.room&&MP.room.cv&&CH.length>=1);
+  const cdp=await ctx.newCDPSession(t);
+  const swipe=async(dx,hold,outside)=>{const bb=await t.$(`#chm .cmr[data-i="${hi}"] .cm`).then(e=>e.boundingBox()),rb=await t.$(`#chm .cmr[data-i="${hi}"]`).then(e=>e.boundingBox());
+    const y=bb.y+bb.height/2,x=!outside?bb.x+bb.width/2:(bb.x-rb.x>rb.x+rb.width-bb.x-bb.width?rb.x+12:rb.x+rb.width-12);  // outside: the empty part of the message's line
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});if(hold){await t.waitForTimeout(650);}
+    else for(let k=1;k<=10;k++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+dx*k/10,y:y+(k%3)}]});await t.waitForTimeout(16);}
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await t.waitForTimeout(350);
+    const r=await t.evaluate(()=>chReply);await t.evaluate(()=>{chReply=0;chRepDraw();});return r;};
+  for(const lang of ['en','ar']){await t.evaluate(l=>{S.lang=l;save();if(chView)chClose();render();chOpenList();chGo(-1);},lang);await t.waitForTimeout(600);
+    ok(await swipe(85)===hi,`touch (${lang}): a finger swipe to the right replies`);
+    ok(await swipe(-85)===hi,`touch (${lang}): a finger swipe to the left replies`);
+    ok(await swipe(30)===0,`touch (${lang}): a short swipe does not`);
+    ok(await swipe(85,false,true)===hi&&await swipe(-85,false,true)===hi,`touch (${lang}): a swipe that starts beside the bubble, on its line, replies too`);}
+  await swipe(0,true);ok(await t.isVisible('#chact .rxp')&&!(await t.isVisible('#chact button:has-text("Reply")')),'touch: long-press shows the reactions, no Reply');
+  await ctx.close();}
  console.log('errs',errs);if(errs.length)process.exitCode=1;srv.kill();await b.close();})();

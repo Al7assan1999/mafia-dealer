@@ -551,8 +551,8 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}.fdrawer,.bell
 .bellsh .bl{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 -4px;padding:0 4px}
 .bellsh .prs q{display:block;font-size:12.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;quotes:"\201C" "\201D"}
 /* v2.19: swipe to reply, the reaction grid, arrows */
-.chm .cm{touch-action:pan-y}.cmr{position:relative}
-.swr{position:absolute;top:50%;inset-inline-start:-36px;width:30px;height:30px;margin-top:-15px;border-radius:50%;display:grid;place-items:center;background:var(--card2);color:var(--mute);opacity:0;transition:background .15s,color .15s,transform .15s}
+.chm .cmr{touch-action:pan-y}.cmr{position:relative}  /* v2.19.1: the whole line swipes, not only the bubble */
+.swr{position:absolute;top:50%;width:30px;height:30px;margin-top:-15px;border-radius:50%;display:grid;place-items:center;background:var(--card2);color:var(--mute);opacity:0;transition:background .15s,color .15s,transform .15s}
 .swr svg{width:17px;height:17px}.swr.on{background:var(--sel);color:#fff;transform:scale(1.12)}
 .chpop .rxp .rxm{font-size:0;color:var(--mute);background:var(--card)}.chpop .rxp .rxm svg{width:22px;height:22px;margin:auto;display:block}
 .chpop .rxp.all{display:grid;grid-template-columns:repeat(6,44px);gap:4px;padding:8px;border-radius:22px;animation:chPop .16s cubic-bezier(.2,.8,.2,1) both}
