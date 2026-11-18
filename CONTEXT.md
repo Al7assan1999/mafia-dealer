@@ -9,7 +9,7 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## Current state: v2.19.1 (versionCode 41), built 2026-11-18, NOT published yet (relay code unchanged)
+## Current state: v2.19.1 (versionCode 41), published on the relay 2026-11-18 (relay version 2e77b183; relay code unchanged; Telegram announce sent to 5 accounts)
 - Swipe to reply didn't work for Alhassan: (1) in Arabic v2.19 only took a swipe to the left, and he swipes right; now either direction replies, in both languages; (2) it had to start on the bubble, hard on short messages; now it starts anywhere on the message's line, like Telegram (`onpointerdown` on `.cmr`, `.chm .cmr{touch-action:pan-y}`; long-press still only on the bubble).
 - The long-press menu has no Reply any more (that is the swipe, his decision): reactions, and Edit on my own messages; with neither, a long-press does nothing.
 - Tests: `test_v219.js` now 32, with real touch input (CDP `Input.dispatchTouchEvent`, mobile-emulated page) in English and Arabic, including swipes that start beside the bubble. Mouse-only checks had passed while the phone failed: use touch for gestures.
