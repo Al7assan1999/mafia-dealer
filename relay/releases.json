@@ -1,5 +1,17 @@
 [
  {
+  "code": 36,
+  "name": "2.17",
+  "date": "2026-11-18",
+  "notes": [
+   "New chat: reactions, replies and @mentions; Back and Minimize buttons.",
+   "The host's Ping everyone reaches players again.",
+   "Invite an online friend from Home and a room opens for you.",
+   "Back on Home asks before closing; the narrator stops when you leave a room.",
+   "Fixes: Settings > profile > Back, see-through avatars on the friends tab."
+  ]
+ },
+ {
   "code": 35,
   "name": "2.16",
   "date": "2026-11-17",

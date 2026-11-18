@@ -9,7 +9,7 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## Current state: v2.17 (versionCode 36), built 2026-11-18, NOT published yet (relay code unchanged)
+## Current state: v2.17 (versionCode 36), published on the relay 2026-11-18 (relay version 08f3c90c; relay code unchanged)
 Alhassan's list (approved; his choices: invite from Home = room opens + invite, reactions 👍 ❤️ 😂 😮 🔪 🤫, mentions = highlight + buzz, chat = messenger style):
 - The host's Ping everyone reached no one: a `// comment` in the middle of a one-line statement in client.ts hid the code after it (same bug as the start-up calls in main.ts). Both split onto their own lines; `npm run check` now also runs `app/check-comments.mjs`, which fails on code after a `//` comment.
 - Phone Back on Home asks "Close Mafia Dealer?" (`homeBack()` in main.ts keeps one history entry so Android doesn't just finish); Close calls the new native `Net.quit()` (Activity.finish, build/app_dex.py). An open sheet closes first.
