@@ -26,3 +26,11 @@ env = dict(os.environ, CLOUDFLARE_API_TOKEN=open(os.path.join(keys, "cf.key"), e
            CLOUDFLARE_ACCOUNT_ID=open(os.path.join(HERE, ".account")).read().strip())
 subprocess.run("npx wrangler deploy", shell=True, cwd=HERE, env=env, check=True)
 print(f"published v{name} ({code}) -> {BASE}/version.json")
+# v2.18: Telegram-linked accounts get "Mafia Dealer X is out" (the relay sends it once per version; .tgsecret = the relay's TG_SECRET)
+import urllib.request
+try:
+    req = urllib.request.Request(f"{BASE}/acc/announce", data=json.dumps({"code": int(code), "name": name, "bullets": bullets}).encode(),
+                                 headers={"content-type": "application/json", "x-key": open(os.path.join(HERE, ".tgsecret")).read().strip()})
+    print("telegram:", urllib.request.urlopen(req, timeout=120).read().decode())
+except Exception as e:
+    print("telegram announce failed (the release itself is out):", e)

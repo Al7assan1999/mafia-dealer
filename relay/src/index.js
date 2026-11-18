@@ -32,6 +32,18 @@ a{display:block;padding:15px;border-radius:14px;font-weight:800;text-decoration:
     { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
 }
 
+// v2.18 update link (Telegram's "new version" message): with the app it opens in the app (verified link) on its release notes + Update.
+function updPage(u) {
+  const apk = u.origin + "/MafiaDealer.apk", intent = `intent://${u.host}/u#Intent;scheme=https;package=com.mafiadealer.app;S.browser_fallback_url=${encodeURIComponent(apk)};end`;
+  return new Response(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mafia Dealer · update</title>
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b0a10;color:#f3f0f7;font-family:system-ui,sans-serif;text-align:center;padding:24px;box-sizing:border-box}
+main{max-width:360px}h1{font-size:24px;margin:0 0 6px}p{color:#a49fb0;line-height:1.5;margin:6px 0}
+a{display:block;padding:15px;border-radius:14px;font-weight:800;text-decoration:none;margin:12px 0;font-size:17px}.p{background:linear-gradient(135deg,#ff2e63,#ff7a3d);color:#fff}.g{border:1px solid #ffffff2a;color:#f3f0f7}.ar{direction:rtl}</style></head>
+<body><main><h1>Mafia Dealer</h1><p>A new version is out.</p><p class="ar">صدر إصدار جديد.</p>
+<a class="p" href="${intent}">Open Mafia Dealer · افتح التطبيق</a><a class="g" href="${apk}">Download the update · حمّل التحديث</a></main></body></html>`,
+    { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+}
+
 export default {
   async fetch(req, env) {
     const u = new URL(req.url);
@@ -40,6 +52,7 @@ export default {
       return accounts(env).fetch(req);
     }
     if (u.pathname === "/.well-known/assetlinks.json") return Response.json(ASSETLINKS);
+    if (u.pathname === "/u") return updPage(u);
     const j = u.pathname.match(/^\/j\/(\d{6})$/);
     if (j) return joinPage(u, j[1]);
     const g = u.pathname.match(/^\/g\/([A-Z2-9]+)(\/(add|edit))?$/);
@@ -210,6 +223,7 @@ export class Accounts {
     try { this.sql.exec("ALTER TABLE invites ADD COLUMN ans INTEGER DEFAULT 0"); } catch (e) {}  // v2.13: 1 = "let you in" (the answer to their Ask to join)
     // notes (v2.11): things to tell someone later, kept 7 days: kind 'acc' = frm accepted uid's friend request
     this.sql.exec("CREATE TABLE IF NOT EXISTS notes(id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT, kind TEXT, frm TEXT, created INTEGER)");
+    this.sql.exec("CREATE TABLE IF NOT EXISTS kv(k TEXT PRIMARY KEY, v TEXT)");  // v2.18: ann = the last version announced on Telegram
   }
   rel(me, id) {  // 'ok' friends, 'out' I asked, 'in' they asked, '' nothing
     const r = this.one("SELECT * FROM friends WHERE (a=? AND b=?) OR (a=? AND b=?)", me, id, id, me);
@@ -237,6 +251,19 @@ export class Accounts {
     this.sql.exec("DELETE FROM invites WHERE created<?", Date.now() - INVITE_TTL);
     this.sql.exec("DELETE FROM notes WHERE created<?", Date.now() - NOTE_TTL);
 
+    if (p === "/acc/announce") {  // v2.18, from publish.py: every Telegram-linked account hears about a new version, once per version
+      if (!this.env.TG_SECRET || req.headers.get("x-key") !== this.env.TG_SECRET) return out({}, 403);
+      const code = Math.floor(+body.code), name = String(body.name || "").slice(0, 20);
+      const pts = (Array.isArray(body.bullets) ? body.bullets : []).slice(0, 6).map(x => "• " + String(x).slice(0, 160));
+      if (!(code > 0) || !/^[\w.]+$/.test(name)) return out({ err: "bad" }, 400);
+      const last = this.one("SELECT v FROM kv WHERE k='ann'");
+      if (last && +last.v >= code) return out({ sent: 0, already: true });
+      this.sql.exec("INSERT OR REPLACE INTO kv VALUES('ann',?)", String(code));  // marked first: a retry never sends twice
+      const text = `Mafia Dealer ${name} is out!\n${pts.join("\n")}${pts.length ? "\n\n" : ""}Update: ${u.origin}/u`;
+      const rows = this.sql.exec("SELECT DISTINCT tg FROM users WHERE tg IS NOT NULL AND tg<>''").toArray();
+      for (const r of rows) await this.tg(r.tg, text);
+      return out({ sent: rows.length });
+    }
     if (p === "/internal/verify") {  // called by Room objects only (this path is not routed from outside)
       const m = String(body.tok || ""); if (!/^[a-f0-9]{64}$/.test(m)) return out({}, 403);
       const s = this.one("SELECT uid FROM sessions WHERE th=?", await sha(m)), r = s && this.one("SELECT * FROM users WHERE id=?", s.uid);

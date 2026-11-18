@@ -58,7 +58,7 @@ function joinCode(code: string){if(MP.online&&MP.online.code===code&&MP.role)ret
   if(G||MP.role)ask(t('fLeaveQ'),t('fLeaveD'),t('fJoin'),go);else go();}
 /** The app was opened (or brought back) by an invite link https://<relay>/j/<code> (Android app link, v2.11). */
 function deepLink(u?: string){if(u==null)try{u=(window.Net&&Net.link&&Net.link())||'';}catch(e){u='';}if(u&&WL.on)welcomeEnd();  // a link while the welcome plays: straight in
-  const m=/\/j\/(\d{6})(?:[/?#]|$)/.exec(u);if(m)joinCode(m[1]);}
+  const m=/\/j\/(\d{6})(?:[/?#]|$)/.exec(u);if(m)joinCode(m[1]);else if(/\/u(?:[/?#]|$)/.test(u))updLink();}
 
 /* lists and actions */
 function friendsLoad(quiet?: boolean){if(!me())return Promise.resolve();
@@ -174,7 +174,7 @@ function inviteGo(id: string,name?: string){const code=MP.online&&MP.online.code
   aReq('/acc/invite',{id,code}).then(j=>toast(j.ans?t('fLetInSent',{n:name}):t(j.tg?'fInvTg':'fInvSent'))).catch(e=>{delete invSent[id+code];fRedraw();aErr(e);});}
 
 /* the notification bell (Home, next to the profile): invites, join requests, friend requests, 'X accepted your request' */
-const bellN=()=>INV.length+JR.length+FREQ+(S.nlog||[]).filter(n=>n.k==='acc'&&n.at>(S.bellSeen||0)).length;
+const bellN=()=>INV.length+JR.length+FREQ+(S.nlog||[]).filter(n=>(n.k==='acc'||n.k==='ment')&&n.at>(S.bellSeen||0)).length;
 const bellBtn=()=>me()?`<button class="ib bell" id="bellb" onclick="bellOpen()" aria-label="${t('notifT')}" title="${t('notifT')}">${IC.bell}${bellN()?`<i class="cnt">${bellN()}</i>`:''}</button>`:'';
 function bellBtnDraw(){const b=$('bellb');if(b)b.outerHTML=bellBtn();}
 function bellOpen(){S.bellSeen=Date.now();save();friendsLoad(true);
@@ -185,15 +185,18 @@ const ago=(ts: number)=>{const s=(Date.now()-ts)/1000,[v,u]=s<3600?[Math.max(1,M
   try{return new (Intl as any).RelativeTimeFormat(S.lang,{style:'short',numeric:'auto'}).format(-v,u);}catch(e){return '';}};
 function bellHtml(){const x=(fn: string)=>`<button class="mini nx" aria-label="${t('cancel')}" onclick="${fn}">✕</button>`;
   const L=(S.nlog||[]).slice().sort((p,q)=>(p.st?1:0)-(q.st?1:0)||q.at-p.at);  // waiting for an answer first, then the newest
-  const row=(n: NLog)=>{const f=n.from,ro=!!n.st||n.k==='acc';
+  const row=(n: NLog)=>{const f=n.from;
+    if(n.k==='ment'){const live=nMentLive(n);  // a chat mention: Open while that room is still on, then read-only
+      return `<div class="prs bi${live?'':' ro'}">${f.id?avatarHtml(f.avatar,f.id,40):chAv({name:f.display} as RoomPlayer,40)}<div class="fn"><b>${esc(f.display)}</b><span>${t('nMent')} · ${ago(n.at)}</span><q dir="auto">${esc(n.x||'')}</q></div>
+        ${live?`<button class="mini pri" onclick="bellClose();chOpenAt(${n.conv},${n.id})">${t('nOpen')}</button>`:`<span class="nst gone">${t('ns_ended')}</span>`}</div>`;}
     const txt=n.k==='inv'?t(n.ans?'fLetYou':'fInvites',{c:fmtCode(n.code||'')}):n.k==='jr'?t('fWantsJoin'):n.k==='req'?t('nReq'):t('nAcc');
     const btns=n.st?`<span class="nst ${n.st}">${t('ns_'+n.st)}</span>`
       :n.k==='inv'?`<button class="mini pri" onclick="bellClose();invJoin(${n.id})">${t('fJoin')}</button>`+x(`invDone(${n.id})`)
       :n.k==='jr'?`<button class="mini pri" onclick="bellClose();jrLet(${n.id})">${t('fLetIn')}</button>`+x(`jrDone(${n.id})`)
       :n.k==='req'?reqBtns(f):'';
     return `<div class="prs bi${n.st?' ro':''}">${avatarHtml(f.avatar,f.id,40)}<div class="fn"><b>${esc(f.display)}</b><span>${txt} · ${ago(n.at)}</span></div>${btns}</div>`;};
-  return `<div class="sh"><h3>${t('notifT')}</h3>${L.some(n=>n.st||n.k==='acc')?`<button class="link" onclick="nClear()">${t('nClear')}</button>`:''}</div>
-    ${L.map(row).join('')||`<div class="fempty">${IC.bell}<p>${t('nNone')}</p></div>`}<p class="mpinfo" style="margin:8px 2px 0">${t('nKept')}</p><button class="btn ghost mt" onclick="bellClose()">${t('ok')}</button>`;}
+  return `<div class="sh"><h3>${t('notifT')}</h3>${L.some(n=>n.st||n.k==='acc'||n.k==='ment')?`<button class="link" onclick="nClear()">${t('nClear')}</button>`:''}</div>
+    <div class="bl">${L.map(row).join('')||`<div class="fempty">${IC.bell}<p>${t('nNone')}</p></div>`}</div><p class="mpinfo" style="margin:8px 2px 0">${t('nKept')}</p><button class="btn ghost mt" onclick="bellClose()">${t('ok')}</button>`;}
 /* the bell's history (v2.12): kept 24 h on this phone; once answered (or gone) an item stays as a read-only row */
 const NDAY=24*3600e3,INV_TTL=30*60e3;
 function nSave(fn: (L: NLog[])=>boolean){const L=S.nlog||(S.nlog=[]);if(fn(L)){save();bellDraw();}}
@@ -208,7 +211,7 @@ function nInbox(inv: Invite[],jr: Invite[]){const now=Date.now();
       aReq('/acc/note/done',{id:v.id}).catch(()=>{});}  // kept here from now on
     NOTES=[];
     for(const n of L)if(!n.st&&(n.k==='inv'||n.k==='jr')&&!(n.k==='inv'?inv:jr).some(v=>v.id===n.id)){n.st=now-n.at>=INV_TTL?'expired':'gone';n.done=now;ch=true;}
-    const keep=L.filter(n=>(!n.st&&n.k!=='acc')||now-n.at<NDAY);if(keep.length!==L.length){L.length=0;L.push(...keep);ch=true;}
+    const keep=L.filter(n=>(!n.st&&n.k!=='acc'&&n.k!=='ment')||now-n.at<NDAY);if(keep.length!==L.length){L.length=0;L.push(...keep);ch=true;}
     return ch;});}
 /** Friend requests waiting (from the friends list); answered elsewhere they turn read-only. */
 function nReqs(inc: Friend[]){const now=Date.now();
@@ -218,6 +221,6 @@ function nReqs(inc: Friend[]){const now=Date.now();
     return ch;});}
 function nSet(k: string,id: any,st: string){nSave(L=>{const n=L.find(x=>x.key===k+':'+id&&!x.st);if(!n)return false;n.st=st;n.done=Date.now();return true;});}
 /** Clear: the answered items and the notes go; ones still waiting for an answer stay. */
-function nClear(){nSave(L=>{const keep=L.filter(n=>!n.st&&n.k!=='acc');L.length=0;L.push(...keep);return true;});}
+function nClear(){nSave(L=>{const keep=L.filter(n=>!n.st&&n.k!=='acc'&&n.k!=='ment');L.length=0;L.push(...keep);return true;});}
 /** While the friends drawer, the bell or the chat is open, only that panel scrolls (not the screen behind it). */
 function scrollLock(){document.documentElement.classList.toggle('lock',!!(S.fpanel&&dockShown()||chView||$('bellsh')));}

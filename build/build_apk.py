@@ -58,7 +58,7 @@ ATTR = {"theme": 0x01010000, "label": 0x01010001, "icon": 0x01010002, "name": 0x
         "allowBackup": 0x01010280, "hardwareAccelerated": 0x010102d3, "usesCleartextTraffic": 0x010104ec,
         "foregroundServiceType": 0x01010599, "authorities": 0x01010018, "grantUriPermissions": 0x0101001b,
         "launchMode": 0x0101001d, "scheme": 0x01010027, "host": 0x01010028, "pathPrefix": 0x0101002b, "autoVerify": 0x010104ee,
-        "drawable": 0x01010199, "roundIcon": 0x0101052c}
+        "drawable": 0x01010199, "roundIcon": 0x0101052c, "path": 0x0101002a}
 RELAY_HOST = "mafia-relay.mafiadealer.workers.dev"  # invite links https://<relay>/j/<code> open the app (v2.11)
 T_REF, T_STR, T_DEC, T_HEX, T_BOOL = 0x01, 0x03, 0x10, 0x11, 0x12
 
@@ -74,6 +74,8 @@ def build_manifest():
         ("uses-permission", [("a", "name", T_STR, "android.permission.FOREGROUND_SERVICE")], []),
         ("uses-permission", [("a", "name", T_STR, "android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE")], []),
         ("uses-permission", [("a", "name", T_STR, "android.permission.REQUEST_INSTALL_PACKAGES")], []),  # in-app updates
+        ("uses-permission", [("a", "name", T_STR, "android.permission.POST_NOTIFICATIONS")], []),  # v2.18 update alerts (Android 13+ asks once)
+        ("uses-permission", [("a", "name", T_STR, "android.permission.RECEIVE_BOOT_COMPLETED")], []),  # the 11:00-17:00 checks survive a restart
         ("queries", [], [("intent", [], [("action", [("a", "name", T_STR, "android.intent.action.TTS_SERVICE")], [])])]),
         ("application", [("a", "label", T_STR, "Mafia Dealer"), ("a", "icon", T_REF, IC_LAUNCHER), ("a", "roundIcon", T_REF, IC_LAUNCHER),
                          ("a", "allowBackup", T_BOOL, True), ("a", "hardwareAccelerated", T_BOOL, True), ("a", "usesCleartextTraffic", T_BOOL, True)], [
@@ -90,11 +92,18 @@ def build_manifest():
                     ("category", [("a", "name", T_STR, "android.intent.category.DEFAULT")], []),
                     ("category", [("a", "name", T_STR, "android.intent.category.BROWSABLE")], []),
                     ("data", [("a", "scheme", T_STR, "https"), ("a", "host", T_STR, RELAY_HOST), ("a", "pathPrefix", T_STR, "/j/")], []),
+                    ("data", [("a", "scheme", T_STR, "https"), ("a", "host", T_STR, RELAY_HOST), ("a", "path", T_STR, "/u")], []),  # v2.18 update link
                 ])]),
             ("service", [("a", "name", T_STR, PKG + ".Keep"), ("a", "exported", T_BOOL, False),
                          ("a", "foregroundServiceType", T_HEX, 0x10)], []),  # 0x10 = connectedDevice
             ("provider", [("a", "name", T_STR, PKG + ".Apk"), ("a", "authorities", T_STR, PKG + ".apk"), ("a", "exported", T_BOOL, False),
-                          ("a", "grantUriPermissions", T_BOOL, True)], [])])])  # lets the installer read cache/update.apk
+                          ("a", "grantUriPermissions", T_BOOL, True)], []),  # lets the installer read cache/update.apk
+            # v2.18: the update checks (alarm, then boot / app update set it again); exported so the system's boot broadcast reaches it
+            ("receiver", [("a", "name", T_STR, PKG + ".UpdRx"), ("a", "exported", T_BOOL, True)], [
+                ("intent-filter", [], [
+                    ("action", [("a", "name", T_STR, "android.intent.action.BOOT_COMPLETED")], []),
+                    ("action", [("a", "name", T_STR, "android.intent.action.MY_PACKAGE_REPLACED")], []),
+                ])])])])
     return bxml(tree)
 
 def bxml(tree):
@@ -272,7 +281,7 @@ def load_key():
     return key, cert.public_bytes(serialization.Encoding.DER)
 
 if __name__ == "__main__":
-    dex = build_dex()
+    dex = build_dex(VER_CODE)
     manifest = build_manifest()
     arsc = build_arsc()
     idir = os.path.dirname(os.path.abspath(ICON))  # icon_bg.png / icon_fg.png sit next to icon.png (node build/render_icon.js)

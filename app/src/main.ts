@@ -39,7 +39,8 @@ setTimeout(()=>deepLink(LINK0),700);setTimeout(()=>checkUpdate(true).then(L=>{if
   const show=()=>{if(L&&L.history&&L.history.some(r=>r.code===APP.code)&&!G&&!MP.role&&!$('modal').innerHTML)whatsNew();else toast(t('updatedTo',{v:APP.name}));};
   if(WL.on)WL.after=show;else show();}),1500);  // after the welcome
 setTimeout(acctRefresh,1800);setTimeout(gSync,2000);setTimeout(()=>{inboxTick();friendsLoad(true);},2500);  // every app start: version.json is a free static file
-setInterval(inboxTick,10000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)inboxTick();});  // friends: invites, requests, online status
+setInterval(inboxTick,10000);document.addEventListener('visibilitychange',()=>{if(!document.hidden){inboxTick();checkUpdate();updAlerts();}});  // friends: invites, requests, online status; a newer version (v2.18)
+updAlerts();setTimeout(askNotifOnce,6000);  // update alerts on (or off), the notification cleared; Android 13+ asks once
 window.addEventListener('popstate',()=>{if(WL.on){if(WL.first){try{history.pushState({v:1},'');}catch(e){}return;}welcomeEnd();return;}if(chView){chBack();return;}if(S.fpanel&&dockShown()){dockOpen(false);return;}if(G){if(G.phase==='end'){finish();return;}showQuit();}else if(inRoom()){try{history.pushState({v:1},'');}catch(e){}askLeaveRoom();}else if(V!=='home')popNav();else homeBack();});
 /** Back on Home (v2.17): asks before closing the app. Home always keeps one step of history, so Back lands here instead of Android closing the app. */
 function homeBack(){try{history.pushState({v:1},'');}catch(e){}if($('modal').innerHTML){$('modal').innerHTML='';bellBtnDraw();scrollLock();return;}

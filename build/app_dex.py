@@ -2,6 +2,7 @@ from dexasm import *
 
 P = "Lcom/mafiadealer/app/"
 MAIN, VOICE, NET, SRV, KEEP, APK, CHROME = P + "MainActivity;", P + "Voice;", P + "Net;", P + "Srv;", P + "Keep;", P + "Apk;", P + "Chrome;"
+UPDRX, UPD = P + "UpdRx;", P + "Upd;"
 ACT = "Landroid/app/Activity;"; WV = "Landroid/webkit/WebView;"; WS = "Landroid/webkit/WebSettings;"
 WIN = "Landroid/view/Window;"; CTX = "Landroid/content/Context;"; BUN = "Landroid/os/Bundle;"
 VIEW = "Landroid/view/View;"; STR = "Ljava/lang/String;"; OBJ = "Ljava/lang/Object;"
@@ -20,6 +21,10 @@ WCC = "Landroid/webkit/WebChromeClient;"; FCP = "Landroid/webkit/WebChromeClient
 F_CB = (CHROME, "cb", VCB); F_A = (CHROME, "a", ACT)
 APK_URI = "content://com.mafiadealer.app.apk/update.apk"; APK_MIME = "application/vnd.android.package-archive"
 WM = "Landroid/net/wifi/WifiManager;"; WI = "Landroid/net/wifi/WifiInfo;"; DHCP = "Landroid/net/DhcpInfo;"
+BRX = "Landroid/content/BroadcastReceiver;"; PR = "Landroid/content/BroadcastReceiver$PendingResult;"; AM = "Landroid/app/AlarmManager;"; PI = "Landroid/app/PendingIntent;"
+CAL = "Ljava/util/Calendar;"; SP = "Landroid/content/SharedPreferences;"; SPE = "Landroid/content/SharedPreferences$Editor;"
+JURL = "Ljava/net/URL;"; UCON = "Ljava/net/URLConnection;"; SCAN = "Ljava/util/Scanner;"; JO = "Lorg/json/JSONObject;"
+RELAY_BASE = "https://mafia-relay.mafiadealer.workers.dev"; F_UC = (UPD, "c", CTX); F_UR = (UPD, "r", PR)
 
 m = lambda c, n, r, *ps: (c, n, r, tuple(ps))
 COLOR = 0xff0b0a0f
@@ -120,6 +125,29 @@ net = Class(NET, OBJ, [("L", STR, ACC_PUBLIC | ACC_STATIC), ("S", CHM, ACC_PUBLI
         ('sget-object', 0, F_L), ('const/4', 1, 0), ('sput-object', 1, F_L), ('return-object', 0)], js=True),
     Method(NET, "quit", "V", [], ACC_PUBLIC, 2, [  # p0=v1: close the app (the page asked first); c is the MainActivity
         ('label', 't0'), ('iget-object', 0, 1, F_C), ('check-cast', 0, ACT), ('invoke-virtual', m(ACT, "finish", "V"), 0),
+        ('label', 't1'), ('label', 'ret'), ('return-void',), ('label', 'fail'), ('goto/16', 'ret'), ('try', 't0', 't1', 'fail')], js=True),
+    Method(NET, "updAlarm", "V", ["Z"], ACC_PUBLIC, 6, [  # p0=v4 on=v5 (v2.18): the update checks at 11:00-17:00 on or off; plan() sets or cancels the alarm
+        ('label', 't0'),
+        ('iget-object', 0, 4, F_C), ('invoke-virtual', m(CTX, "getApplicationContext", CTX), 0), ('move-result-object', 0),
+        ('const-string', 1, "upd"), ('const/4', 2, 0), ('invoke-virtual', m(CTX, "getSharedPreferences", SP, STR, "I"), 0, 1, 2), ('move-result-object', 1),
+        ('invoke-interface', m(SP, "edit", SPE), 1), ('move-result-object', 1),
+        ('const/4', 3, 1), ('if-eqz', 5, 'put'), ('const/4', 3, 0), ('label', 'put'),  # off = !on
+        ('const-string', 2, "off"), ('invoke-interface', m(SPE, "putBoolean", SPE, STR, "Z"), 1, 2, 3), ('move-result-object', 1),
+        ('invoke-interface', m(SPE, "commit", "Z"), 1),
+        ('invoke-static', m(UPDRX, "plan", "Z", CTX), 0),
+        ('label', 't1'), ('label', 'ret'), ('return-void',), ('label', 'fail'), ('goto/16', 'ret'), ('try', 't0', 't1', 'fail')], js=True),
+    Method(NET, "updClear", "V", [], ACC_PUBLIC, 3, [  # p0=v2: the app is open, so the update notification (and the icon badge) goes
+        ('label', 't0'),
+        ('iget-object', 0, 2, F_C), ('const-string', 1, "notification"), ('invoke-virtual', m(CTX, "getSystemService", OBJ, STR), 0, 1),
+        ('move-result-object', 0), ('check-cast', 0, NM), ('const/4', 1, 2), ('invoke-virtual', m(NM, "cancel", "V", "I"), 0, 1),
+        ('label', 't1'), ('label', 'ret'), ('return-void',), ('label', 'fail'), ('goto/16', 'ret'), ('try', 't0', 't1', 'fail')], js=True),
+    Method(NET, "askNotif", "V", [], ACC_PUBLIC, 4, [  # p0=v3: Android 13+ asks "Allow notifications?" (String[] made with split: no array opcodes)
+        ('label', 't0'),
+        ('sget', 0, F_SDK), ('const/16', 1, 33), ('if-lt', 0, 1, 'ret'),
+        ('iget-object', 0, 3, F_C), ('check-cast', 0, ACT),
+        ('const-string', 1, "android.permission.POST_NOTIFICATIONS"), ('const-string', 2, ","),
+        ('invoke-virtual', m(STR, "split", SA, STR), 1, 2), ('move-result-object', 1),
+        ('const/16', 2, 9), ('invoke-virtual', m(ACT, "requestPermissions", "V", SA, "I"), 0, 1, 2),
         ('label', 't1'), ('label', 'ret'), ('return-void',), ('label', 'fail'), ('goto/16', 'ret'), ('try', 't0', 't1', 'fail')], js=True),
     Method(NET, "running", "Z", [], ACC_PUBLIC, 2, [  # p0=v1
         ('sget-object', 0, F_TH), ('if-eqz', 0, 'no'), ('const/4', 0, 1), ('return', 0),
@@ -382,5 +410,118 @@ chrome = Class(CHROME, WCC, [("cb", VCB, ACC_PUBLIC | ACC_STATIC), ("a", ACT, AC
         ('try', 't0', 't1', 'fail')]),
 ])
 
-def build_dex():
-    return build([main, voice, net, srv, keep, apk, chrome])
+# ---- v2.18 update alerts. UpdRx: an inexact alarm at the next full hour from 11:00 to 17:00 (phone clock; setAndAllowWhileIdle also
+# fires in Doze, no exact-alarm permission needed); boot and app updates set it again. Each firing in that window starts Upd, which
+# reads version.json and, when there is a newer version not announced yet, posts a notification (the launcher shows its badge).
+updrx = Class(UPDRX, BRX, [], [
+    Method(UPDRX, "<init>", "V", [], ACC_PUBLIC | ACC_CONSTRUCTOR, 1, [('invoke-direct', m(BRX, "<init>", "V"), 0), ('return-void',)]),
+    Method(UPDRX, "onReceive", "V", [CTX, INTENT], ACC_PUBLIC, 6, [  # p0=v3 ctx=v4 intent=v5
+        ('label', 't0'),
+        ('invoke-virtual', m(CTX, "getApplicationContext", CTX), 4), ('move-result-object', 0),
+        ('invoke-static', m(UPDRX, "plan", "Z", CTX), 0), ('move-result', 1), ('if-eqz', 1, 'ret'),  # switched off
+        ('invoke-static', m(CAL, "getInstance", CAL)), ('move-result-object', 1),
+        ('const/16', 2, 11), ('invoke-virtual', m(CAL, "get", "I", "I"), 1, 2), ('move-result', 2),  # HOUR_OF_DAY
+        ('const/16', 1, 11), ('if-lt', 2, 1, 'ret'),
+        ('const/16', 1, 18), ('if-lt', 2, 1, 'go'), ('goto/16', 'ret'),
+        ('label', 'go'),
+        ('invoke-virtual', m(BRX, "goAsync", PR), 3), ('move-result-object', 1),
+        ('new-instance', 2, UPD), ('invoke-direct', m(UPD, "<init>", "V", CTX, PR), 2, 0, 1),
+        ('invoke-virtual', m(THR, "start", "V"), 2),
+        ('label', 't1'),
+        ('label', 'ret'), ('return-void',),
+        ('label', 'fail'), ('goto/16', 'ret'),
+        ('try', 't0', 't1', 'fail')]),
+    Method(UPDRX, "plan", "Z", [CTX], ACC_PUBLIC | ACC_STATIC, 10, [  # ctx=v9 -> false when switched off (alarm cancelled)
+        ('label', 't0'),
+        ('const-string', 0, "upd"), ('const/4', 1, 0),
+        ('invoke-virtual', m(CTX, "getSharedPreferences", SP, STR, "I"), 9, 0, 1), ('move-result-object', 0),
+        ('const-string', 1, "off"), ('const/4', 2, 0),
+        ('invoke-interface', m(SP, "getBoolean", "Z", STR, "Z"), 0, 1, 2), ('move-result', 8),
+        ('const-string', 0, "alarm"), ('invoke-virtual', m(CTX, "getSystemService", OBJ, STR), 9, 0), ('move-result-object', 0), ('check-cast', 0, AM),
+        ('new-instance', 1, INTENT), ('invoke-direct', m(INTENT, "<init>", "V"), 1),
+        ('const-string', 2, "com.mafiadealer.app.UpdRx"), ('invoke-virtual', m(INTENT, "setClassName", INTENT, CTX, STR), 1, 9, 2),
+        ('const/4', 2, 0), ('const', 3, 0x0C000000),  # FLAG_IMMUTABLE | FLAG_UPDATE_CURRENT
+        ('invoke-static', m(PI, "getBroadcast", PI, CTX, "I", INTENT, "I"), 9, 2, 1, 3), ('move-result-object', 1),
+        ('if-eqz', 8, 'on'),
+        ('invoke-virtual', m(AM, "cancel", "V", PI), 0, 1), ('const/4', 0, 0), ('return', 0),
+        ('label', 'on'),
+        ('invoke-static', m(CAL, "getInstance", CAL)), ('move-result-object', 2),
+        ('const/16', 3, 11), ('invoke-virtual', m(CAL, "get", "I", "I"), 2, 3), ('move-result', 4),  # v4 = hour now
+        ('const/4', 5, 0),
+        ('const/16', 3, 12), ('invoke-virtual', m(CAL, "set", "V", "I", "I"), 2, 3, 5),  # :00.000
+        ('const/16', 3, 13), ('invoke-virtual', m(CAL, "set", "V", "I", "I"), 2, 3, 5),
+        ('const/16', 3, 14), ('invoke-virtual', m(CAL, "set", "V", "I", "I"), 2, 3, 5),
+        ('const/16', 3, 11),
+        ('const/16', 5, 11), ('if-lt', 4, 5, 'at'),  # before 11: 11:00 today
+        ('const/16', 5, 17), ('if-lt', 4, 5, 'next'),  # 11..16: the next hour
+        ('const/4', 6, 5), ('const/4', 7, 1), ('invoke-virtual', m(CAL, "add", "V", "I", "I"), 2, 6, 7),  # 17 or later: 11:00 tomorrow
+        ('const/16', 5, 11), ('goto/16', 'at'),
+        ('label', 'next'), ('add-int/lit8', 5, 4, 1),
+        ('label', 'at'), ('invoke-virtual', m(CAL, "set", "V", "I", "I"), 2, 3, 5),
+        ('invoke-virtual', m(CAL, "getTimeInMillis", "J"), 2), ('move-result-wide', 4),
+        ('const/4', 6, 0),  # RTC_WAKEUP
+        ('invoke-virtual', m(AM, "setAndAllowWhileIdle", "V", "I", "J", PI), 0, 6, 4, 5, 1),
+        ('const/4', 0, 1), ('return', 0),
+        ('label', 't1'),
+        ('label', 'fail'), ('const/4', 0, 0), ('return', 0),
+        ('try', 't0', 't1', 'fail')]),
+])
+
+def make_upd(ver):
+    return Class(UPD, THR, [("c", CTX, ACC_PRIVATE), ("r", PR, ACC_PRIVATE)], [
+    Method(UPD, "<init>", "V", [CTX, PR], ACC_PUBLIC | ACC_CONSTRUCTOR, 3, [
+        ('invoke-direct', m(THR, "<init>", "V"), 0), ('iput-object', 1, 0, F_UC), ('iput-object', 2, 0, F_UR), ('return-void',)]),
+    Method(UPD, "run", "V", [], ACC_PUBLIC, 12, [  # p0=v11
+        ('label', 't0'),
+        ('new-instance', 0, JURL), ('const-string', 1, RELAY_BASE + "/version.json"), ('invoke-direct', m(JURL, "<init>", "V", STR), 0, 1),
+        ('invoke-virtual', m(JURL, "openConnection", UCON), 0), ('move-result-object', 0),
+        ('const/16', 1, 15000), ('invoke-virtual', m(UCON, "setConnectTimeout", "V", "I"), 0, 1), ('invoke-virtual', m(UCON, "setReadTimeout", "V", "I"), 0, 1),
+        ('const/4', 1, 0), ('invoke-virtual', m(UCON, "setUseCaches", "V", "Z"), 0, 1),
+        ('invoke-virtual', m(UCON, "getInputStream", IS), 0), ('move-result-object', 0),
+        ('new-instance', 1, SCAN), ('const-string', 2, "UTF-8"), ('invoke-direct', m(SCAN, "<init>", "V", IS, STR), 1, 0, 2),
+        ('const-string', 2, "\\A"), ('invoke-virtual', m(SCAN, "useDelimiter", SCAN, STR), 1, 2),
+        ('invoke-virtual', m(SCAN, "next", STR), 1), ('move-result-object', 1),
+        ('new-instance', 0, JO), ('invoke-direct', m(JO, "<init>", "V", STR), 0, 1),
+        ('const-string', 1, "code"), ('invoke-virtual', m(JO, "optInt", "I", STR), 0, 1), ('move-result', 2),  # v2 = newest code
+        ('const-string', 1, "name"), ('invoke-virtual', m(JO, "optString", STR, STR), 0, 1), ('move-result-object', 3),  # v3 = its name
+        ('const/16', 1, ver), ('if-lt', 1, 2, 'newer'), ('goto/16', 'done'),  # this app is up to date
+        ('label', 'newer'),
+        ('iget-object', 4, 11, F_UC),
+        ('const-string', 0, "upd"), ('const/4', 1, 0),
+        ('invoke-virtual', m(CTX, "getSharedPreferences", SP, STR, "I"), 4, 0, 1), ('move-result-object', 5),
+        ('const-string', 0, "n"), ('invoke-interface', m(SP, "getInt", "I", STR, "I"), 5, 0, 1), ('move-result', 0),
+        ('if-lt', 0, 2, 'tell'), ('goto/16', 'done'),  # this version was announced already
+        ('label', 'tell'),
+        ('sget', 0, F_SDK), ('const/16', 1, 26), ('if-lt', 0, 1, 'done'),  # ponytail: no channel API on Android 7, no notification there
+        ('const-string', 0, "notification"), ('invoke-virtual', m(CTX, "getSystemService", OBJ, STR), 4, 0), ('move-result-object', 6), ('check-cast', 6, NM),
+        ('new-instance', 7, NCH), ('const-string', 0, "upd"), ('const-string', 1, "New versions"), ('const/4', 9, 3),  # IMPORTANCE_DEFAULT
+        ('invoke-direct', m(NCH, "<init>", "V", STR, CS, "I"), 7, 0, 1, 9),
+        ('invoke-virtual', m(NM, "createNotificationChannel", "V", NCH), 6, 7),
+        ('new-instance', 7, NB), ('invoke-direct', m(NB, "<init>", "V", CTX, STR), 7, 4, 0),
+        ('const', 1, 0x7f010000), ('invoke-virtual', m(NB, "setSmallIcon", NB, "I"), 7, 1),
+        ('new-instance', 1, SB), ('const-string', 9, "Mafia Dealer "), ('invoke-direct', m(SB, "<init>", "V", STR), 1, 9),
+        ('invoke-virtual', m(SB, "append", SB, STR), 1, 3), ('const-string', 9, " is available"), ('invoke-virtual', m(SB, "append", SB, STR), 1, 9),
+        ('invoke-virtual', m(SB, "toString", STR), 1), ('move-result-object', 1),
+        ('invoke-virtual', m(NB, "setContentTitle", NB, CS), 7, 1),
+        ('const-string', 1, "Tap to see what's new and update."), ('invoke-virtual', m(NB, "setContentText", NB, CS), 7, 1),
+        ('const/4', 1, 1), ('invoke-virtual', m(NB, "setNumber", NB, "I"), 7, 1), ('invoke-virtual', m(NB, "setAutoCancel", NB, "Z"), 7, 1),
+        ('const-string', 1, RELAY_BASE + "/u"), ('invoke-static', m(URI, "parse", URI, STR), 1), ('move-result-object', 1),
+        ('new-instance', 9, INTENT), ('const-string', 10, "android.intent.action.VIEW"), ('invoke-direct', m(INTENT, "<init>", "V", STR, URI), 9, 10, 1),
+        ('const-string', 10, "com.mafiadealer.app.MainActivity"), ('invoke-virtual', m(INTENT, "setClassName", INTENT, CTX, STR), 9, 4, 10),
+        ('const/4', 1, 0), ('const', 10, 0x0C000000), ('invoke-static', m(PI, "getActivity", PI, CTX, "I", INTENT, "I"), 4, 1, 9, 10), ('move-result-object', 1),
+        ('invoke-virtual', m(NB, "setContentIntent", NB, PI), 7, 1),
+        ('invoke-virtual', m(NB, "build", NOTIF), 7), ('move-result-object', 1),
+        ('const/4', 9, 2), ('invoke-virtual', m(NM, "notify", "V", "I", NOTIF), 6, 9, 1),  # id 2 (1 is the host's "game in progress")
+        ('invoke-interface', m(SP, "edit", SPE), 5), ('move-result-object', 0),
+        ('const-string', 1, "n"), ('invoke-interface', m(SPE, "putInt", SPE, STR, "I"), 0, 1, 2), ('move-result-object', 0),
+        ('invoke-interface', m(SPE, "apply", "V"), 0),
+        ('label', 't1'),
+        ('label', 'done'),
+        ('iget-object', 0, 11, F_UR), ('if-eqz', 0, 'end'), ('invoke-virtual', m(PR, "finish", "V"), 0),
+        ('label', 'end'), ('return-void',),
+        ('label', 'fail'), ('goto/16', 'done'),
+        ('try', 't0', 't1', 'fail')]),
+    ])
+
+def build_dex(ver=0):
+    return build([main, voice, net, srv, keep, apk, chrome, updrx, make_upd(ver)])

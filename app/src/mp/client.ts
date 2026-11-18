@@ -55,7 +55,7 @@ async function clientTick(){if(MP.busy||MP.role!=='client')return;MP.busy=true;c
         if(st.g&&!st.g.ph&&MP.readyDeal===st.g.deal&&!st.g.meReady&&MP.hb%2===0)send({t:'ready',deal:st.g.deal});
         const g=st.g;if(g&&MP.sent&&MP.hb%2===0){if(g.ph==='night'&&MP.sent.k===nkeyN(g))send({t:'act',n:g.n,deal:g.deal,sel:MP.sent.sel});if(g.ph==='vote'&&MP.sent.k==='v'+g.v)send({t:'vote',v:g.v,sel:MP.sent.sel});}}}}
   catch(e){const gone=Date.now()-MP.lastOk;if(gone>4000)MP.status='lost';if(gone>8000&&!MP.online)rescan();}
-  MP.busy=false;if(MP.status==='ok')chResend();if(MP.role==='client'&&++MP.hb%3===0)send({t:'hb'});
+  MP.busy=false;chResend();if(MP.role==='client'&&++MP.hb%3===0)send({t:'hb'});
   if(V!=='join'&&MP.role==='client'&&['kicked','closed','noroom','started','taken','full'].includes(MP.status))nav('join');  // minimized: show what happened
   else if(V!=='join')rbarDraw();
   if(V==='join'){const sig=joinSig();if(sig!==MP.sig)render();else{const e=$('lat');if(e&&!MP.online)e.textContent=t('lat',{n:MP.lat});}}}

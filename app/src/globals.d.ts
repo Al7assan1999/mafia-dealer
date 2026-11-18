@@ -14,7 +14,10 @@ interface NativeNet {
   share(text: string): void; copy(text: string): void; open(url: string): void;
   saveApk(b64: string): boolean; install(): void;
   link?(): string;
-  quit?(): void;  // v2.17: closes the app (Back on Home, after asking)  // v2.11: the invite link the app was opened with (once), null otherwise
+  quit?(): void;
+  updAlarm?(on: boolean): void;  // v2.18: the version checks at 11:00-17:00 (phone clock) with the app closed, on or off
+  updClear?(): void;  // v2.18: removes the update notification (and the icon badge)
+  askNotif?(): void;  // v2.18: Android 13+ asks for the notification permission  // v2.17: closes the app (Back on Home, after asking)  // v2.11: the invite link the app was opened with (once), null otherwise
 }
 declare const Net: NativeNet;
 interface Window { Net?: NativeNet; webkitAudioContext?: typeof AudioContext }

@@ -28,6 +28,8 @@ interface Settings {
   wlSeen?: boolean; wlMute?: boolean;  // watched to the end once (then Skip shows); welcome sounds muted  // just updated to this version: show What's new once
   devKey?: string; group?: { code: string } | null; gcache?: LogEntry[] | null; gsent?: number[]; gsync?: number;
   hideOnline?: boolean;  // "Show me as online" switched off
+  updAlerts?: boolean;  // false = no phone notification for new versions (v2.18)
+  notifAsked?: number;  // asked Android for the notification permission (Android 13+), once
   fpanel?: boolean;  // friends drawer left open
   ftabY?: number;
   bellSeen?: number;
@@ -44,7 +46,7 @@ interface Note { id: number; kind: string; at: number; from: Friend }
 /** One release in version.json's history (v2.14). */
 interface Release { code: number; name: string; date: string; notes: string[] }
 /** The bell's history on this phone (v2.12): k inv | jr | req | acc; st '' waiting, else joined | letin | accepted | declined | dismissed | expired | gone. */
-interface NLog { key: string; k: string; id: any; from: Friend; at: number; code?: string; st: string; done?: number; ans?: number }
+interface NLog { key: string; k: string; id: any; from: Friend; at: number; code?: string; st: string; done?: number; ans?: number; x?: string; conv?: number; sess?: string }
 
 /** What happened in a game, for the recap and the stats. Indexes are seats. */
 interface GameEv { first: number | null; saves: number[]; caught: string[]; kills?: number[]; outs?: number[] }

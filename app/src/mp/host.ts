@@ -25,7 +25,7 @@ function hostTick(){let m,ch=false;const now=Date.now();
       MP.players[o.id]={name:nm,seen:now,on:true,v:o.v||0,uid:o.uid||null,uav:o.uav||''};ch=true;}
     else if(p){p.seen=now;if(!p.on){p.on=true;ch=true;}
       if(o.t==='buzz'){p.buzz=(p.buzz||0)+1;const mx=S.host.buzzMax;if(!mx||p.buzz<=mx){buzzFx();toast(t(mx&&p.buzz===mx?'buzzLast':'buzzed',{n:p.name}));}ch=true;}
-      if(o.t==='chat'||o.t==='react')chHostIn(o.id,o);
+      if(o.t==='chat'||o.t==='react'||o.t==='edit')chHostIn(o.id,o);
       if(o.t==='ready'&&MP.game&&o.deal===MP.game.deal&&!MP.game.ready[o.id]){MP.game.ready[o.id]=true;ch=true;}
       if(G&&G.mp){const i=G.ids.indexOf(o.id);
         if(o.t==='act'&&i>=0&&G.phase==='mpNight'&&o.n===G.day&&o.deal===MP.game.deal&&G.alive[i]&&!G.done[i]){const no=nightOpts(i);

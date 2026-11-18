@@ -1,9 +1,17 @@
 /* update check: the relay serves version.json; the app compares it with APP.code */
-function checkUpdate(force?: boolean){const L: Partial<Settings['latest']>=S.latest||{};if(!force&&Date.now()-(L.at||0)<6*3600e3)return Promise.resolve(S.latest);
+function checkUpdate(force?: boolean){const L: Partial<Settings['latest']>=S.latest||{};if(!force&&Date.now()-(L.at||0)<10*60e3)return Promise.resolve(S.latest);  // every open (v2.18), at most every 10 minutes
   const c=new AbortController();setTimeout(()=>c.abort(),8000);
   return fetch(relayUrl().replace(/^ws/,'http')+'/version.json',{cache:'no-store',signal:c.signal}).then(r=>r.json()).then(j=>{
     if(j&&j.code){S.latest={code:j.code,name:j.name,url:j.url,notes:j.notes||'',at:Date.now(),bullets:Array.isArray(j.bullets)?j.bullets:null,history:Array.isArray(j.history)?j.history:null};save();if((V==='home'||V==='settings')&&!G)render();}return S.latest;}).catch(()=>null);}
 function checkNow(){toast(t('checking'));checkUpdate(true).then(L=>{if(!L||!L.at||Date.now()-L.at>5000)toast(t('gOffline'));else if(L.code>APP.code){nav('home');toast(t('updAvail',{v:L.name}));}else toast(t('upToDate',{v:APP.name}));});}
+/* update alerts (v2.18): the phone checks version.json at 11:00, 12:00 ... 17:00 even with the app closed (native alarm) and shows a notification
+   (the launcher adds its badge); Telegram-linked accounts also get a message when a release is published (relay). Opening the app clears it. */
+function updAlerts(){try{if(window.Net&&Net.updAlarm)Net.updAlarm(S.updAlerts!==false);if(window.Net&&Net.updClear)Net.updClear();}catch(e){}}
+/** Android 13+ needs the notification permission: asked once, when nothing else is on screen. */
+function askNotifOnce(){if(S.notifAsked||S.updAlerts===false||!(window.Net&&Net.askNotif))return;
+  if(WL.on||G||$('modal').innerHTML){setTimeout(askNotifOnce,4000);return;}S.notifAsked=Date.now();save();try{Net.askNotif();}catch(e){}}
+/** An update link (Telegram, the notification): the release notes with Update, or "up to date". */
+function updLink(){checkUpdate(true).then(L=>{if(G)return;if(L&&L.code>APP.code){if(V!=='home'&&!inRoom())nav('home');whatsNew();}else if(L)toast(t('upToDate',{v:APP.name}));});}
 /** Update banner (v2.14): the new version's first three points, See all, Update. */
 const updBanner=()=>{const L=S.latest;if(!(L&&L.code>APP.code))return '';const B=L.bullets||[];
   return `<div class="banner upd"><div><b>${t('rnNewIn',{v:esc(L.name)})}</b>${B.length?`<ul class="rn">${B.slice(0,3).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:L.notes?`<small>${esc(L.notes)}</small>`:''}</div>

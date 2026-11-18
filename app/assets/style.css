@@ -343,7 +343,7 @@ body.night .sky{opacity:1}[data-theme=noir] body.night .sky{opacity:.45}
 .avt.chx{width:34px;height:34px;display:inline-grid;place-items:center;border-radius:50%;background:var(--card);color:var(--mute);font-weight:800;flex:none}.avt.chx svg{width:18px;height:18px}
 .chm{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px;padding:4px 2px}
 .cm{align-self:flex-start;max-width:82%;padding:8px 12px;border-radius:14px 14px 14px 4px;background:var(--card);border:1px solid var(--line);overflow-wrap:anywhere}
-.cm b{display:block;font-size:12px;color:var(--gold);margin-bottom:2px}.cm.me{align-self:flex-end;border-radius:14px 14px 4px 14px;background:var(--sel);border-color:transparent;color:#fff}.cm.pend{opacity:.55}
+.cm b{display:block;font-size:12px;color:var(--gold);margin-bottom:2px}.cm.me{align-self:flex-end;border-radius:14px 14px 4px 14px;background:var(--sel);border-color:transparent;color:#fff}
 [dir=rtl] .cm{border-radius:14px 14px 4px 14px}[dir=rtl] .cm.me{border-radius:14px 14px 14px 4px}
 .chf{margin:8px 0 0}
 /* v2.10.1 Online: the code box and Join on one row */
@@ -523,3 +523,35 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}.fdrawer,.bell
 .chas{width:100%;max-width:520px;margin:0 auto;background:var(--bg);background-image:linear-gradient(var(--card2),var(--card2));border:1px solid var(--line2);border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:10px;animation:rise .25s ease both}
 .rxp{display:flex;justify-content:space-between}.rxp button{font-size:28px;width:46px;height:46px;border-radius:50%;background:var(--card)}.chas .btn{margin:0}
 [data-theme=noir] .chm .cm,[data-theme=noir] .chf input,[data-theme=noir] .chas,[data-theme=noir] .chmn{border-radius:4px}[data-theme=noir] .chsend{border-radius:4px}
+/* v2.18 chat: sending status, edit, the long-press menu beside the message, panel slides */
+#chat .chw{animation:none}
+#chat .chw.a-up{animation:chUp .28s cubic-bezier(.2,.8,.2,1) both}
+#chat .chw.a-down{animation:chDown .2s ease-in both;pointer-events:none}
+#chat .chw.a-in{animation:chIn .26s cubic-bezier(.2,.8,.2,1) both}
+#chat .chw.a-back{animation:chBk .26s cubic-bezier(.2,.8,.2,1) both}
+[dir=rtl] #chat .chw.a-in{animation-name:chInR}[dir=rtl] #chat .chw.a-back{animation-name:chBkR}
+@keyframes chUp{from{transform:translateY(48px);opacity:0}to{transform:none;opacity:1}}
+@keyframes chDown{to{transform:translateY(48px);opacity:0}}
+@keyframes chIn{from{transform:translateX(36%);opacity:.3}to{transform:none;opacity:1}}
+@keyframes chInR{from{transform:translateX(-36%);opacity:.3}to{transform:none;opacity:1}}
+@keyframes chBk{from{transform:translateX(-22%);opacity:.3}to{transform:none;opacity:1}}
+@keyframes chBkR{from{transform:translateX(22%);opacity:.3}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){#chat .chw[class*=a-]{animation:none}}
+.cm time{display:flex;align-items:center;justify-content:flex-end;gap:3px}.cst{width:13px;height:13px;flex:none}
+.cmr.nsent .cm{opacity:.8;border:1px dashed #fff8}
+.cfail{align-self:flex-end;margin-top:3px;font-size:12px;font-weight:700;color:var(--sel);padding:2px 4px}
+.crp.ed{border-inline-start-color:var(--sel)}.crp.ed b{color:var(--sel)}
+.chact{display:block;padding:0;background:#000a;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:fadein .15s ease both}
+.chpop{position:fixed;display:flex;flex-direction:column;gap:8px;max-width:calc(100vw - 16px);animation:chPop .18s cubic-bezier(.2,.8,.2,1) both}
+@keyframes chPop{from{transform:scale(.94);opacity:.4}to{transform:none;opacity:1}}
+.chpop .rxp{display:flex;gap:2px;padding:5px;border-radius:99px;background:var(--bg);background-image:linear-gradient(var(--card2),var(--card2));border:1px solid var(--line2);box-shadow:0 8px 24px #0008}
+.chpop .rxp button{width:44px;height:44px;font-size:27px;border-radius:50%;background:none;transition:transform .12s}.chpop .rxp button:active{transform:scale(1.25)}
+.chlift{display:block;max-width:100%}.chlift .cm{max-width:calc(100vw - 16px);box-shadow:0 10px 30px #000a;pointer-events:none}
+.chmenu{min-width:190px;border-radius:16px;overflow:hidden;background:var(--bg);background-image:linear-gradient(var(--card2),var(--card2));border:1px solid var(--line2);box-shadow:0 8px 24px #0008}
+.chmenu button{display:flex;align-items:center;gap:12px;width:100%;height:48px;padding:0 16px;text-align:start;color:var(--text);font-size:15.5px;font-weight:600;border-bottom:1px solid var(--line)}
+.chmenu button:last-child{border:0}.chmenu svg{width:20px;height:20px;color:var(--mute)}
+[data-theme=noir] .chpop .rxp,[data-theme=noir] .chmenu{border-radius:6px}
+/* v2.18 bell: a compact panel; only the list scrolls */
+.bellsh{max-height:min(62vh,560px);overflow:hidden;display:flex;flex-direction:column}
+.bellsh .bl{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 -4px;padding:0 4px}
+.bellsh .prs q{display:block;font-size:12.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;quotes:"\201C" "\201D"}

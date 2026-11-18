@@ -74,6 +74,7 @@ python3 verify_apk.py out/MafiaDealer.apk
 ```bash
 cd relay && npm install          # once
 python publish.py "first change" "second change"   # one release-notes bullet per argument (kept in relay/releases.json); keys: $MAFIA_KEYS or Desktop/Mafia (cf.key); needs relay/.account
+# then it tells Telegram-linked accounts about the version (relay/.tgsecret = the relay's TG_SECRET); phones also check at 11:00-17:00
 ```
 Installed apps see the update via version.json and install it in-app.
 
@@ -100,6 +101,7 @@ cd tests/multiplayer && python3 mock_srv.py &   # stand-in for the in-app server
 node test_s3.js cit                         # full multiplayer game, Citizens win
 node test_s3.js maf                         # Mafia win
 node test_v217.js                           # ping, Back, chat reactions/replies/mentions (spawns mock_srv.py itself)
+node test_v218.js                           # sending status, edit, long-press menu, chat slides, bell mentions, update alerts (app side)
 ```
 
 ## Multiplayer protocol

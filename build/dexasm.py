@@ -16,7 +16,7 @@ def shorty(ret, params):
 
 # opcode -> (format, size)
 OPS = {
-    'nop': (0x00, '10x'), 'move-object': (0x07, '12x'), 'move-result': (0x0a, '11x'), 'move-result-object': (0x0c, '11x'),
+    'nop': (0x00, '10x'), 'move-object': (0x07, '12x'), 'move-result': (0x0a, '11x'), 'move-result-wide': (0x0b, '11x'), 'move-result-object': (0x0c, '11x'),
     'move-exception': (0x0d, '11x'), 'return-void': (0x0e, '10x'), 'return': (0x0f, '11x'), 'return-object': (0x11, '11x'),
     'const/4': (0x12, '11n'), 'const/16': (0x13, '21s'), 'const': (0x14, '31i'), 'const-string': (0x1a, '21c-s'),
     'check-cast': (0x1f, '21c-t'), 'new-instance': (0x22, '21c-t'), 'goto/16': (0x29, '20t'),
