@@ -73,10 +73,16 @@ const VJ={code:99,name:'9.9',url:'https://example.invalid/MafiaDealer.apk',notes
  await host.evaluate(()=>{chPost(0,-1,'new one');hostPublish();});await wait(s,()=>CH.some(m=>m.x==='new one'));await s.waitForTimeout(300);
  ok(await s.evaluate(()=>document.querySelector('#chat .chw').__k===1&&/new one/.test(document.querySelector('#chat .chb').textContent)),'a new message on the list: the rows change, no flash');
  await s.evaluate(()=>chGo(-1));ok(await s.evaluate(()=>!!document.querySelector('#chat .chw.a-in')),'into a conversation: slides in');
+ ok(await s.evaluate(()=>{const w=document.querySelector('#chat .chw');return getComputedStyle(w).animationName==='none'&&getComputedStyle(w).opacity==='1'&&getComputedStyle(w.querySelector('.chh')).animationName==='chRise';}),
+   'v2.18.1: the panel stays solid (no flash of the room behind); its content rises in like opening the chat');
  await s.evaluate(()=>chClose());ok(await s.evaluate(()=>!!document.querySelector('#chat .chw.a-down')),'Minimize: slides down');
  await s.waitForTimeout(300);ok(await s.evaluate(()=>!document.querySelector('#chat .chw')),'then it is gone');
  await s.evaluate(()=>chOpenList());ok(await s.evaluate(()=>!!document.querySelector('#chat .chw.a-up')),'opening the chat: slides up');await s.evaluate(()=>chClose());await s.waitForTimeout(300);
  await s.emulateMedia({reducedMotion:'reduce'});
+ // v2.18.1: the host's "Hosting a game" notification opens the room
+ await host.evaluate(()=>{nav('home');chOpenList();});ok(await host.evaluate(()=>roomMinned()),'host on Home with the room minimized (chat open)');
+ await host.evaluate(()=>deepLink('md:room'));ok(await host.evaluate(()=>V==='host'&&!chView),'tapping the hosting notification: back in the room');
+ ok(await host.evaluate(()=>{const g=G;G={phase:'day'};const v=V;deepLink('md:room');const same=V===v;G=g;return same;}),'during a game it leaves the game on screen');
  // mentions in the bell
  await d.evaluate(()=>{chOpenList();chGo(-1);$('chin').value='@Sami are you mafia?';chSend();});
  await wait(s,()=>(S.nlog||[]).some(n=>n.k==='ment'));

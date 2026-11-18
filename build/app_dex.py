@@ -343,6 +343,13 @@ keep = Class(KEEP, SVC, [("w", WL, ACC_PUBLIC | ACC_STATIC), ("f", FL, ACC_PUBLI
         ('const-string', 3, "Mafia Dealer"), ('invoke-virtual', m(NB, "setContentTitle", NB, CS), 1, 3),
         ('const-string', 3, "Hosting a game. The room stays open."), ('invoke-virtual', m(NB, "setContentText", NB, CS), 1, 3),
         ('const/4', 3, 1), ('invoke-virtual', m(NB, "setOngoing", NB, "Z"), 1, 3),
+        # v2.18.1: tapping it opens the app on the room (MainActivity is singleTask: onNewIntent -> deepLink('md:room'))
+        ('new-instance', 3, INTENT), ('invoke-direct', m(INTENT, "<init>", "V"), 3),
+        ('const-string', 4, "com.mafiadealer.app.MainActivity"), ('invoke-virtual', m(INTENT, "setClassName", INTENT, CTX, STR), 3, 5, 4),
+        ('const-string', 4, "md:room"), ('invoke-static', m(URI, "parse", URI, STR), 4), ('move-result-object', 4),
+        ('invoke-virtual', m(INTENT, "setData", INTENT, URI), 3, 4),
+        ('const/4', 4, 1), ('const', 2, 0x0C000000), ('invoke-static', m(PI, "getActivity", PI, CTX, "I", INTENT, "I"), 5, 4, 3, 2), ('move-result-object', 3),
+        ('invoke-virtual', m(NB, "setContentIntent", NB, PI), 1, 3),
         ('invoke-virtual', m(NB, "build", NOTIF), 1), ('move-result-object', 1),
         ('const/4', 3, 1), ('invoke-virtual', m(SVC, "startForeground", "V", "I", NOTIF), 5, 3, 1),
         ('sget-object', 0, F_WL), ('if-nez', 0, 't1'),  # locks already held

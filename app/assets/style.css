@@ -527,16 +527,11 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}.fdrawer,.bell
 #chat .chw{animation:none}
 #chat .chw.a-up{animation:chUp .28s cubic-bezier(.2,.8,.2,1) both}
 #chat .chw.a-down{animation:chDown .2s ease-in both;pointer-events:none}
-#chat .chw.a-in{animation:chIn .26s cubic-bezier(.2,.8,.2,1) both}
-#chat .chw.a-back{animation:chBk .26s cubic-bezier(.2,.8,.2,1) both}
-[dir=rtl] #chat .chw.a-in{animation-name:chInR}[dir=rtl] #chat .chw.a-back{animation-name:chBkR}
+#chat .chw.a-in>*,#chat .chw.a-back>*{animation:chRise .28s cubic-bezier(.2,.8,.2,1) both}
 @keyframes chUp{from{transform:translateY(48px);opacity:0}to{transform:none;opacity:1}}
 @keyframes chDown{to{transform:translateY(48px);opacity:0}}
-@keyframes chIn{from{transform:translateX(36%);opacity:.3}to{transform:none;opacity:1}}
-@keyframes chInR{from{transform:translateX(-36%);opacity:.3}to{transform:none;opacity:1}}
-@keyframes chBk{from{transform:translateX(-22%);opacity:.3}to{transform:none;opacity:1}}
-@keyframes chBkR{from{transform:translateX(22%);opacity:.3}to{transform:none;opacity:1}}
-@media (prefers-reduced-motion:reduce){#chat .chw[class*=a-]{animation:none}}
+@keyframes chRise{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){#chat .chw[class*=a-],#chat .chw[class*=a-]>*{animation:none}}
 .cm time{display:flex;align-items:center;justify-content:flex-end;gap:3px}.cst{width:13px;height:13px;flex:none}
 .cmr.nsent .cm{opacity:.8;border:1px dashed #fff8}
 .cfail{align-self:flex-end;margin-top:3px;font-size:12px;font-weight:700;color:var(--sel);padding:2px 4px}
