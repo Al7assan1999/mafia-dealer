@@ -1,5 +1,15 @@
 [
  {
+  "code": 40,
+  "name": "2.19",
+  "date": "2026-11-18",
+  "notes": [
+   "Swipe a message to the right to reply (to the left in Arabic).",
+   "Tap + on the reactions for 24 more: angry, sad, broken heart, middle finger, rat and more.",
+   "Arabic: arrows point the right way everywhere, plus small layout fixes."
+  ]
+ },
+ {
   "code": 39,
   "name": "2.18.2",
   "date": "2026-11-18",
