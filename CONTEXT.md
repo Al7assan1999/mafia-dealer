@@ -9,7 +9,8 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## Current state: v2.18 (versionCode 37), built 2026-11-18, NOT published yet (relay code changed: /acc/announce, /u)
+## Current state: v2.18 (versionCode 37), published on the relay 2026-11-18 (relay version 934863f5; relay code changed: /acc/announce, /u)
+- Release note: the first Telegram announce was refused with Cloudflare's 403 (error 1010: Python's default User-Agent is blocked); publish.py now sends a named User-Agent, and `python publish.py --announce` sends only the Telegram message for the current version. It went to 5 linked accounts.
 Alhassan's list (his choices: solid + clock then tick, edit for 15 minutes, a smaller bell panel that scrolls, update checks at 11:00-17:00 + Telegram; Firebase only if the app moves to a normal Gradle build):
 - Sending: my message shows in full colour right away with a clock; a tick once the host has it. Not back in 8 s: "Not sent · Tap to retry" (`chResend` now runs on every client tick and stops resending after 8 s; `chRetry`).
 - Edit: my own messages for 15 minutes (`CH_EDIT`), host-checked (`chEditIn`, message `{t:'edit',i,x,mt}`), marked "edited"; offered only when the host's app is v2.18+ (`MP.room.hv>=37`). Mentions are re-checked on edit (no second buzz).

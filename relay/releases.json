@@ -1,5 +1,18 @@
 [
  {
+  "code": 37,
+  "name": "2.18",
+  "date": "2026-11-18",
+  "notes": [
+   "Messages show at once with a clock, then a tick; Not sent? Tap to retry.",
+   "Edit your messages for 15 minutes.",
+   "Long-press a message: reactions and Reply / Edit right next to it.",
+   "Smoother chat: slides in and out, no flashing.",
+   "Mentions in the notification bell, and a tidier bell.",
+   "New version alerts: a notification (11:00-17:00) and a Telegram message."
+  ]
+ },
+ {
   "code": 36,
   "name": "2.17",
   "date": "2026-11-18",
