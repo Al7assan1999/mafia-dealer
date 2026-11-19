@@ -1,5 +1,13 @@
 [
  {
+  "code": 43,
+  "name": "2.20.1",
+  "date": "2026-11-19",
+  "notes": [
+   "Fixed: creating a room no longer shows \"Connection lost\" when the connection is fine."
+  ]
+ },
+ {
   "code": 42,
   "name": "2.20",
   "date": "2026-11-18",

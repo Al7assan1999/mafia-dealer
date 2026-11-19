@@ -9,7 +9,7 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## Current state: v2.20.1 (versionCode 43), built 2026-11-19, NOT published yet (relay code unchanged)
+## Current state: v2.20.1 (versionCode 43), published on the relay 2026-11-19 (relay version 4a26f214; relay code unchanged; Telegram announce sent to 5 accounts)
 - Fix: creating an online room flashed the red "Connection lost · reconnecting…" bar. The host's bar counted the relay socket as lost while it was
   still CONNECTING (a phone takes a second or two to reach the relay; the local test relay opens instantly, so tests never saw it). The host's
   link is now judged by when it last worked (`OnlineNet.okAt`: set when created, on open and on every message): red after 3 s down (4.5 s silent
