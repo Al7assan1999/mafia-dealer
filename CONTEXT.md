@@ -9,7 +9,15 @@ You are continuing work on **Mafia Dealer**, an Android app for the Mafia party 
 - All narration and sounds must be **English only**. The UI is English and Arabic (toggle).
 - Deliver each build as `MafiaDealer.apk` and say what changed and how to test it.
 
-## Current state: v2.20 (versionCode 42), published on the relay 2026-11-18 (relay version 3b00efe6; relay code changed: host generations `ep`, checked live: ep 1 connects, ep 0 gets "replaced"; Telegram announce sent to 5 accounts)
+## Current state: v2.20.1 (versionCode 43), built 2026-11-19, NOT published yet (relay code unchanged)
+- Fix: creating an online room flashed the red "Connection lost · reconnecting…" bar. The host's bar counted the relay socket as lost while it was
+  still CONNECTING (a phone takes a second or two to reach the relay; the local test relay opens instantly, so tests never saw it). The host's
+  link is now judged by when it last worked (`OnlineNet.okAt`: set when created, on open and on every message): red after 3 s down (4.5 s silent
+  while open), so a new room and a short reconnect show nothing.
+- `test_v220_app.js` (15) now opens every WebSocket 1.5 s late (like a phone) and records every bar from hosting / joining: none may appear. Its
+  host-bar checks use a real outage (reconnects fail until the relay address is back) and keep the players' takeover wait long meanwhile.
+
+## Previous: v2.20 (versionCode 42), published on the relay 2026-11-18 (relay version 3b00efe6; relay code changed: host generations `ep`, checked live: ep 1 connects, ep 0 gets "replaced"; Telegram announce sent to 5 accounts)
 - Noir chat redesign, Alhassan's pick "A · Case file" of three options made on the real app (B Velvet = Neon's shapes in Noir colours, C Spotlight = my messages on cream with a red edge; scratchpad noir/*.css): others' messages are cream paper notes (--alt) with dark ink, mine are red, hard black offset shadows, names / times / titles / menu in the typewriter font (Elite) in capitals, dashed dividers, stamped square avatars with a red shadow, cream reaction bar / grid / Edit menu / @ list / reply bar with red shadows. CSS block "v2.20 Noir chat" at the end of style.css; Neon unchanged.
 - The message box had the browser's white focus ring in both themes; now the accent colour (Noir: red border + red offset shadow).
 - Checked in English and Arabic, with the grid, reply bar, @ list, a failed message and the focused box.

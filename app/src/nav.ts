@@ -25,8 +25,9 @@ function connInfo(): {cls: string; txt: string}{const now=Date.now();let c={cls:
     if(MP.status==='lost'&&MP.online&&MP.ws&&MP.ws.readyState===1&&!MP.hostOn)c={cls:'wait',txt:t('connHost',{n:hn})+(tk?' · '+tk:'')};
     else if(MP.status==='lost')c={cls:'lost',txt:t('connLost')+(tk&&!MP.online?' · '+tk:'')};
     else if(MP.lat>1200||gone>2500)c={cls:'weak',txt:t('connWeak')};}
-  else if(MP.role==='host'&&MP.online&&HN){const N=HN as OnlineNet;
-    if(!(N.ws&&N.ws.readyState===1)||now-(N.at||0)>4500)c={cls:'lost',txt:t('connLost')};else if((N.lat||0)>1200||now-(N.at||0)>3000)c={cls:'weak',txt:t('connWeak')};}
+  else if(MP.role==='host'&&MP.online&&HN){const N=HN as OnlineNet,open=N.ws&&N.ws.readyState===1,since=now-(N.okAt||now);
+    // v2.20.1: judged by when the link last worked, not by "open right now": a new room's first connect (and a short reconnect) is not a lost connection
+    if(open?since>4500:since>3000)c={cls:'lost',txt:t('connLost')};else if(open&&((N.lat||0)>1200||since>3000))c={cls:'weak',txt:t('connWeak')};}
   if(c.cls){MP.cPrev=c.cls;MP.cOkAt=0;return c;}
   if(MP.cPrev){MP.cPrev='';MP.cOkAt=now;}
   return MP.cOkAt&&now-MP.cOkAt<2000&&MP.role?{cls:'back',txt:t('connBack')}:c;}

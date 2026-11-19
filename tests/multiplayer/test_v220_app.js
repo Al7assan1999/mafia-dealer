@@ -6,22 +6,37 @@ const RELAY=process.argv[2]||'ws://127.0.0.1:8787';
 const ok=(c,m)=>{console.log(c?'ok  ':'FAIL',m);if(!c)process.exitCode=1;};
 (async()=>{const b=await chromium.launch();const errs=[];
  const mk=async name=>{const p=await (await b.newContext({viewport:{width:390,height:800},reducedMotion:'reduce'})).newPage();p.on('pageerror',e=>errs.push(name+': '+e.message));
-   await p.route('**/version.json',r=>r.fulfill({json:{code:1,name:'1'}}));await p.goto(URL);
+   await p.route('**/version.json',r=>r.fulfill({json:{code:1,name:'1'}}));
+   await p.addInitScript(()=>{const R=window.WebSocket;  // v2.20.1: every connection opens 1.5 s late, like a phone reaching the internet relay
+     window.WebSocket=function(u,pr){let r=null;const o={readyState:0,onopen:null,onmessage:null,onclose:null,onerror:null,send(d){if(r)r.send(d);},close(c,x){if(r)r.close(c,x);else o.readyState=3;}};
+       setTimeout(()=>{if(o.readyState===3)return;r=new R(u,pr);r.onopen=(e)=>{o.readyState=1;o.onopen&&o.onopen(e);};r.onmessage=(e)=>o.onmessage&&o.onmessage(e);
+         r.onclose=(e)=>{o.readyState=3;o.onclose&&o.onclose(e);};r.onerror=(e)=>o.onerror&&o.onerror(e);},1500);return o;};});
+   await p.goto(URL);
    await p.evaluate(([n,r,u])=>{S.relay=r;S.mpName='';save();TK.lobby=3000;TK.game=6000;  // online needs an account (local relay only)
      return aReq('/acc/signup',{uname:u,pass:'secret12'}).then(x=>{signedIn(x);return aReq('/acc/profile',{display:n});}).then(j=>{S.acct.u=j.user;S.mpName=n;save();nav('home');});},[name,RELAY,'tk'+name.slice(0,2).toLowerCase()+Math.random().toString(36).slice(2,7)]);return p;};
  const wait=(p,fn,arg,ms)=>p.waitForFunction(fn,arg,{timeout:ms||20000});
  const H=await mk('Alhassan'),A=await mk('Sami'),B=await mk('Dareer');
+ // v2.20.1: record every connection bar from now on (it flashed "Connection lost" each time a room was created)
+ const watch=p=>p.evaluate(()=>{window.__bars=[];const f=()=>{for(const e of document.querySelectorAll('#cbar .cbar,#rbar .rbar.lost,#rbar .rbar.weak,#rbar .rbar.wait,#rbar .rbar.back'))__bars.push(e.className);};
+   new MutationObserver(f).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});});
+ for(const p of [H,A,B])await watch(p);
  await H.click('#mode-online');await H.click('button:has-text("Host online")');await wait(H,()=>MP.online&&HN.ws&&HN.ws.readyState===1);
  const code=await H.evaluate(()=>MP.online.code);
  for(const p of [A,B]){await p.click('#mode-online');await p.fill('#ocode',code);await p.click('button:has-text("Join online")');await wait(p,()=>MP.status==='ok');await p.waitForTimeout(500);}
  await wait(H,()=>Object.keys(MP.players).length===2);await wait(A,()=>!!MP.bk);
+ await H.waitForTimeout(3000);
+ for(const [p,n] of [[H,'host creating the room'],[A,'Sami joining'],[B,'Dareer joining']])ok(await p.evaluate(()=>!__bars.length),`v2.20.1: ${n}: no connection bar at any moment`);
+ // a real outage for the bars below: reconnecting fails until the relay address is back (a blip of a second or two shows nothing)
+ for(const p of [A,B])await p.evaluate(()=>{TK.lobby=TK.game=600e3;});  // nobody takes over during the host-bar checks below
+ const cut=p=>p.evaluate(()=>{window.__relay=S.relay;S.relay='ws://127.0.0.1:9';HN.ws.close();}),mend=p=>p.evaluate(()=>{S.relay=__relay;});
  // the host's own connection: a bar in the room, the room bar itself when minimized
- await H.evaluate(()=>{HN.ws.close();});await wait(H,()=>!!document.querySelector('#cbar .cbar.lost'),null,6000).then(()=>ok(true,'host: red "Connection lost · reconnecting…" bar in the room'),()=>ok(false,'host: red bar'));
- await wait(H,()=>!!document.querySelector('#cbar .cbar.back'),null,9000).then(()=>ok(true,'host: green "Connected again" once the relay is back'),()=>ok(false,'host: green bar'));
- await H.evaluate(()=>nav('home'));await H.evaluate(()=>{HN.ws.close();});
- await wait(H,()=>{const r=document.querySelector('#rbar .rbar.lost');return r&&/Connection lost/.test(r.textContent);},null,6000).then(()=>ok(true,'minimized: the room bar itself turns red with the message (no second bar)'),()=>ok(false,'room bar turns red'));
+ await cut(H);await wait(H,()=>!!document.querySelector('#cbar .cbar.lost'),null,8000).then(()=>ok(true,'host: red "Connection lost · reconnecting…" bar in the room'),()=>ok(false,'host: red bar'));
+ await mend(H);await wait(H,()=>!!document.querySelector('#cbar .cbar.back'),null,9000).then(()=>ok(true,'host: green "Connected again" once the relay is back'),()=>ok(false,'host: green bar'));
+ await H.evaluate(()=>nav('home'));await cut(H);
+ await wait(H,()=>{const r=document.querySelector('#rbar .rbar.lost');return r&&/Connection lost/.test(r.textContent);},null,8000).then(()=>ok(true,'minimized: the room bar itself turns red with the message (no second bar)'),()=>ok(false,'room bar turns red'));
  ok(await H.evaluate(()=>!document.querySelector('#cbar .cbar')),'and no separate bar on top of it');
- await wait(H,()=>HN.ws&&HN.ws.readyState===1&&!document.querySelector('#rbar .rbar.lost'),null,9000);await H.evaluate(()=>nav('host'));
+ await mend(H);await wait(H,()=>HN.ws&&HN.ws.readyState===1&&!document.querySelector('#rbar .rbar.lost'),null,9000);await H.evaluate(()=>nav('host'));
+ for(const p of [A,B])await p.evaluate(()=>{TK.lobby=3000;TK.game=6000;});
  // a game: Alhassan citizen, Sami mafia, Dareer doctor (+ an offline seat)
  await H.evaluate(()=>{const ids=['host',...Object.keys(MP.players)];MP.players.x1={name:'X1',on:true,seen:Date.now(),v:0,uid:null,uav:''};ids.push('x1');
    MP.game={deal:1,ids,names:ids.map(id=>id==='host'?S.mpName:MP.players[id].name),roles:['citizen','mafia','doctor','citizen'],ready:{}};hostStartGame();hostPublish();});
